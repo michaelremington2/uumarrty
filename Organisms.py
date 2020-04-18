@@ -40,54 +40,50 @@ class organism:
 
         
 class snake(organism):
-    def __init__(self,color,size,boundary_x=800,boundary_y = 800):
-        super().__init__(color,size,boundary_x,boundary_y)
+    def __init__(self,boundary_x=800,boundary_y = 800):
+        super().__init__(boundary_x,boundary_y)
         self.color = (255,0,0)
         #animal_color('red')
-        self.size = 4
+        self.size = 5
         self.boundary_x = boundary_x
         self.boundary_y = boundary_y
-        self.initial_energy_counter = 1000
+        self.energy_counter = 1000
         self.alive = True
 
     def snake_walk_x(self):
         chance_to_move = random.randrange(0,100)
         long_distiance = random.randrange(0,100)
-        if long_distiance <=80:
+        if long_distiance <=95:
             if chance_to_move < 25:
-                movement = random.randrange(1,4)
+                movement = random.randrange(1,3)
             elif chance_to_move >=25 and chance_to_move < 50:
-                movement = random.randrange(-4,-1)
+                movement = random.randrange(-2,-1)
             elif chance_to_move >= 50:
                 movement = 0
             return movement
         else:
-            if chance_to_move < 25:
-                movement = random.randrange(1,4)
-            elif chance_to_move >=25 and chance_to_move < 50:
-                movement = random.randrange(-4,-1)
-            elif chance_to_move >= 50:
-                movement = 0
+            if chance_to_move < 50:
+                movement = random.randrange(4,7)
+            elif chance_to_move >=50:
+                movement = random.randrange(-6,-4)
             return movement*2 
 
     def snake_walk_y(self):
         chance_to_move = random.randrange(0,100)
         long_distiance = random.randrange(0,100)
-        if long_distiance <=80:
+        if long_distiance <=95:
             if chance_to_move < 25:
                 movement = random.randrange(1,3)
             elif chance_to_move >=25 and chance_to_move < 50:
-                movement = random.randrange(-3,-1)
+                movement = random.randrange(-2,-1)
             elif chance_to_move >= 50:
                 movement = 0
             return movement
         else:
-            if chance_to_move < 25:
-                movement = random.randrange(1,3)
-            elif chance_to_move >=25 and chance_to_move < 50:
-                movement = random.randrange(-3,-1)
-            elif chance_to_move >= 50:
-                movement = 0
+            if chance_to_move < 50:
+                movement = random.randrange(4,7)
+            elif chance_to_move >=50:
+                movement = random.randrange(-6,-4)
             return movement*2 
 
 
@@ -97,14 +93,19 @@ class snake(organism):
         self.x += self.move_x
         self.y += self.move_y
         self.boundary()
+    
+    def snake_energy(self,n):
+        if n % 13 == 0:
+            self.energy_counter = self.energy_counter - 5
+        print('Snake Energy Level:' + str(self.energy_counter))
 
 
 class kangaroo_rat(organism):
-    def __init__(self,color,size,boundary_x=800,boundary_y = 800):
-        super().__init__(color,size,boundary_x,boundary_y)
+    def __init__(self,boundary_x=800,boundary_y = 800):
+        super().__init__(boundary_x,boundary_y)
         self.color = (0,0,255)
         #animal_color('red')
-        self.size = 4
+        self.size = 3
         self.boundary_x = boundary_x
         self.boundary_y = boundary_y
         self.initial_energy_counter = 200
@@ -141,5 +142,5 @@ class grass:
         self.alive = True
 
 if __name__ == "__main__":
-    help(pygame.draw.rect)
+    pass
 

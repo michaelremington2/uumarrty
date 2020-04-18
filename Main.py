@@ -8,7 +8,7 @@ class sim:
         self.width =800
         self.height = 600
         self.background_color = (255,255,255)
-        self.start = pygame.font.init()
+        self.start = pygame.init()
         self.initial_snake_pop = initial_snake_pop
         self.initial_kr_pop = initial_kr_pop
         self.initial_bush_pop = initial_bush_pop
@@ -23,7 +23,7 @@ class sim:
         'Generates Game Background. This should be run first.'
         self.game_display.fill(self.background_color)
 
-    def add_organisms(self,org_list,org_type):
+    def add_organisms(self,org_list,org_type,time_counter):
         '''This function designates shape and color of objects depending on the organism type.
         org type is either KRAT, SNAKE, BUSH, GRASS.'''
         if org_type == 'KRAT':   
@@ -32,6 +32,7 @@ class sim:
                 org.krat_move()
         elif org_type == 'SNAKE':
             for org in org_list:
+                org.snake_energy(time_counter)
                 pygame.draw.circle(self.game_display,org.color,[org.x,org.y],org.size)
                 org.snake_move()
         elif org_type in ['BUSH','GRASS']:
@@ -40,10 +41,18 @@ class sim:
         pygame.display.update()
     
     def set_organisms(self):
-        self.SNAKES = dict(enumerate([Organisms.snake(Organisms.snake.animal_color('red'),6,self.width,self.height) for i in range(self.initial_snake_pop)]))
-        self.KANGAROO_RATS = dict(enumerate([Organisms.kangaroo_rat(Organisms.kangaroo_rat.animal_color('blue'),3,self.width,self.height) for i in range(self.initial_kr_pop)]))
-        self.BUSHES = dict(enumerate([Organisms.bush(self.width,self.height) for i in range(self.initial_bush_pop)]))
-        self.GRASSES = dict(enumerate([Organisms.grass(self.width,self.height) for i in range(self.initial_grass_pop)]))
+        self.SNAKES = dict(enumerate(
+            [Organisms.snake(self.width,self.height) for i in range(self.initial_snake_pop)]
+            ))
+        self.KANGAROO_RATS = dict(enumerate(
+            [Organisms.kangaroo_rat(self.width,self.height) for i in range(self.initial_kr_pop)]
+            ))
+        self.BUSHES = dict(enumerate(
+            [Organisms.bush(self.width,self.height) for i in range(self.initial_bush_pop)]
+            ))
+        self.GRASSES = dict(enumerate(
+            [Organisms.grass(self.width,self.height) for i in range(self.initial_grass_pop)]
+            ))
     
     def time_set(self,n,time_counter,fps):
         if (n % 13) == 0:
@@ -63,6 +72,7 @@ class sim:
         '''Main function that runs and compiles the program'''
         time_counter=0
         n = 0
+        fps = 30
         self.set_organisms()
         while True:
             for event in pygame.event.get():
@@ -71,13 +81,13 @@ class sim:
                     quit()
             self.background()
             self.population_counts_and_time(time_counter,self.SNAKES,self.KANGAROO_RATS)
-            self.add_organisms(self.SNAKES.values(),'SNAKE')
-            self.add_organisms(self.KANGAROO_RATS.values(),'KRAT')
-            self.add_organisms(self.BUSHES.values(),'BUSH')
-            self.add_organisms(self.GRASSES.values(),'GRASS')
-            self.clock.tick(30)
+            self.add_organisms(self.SNAKES.values(),'SNAKE',n)
+            self.add_organisms(self.KANGAROO_RATS.values(),'KRAT',n)
+            self.add_organisms(self.BUSHES.values(),'BUSH',n)
+            self.add_organisms(self.GRASSES.values(),'GRASS',n)
+            self.clock.tick(fps)
             n=n+1
-            time_counter = self.time_set(n,time_counter,30)
+            time_counter = self.time_set(n,time_counter,fps)
             #print(time_counter)
     
 if __name__ ==  "__main__":
@@ -87,4 +97,5 @@ if __name__ ==  "__main__":
     initial_grass_pop = 400
     sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop)
     sim.main()
+    
     

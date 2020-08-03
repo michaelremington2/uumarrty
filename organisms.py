@@ -148,8 +148,8 @@ class snake(organism):
             self.color = (255,255,255)
             self.move_x = 0
             self.move_y = 0
-            self.x = 0 
-            self.y = 0 
+            #self.x = 0 
+            #self.y = 0 
             self.size = 1
 
     def snake_energy(self,time):
@@ -250,9 +250,9 @@ class kangaroo_rat(organism):
             self.color = (255,255,255)
             self.move_x = 0
             self.move_y = 0
-            self.x = 0 
-            self.y = 0 
-            self.size = 1
+            #self.x = 0 
+            #self.y = 0 
+            self.size = 0
             self.energy_counter = 0
 
     def krat_energy(self,time):
@@ -284,8 +284,8 @@ class bush:
             self.color = (255,255,255)
             self.move_x = 0
             self.move_y = 0
-            self.x = 0 
-            self.y = 0 
+            #self.x = 0 
+            #self.y = 0 
             self.size = 1
             self.energy_counter = 0
         
@@ -306,8 +306,8 @@ class grass:
             self.color = (255,255,255)
             self.move_x = 0
             self.move_y = 0
-            self.x = 0 
-            self.y = 0 
+            #self.x = 0 
+            #self.y = 0 
             self.size = 1
             self.energy_counter = 0
 if __name__ == "__main__":

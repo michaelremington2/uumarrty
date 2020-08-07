@@ -75,7 +75,7 @@ class sim:
                 dy = abs(kr.y - snake.y)
                 R = 5 #radius of strikes
                 if dx <= R and dy <= R:
-                    chance_to_kill = 50 #probability a kill is successful
+                    chance_to_kill = 90 #probability a kill is successful
                     strike = random.randrange(0,100)
                     if strike <= chance_to_kill:
                         kr.alive = False
@@ -202,7 +202,7 @@ if __name__ ==  "__main__":
     initial_snake_pop = 5
     initial_kr_pop = 30
     initial_bush_pop = 2
-    initial_grass_pop = 100
-    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop,30)
+    initial_grass_pop = 500
+    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop,60)
     sim.main()
     

@@ -2,12 +2,13 @@ import pygame
 import random
 import organisms
 import time
+import numpy as np
 
 class sim:
     def __init__(self,initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop, end_time=0):
         # Parameters
         self.width = 800
-        self.height = 600
+        self.height = 500
         self.background_color=(255,255,255)
         self.start = pygame.init()
         self.initial_snake_pop = initial_snake_pop
@@ -22,8 +23,9 @@ class sim:
         self.dead_kr_list = []
         self.dead_snake_list = []
         self.dead_grass_list = []
-        self.kr_energy = 0
+        self.krat_energy_check = []
         self.snake_energy = 0
+        self.time_history = {}
         self.end_time = end_time
 
     def background(self):
@@ -46,17 +48,17 @@ class sim:
             [organisms.grass(self.width,self.height) for i in range(self.initial_grass_pop)]
             ))
 
-    def add_organisms(self,org_list,org_type,time):
+    def add_organisms(self,org_list,org_type):
         '''Designates shape, color, and sets energy and move counters of objects depending on the organism type.
         org type is either KRAT, SNAKE, BUSH, GRASS.'''
         if org_type == 'KRAT':   
             for org in org_list:
-                org.krat_energy(time)
+                org.krat_energy(self.time_counter)
                 pygame.draw.circle(self.game_display,org.color,[org.x,org.y],org.size)
                 org.krat_move()
         elif org_type == 'SNAKE':
             for org in org_list:
-                org.snake_energy(time)
+                org.snake_energy(self.time_counter)
                 pygame.draw.circle(self.game_display,org.color,[org.x,org.y],org.size)
                 org.snake_move()
                 #org.move()
@@ -75,12 +77,12 @@ class sim:
                 dy = abs(kr.y - snake.y)
                 R = 5 #radius of strikes
                 if dx <= R and dy <= R:
-                    chance_to_kill = 90 #probability a kill is successful
+                    chance_to_kill = 95 #probability a kill is successful
                     strike = random.randrange(0,100)
                     if strike <= chance_to_kill:
+                        snake.energy_counter += kr.energy_counter*snake.metabolism #metabolism
                         kr.alive = False
                         kr.krat_dead()
-                        snake.energy_counter += kr.energy_counter*snake.metabolism #metabolism
                         pygame.display.update()
 
     def krat_grass_attack(self):
@@ -89,14 +91,15 @@ class sim:
         the kangaroo rat based on it's metabolism.'''
         for i, grass in self.grasses_dict.items():
             for j, kr in self.krat_dict.items():
-                dx = abs(grass.x - kr.x)
-                dy = abs(grass.y - kr.y)
-                R = 3 # radius of interest
-                if dx <= R and dy <= R:
-                    grass.alive = False
-                    grass.grass_dead()
-                    kr.energy_counter += grass.energy_counter*kr.metabolism #metabolism
-                    pygame.display.update()
+                if kr.energy_counter <= kr.hunger_level:
+                    dx = abs(grass.x - kr.x)
+                    dy = abs(grass.y - kr.y)
+                    R = 3 # radius of interest
+                    if dx <= R and dy <= R:
+                        grass.alive = False
+                        kr.energy_counter += grass.energy_counter*kr.metabolism #metabolism
+                        grass.grass_dead()
+                        pygame.display.update()
     
     def krat_bush_attack(self):
         '''Establishes kangaroo rats eating off bushes if it is in a 5 pixel  radius range of a bush. There is a 100% likelyhood
@@ -108,17 +111,48 @@ class sim:
                 dy = abs(bush.y - kr.y)
                 R = 5
                 if dx <= R and dy <= R:
-                    kr.energy_counter += 10*kr.metabolism
-                    bush.energy_counter += -10
+                    kr.energy_counter += 50*kr.metabolism
+                    bush.energy_counter += -50
                     bush.bush_dead()
                     pygame.display.update()
 
-    def krat_energy_total(self,time_counter):
-        '''Checks how an individual kangaroo rats metabolism changes over time for troublshooting.'''
-        kr=self.krat_dict.get(1)
-        print('Kangaroo Rat 1 Energy Counter ' + str(kr.energy_counter)+ 'time: ' +str(time_counter))
+    def organism_breed_type(self,org_type):
+        if org_type == 'KRAT':
+            x = organisms.kangaroo_rat(self.width,self.height)
+        elif org_type == 'SNAKE':
+            x = organisms.snake(self.width,self.height)
+        elif org_type == 'GRASS':
+            x = organisms.grass(self.width,self.height)
+        return x
 
-    def krat_count(self):
+    def breed(self,organism_dict,org_type):
+        if self.time_counter not in self.time_history:
+            #print('I made it 1 deep!')
+            for i,org in organism_dict.items():
+                prob = random.random() #number to check against breed probability
+                if prob <= org.litters_per_year:
+                    babies ={}
+                    #print('I made it 2 deep!')
+                    for i in range(org.children):
+                        max_key = max(organism_dict.keys())
+                        if (max_key+i) not in organism_dict and (max_key+i) not in babies:
+                            org_object = self.organism_breed_type(org_type)
+                            babies[(max_key+i)] = org_object
+            try:
+                organism_dict.update(babies)
+            except UnboundLocalError:
+                pass     
+
+    def krat_energy_total(self):
+        '''Checks how an individual kangaroo rats metabolism changes over time for troublshooting.'''
+        try:
+            kr=self.krat_dict.get(1)
+            #print('Kangaroo Rat 1 Energy Counter ' + str(kr.energy_counter)+ ' time: ' +str(time_counter))
+            self.krat_energy_check.append((self.time_counter,kr.energy_counter))
+        except AttributeError:
+            self.program_quit()
+
+    def krat_grave(self):
         '''Populates set of dead krat ID's to be used in the program for establishing counters. 
         Filters out dead Kangaroo Rats from the main kangaroo rat dictionary to save computational space.'''
         for j, kr in self.krat_dict.items():
@@ -126,7 +160,7 @@ class sim:
                 self.dead_kr_list.append(j)
             self.krat_dict = dict((j, self.krat_dict[j]) for j in self.krat_dict if j not in self.dead_kr_list)
 
-    def snake_count(self):
+    def snake_grave(self):
         '''Populates set of dead snake ID's to be used in the program for establishing counters. 
         Filters out dead snakes from the main snake dictionary to save computational space.'''
         for j, snake in self.snake_dict.items():
@@ -134,7 +168,7 @@ class sim:
                 self.dead_snake_list.append(j)
             self.snake_dict = dict((j, self.snake_dict[j]) for j in self.snake_dict if j not in self.dead_snake_list)
 
-    def grass_count(self):
+    def grass_grave(self):
         '''Populates set of dead grass ID's to be used in the program for establishing counters. 
         Filters out dead grasses from the main grass dictionary to save computational space.'''
         for j, grass in self.grasses_dict.items():
@@ -149,60 +183,74 @@ class sim:
         while elapsed < seconds:
             elapsed = round(time.time()) - start
     
-    def population_counts_and_time(self,time,num_snakes,num_rats,num_grass):
+    def population_counts_and_time(self,num_snakes,num_rats,num_grass):
         '''Sets legend. counts for time, snake population, and krat population'''
-        self.text1 = self.font.render("Time Step: "+str(time), True, (0,0,0))
+        self.text1 = self.font.render("Time Step: "+str(self.time_counter), True, (0,0,0))
         self.game_display.blit(self.text1,(0,0))
-        self.text2 = self.font.render("Snakes: "+ str(num_snakes-len(self.dead_snake_list)), True, (0,0,0))
+        self.text2 = self.font.render("Snakes: "+ str(len(self.snake_dict)), True, (0,0,0))
         self.game_display.blit(self.text2,(0,20))
-        self.text3 = self.font.render("Kangaroo Rats: "+ str(num_rats - len(self.dead_kr_list)), True, (0,0,0))
+        self.text3 = self.font.render("Kangaroo Rats: "+ str(len(self.krat_dict)), True, (0,0,0))
         self.game_display.blit(self.text3,(0,40))
         self.text4 = self.font.render("Grass: "+ str(num_grass- len(self.dead_grass_list)), True, (0,0,0))
         self.game_display.blit(self.text4,(0,55))
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
+        #print(np.array(self.krat_energy_check))
+        print(self.time_history)
         pygame.quit()
         quit() 
 
-    def program_time(self,time_counter):
+    def program_time(self):
         '''Runs quit system program once the end time (seconds) is reached.'''
         if self.end_time !=0:
-            if time_counter == self.end_time:
-                self.program_quit()         
+            if self.time_counter == self.end_time:
+                self.program_quit()
+
+    def history(self):
+        '''Creates a dictionary for analysis on how things change over time in the system.'''
+        snake_count = len(self.snake_dict)
+        krat_count = len(self.krat_dict)
+        grass_count = len(self.grasses_dict)
+        data = [snake_count,krat_count,grass_count]
+        if self.time_counter not in self.time_history:
+            self.time_history[self.time_counter] = data           
 
     def main(self):
         '''Main function that runs and compiles the program'''
         fps = 30
         start = round(time.time())
-        time_counter = 0
+        self.time_counter = 0
         self.set_organisms()
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.program_quit()
             self.background()
-            self.population_counts_and_time(time_counter,self.initial_snake_pop,self.initial_kr_pop,self.initial_grass_pop)
-            self.add_organisms(self.snake_dict.values(),'SNAKE',time_counter)
-            self.add_organisms(self.krat_dict.values(),'KRAT',time_counter)
-            self.add_organisms(self.bushes_dict.values(),'BUSH',time_counter)
-            self.add_organisms(self.grasses_dict.values(),'GRASS',time_counter)
+            self.population_counts_and_time(self.initial_snake_pop,self.initial_kr_pop,self.initial_grass_pop)
+            self.add_organisms(self.snake_dict.values(),'SNAKE')
+            self.add_organisms(self.krat_dict.values(),'KRAT')
+            self.add_organisms(self.bushes_dict.values(),'BUSH')
+            self.add_organisms(self.grasses_dict.values(),'GRASS')
             self.snake_attack()
             self.krat_grass_attack()
             self.krat_bush_attack()
             #self.krat_energy_total(time_counter)
             self.clock.tick(fps)
-            self.krat_count()
-            self.snake_count()
-            self.grass_count()
-            time_counter = round(time.time()) - start
-            self.program_time(time_counter)
+            self.krat_grave()
+            self.snake_grave()
+            self.grass_grave()
+            self.time_counter = round(time.time()) - start
+            self.breed(self.krat_dict,'KRAT')
+            self.breed(self.snake_dict,'SNAKE')
+            self.history()
+            self.program_time()
     
 if __name__ ==  "__main__":
-    initial_snake_pop = 5
-    initial_kr_pop = 30
+    initial_snake_pop = 15
+    initial_kr_pop = 40
     initial_bush_pop = 2
     initial_grass_pop = 500
-    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop,60)
+    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop)
     sim.main()
     

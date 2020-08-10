@@ -71,9 +71,16 @@ class snake(organism):
         self.size = 5
         self.boundary_x = boundary_x
         self.boundary_y = boundary_y
-        self.energy_counter = random.randrange(150,200)
+        self.energy_counter = random.randrange(150,300)
         self.alive = True
         self.metabolism = 0.5 #ability to metabolize food
+        self.hunger_level = 100
+        self.max_energy = 400
+        #self.litters_per_year = (1/365)
+        #self.children = 1
+        self.litters_per_year = (1/365)
+        self.children = 1
+    
 
     def snake_move_distance(self):
         y_short_distance = random.randrange(1,4)
@@ -104,7 +111,7 @@ class snake(organism):
         self.x_direction = random.choice([0,1])
         self.snake_move_distance()
         if self.x_distance == 0 and self.y_distance == 0:
-            time_in_loop = random.randrange(5000,10000)
+            time_in_loop = random.randrange(5000,50000)
             for i in range(time_in_loop):
                 self.move_x = 0
                 self.move_y = 0
@@ -148,10 +155,13 @@ class snake(organism):
 
     def snake_energy(self,time):
         if self.alive == True:
-            if time % 10 == 0:
-                self.energy_counter = self.energy_counter - 2
+            if time % 5 == 0:
+                self.energy_counter = self.energy_counter - 1
             else:
-                self.energy_counter = round(self.energy_counter)
+                if self.energy_counter > self.max_energy:
+                    self.energy_counter = self.max_energy
+                else:
+                    self.energy_counter = round(self.energy_counter)
             if self.energy_counter <= 1:
                 self.alive = False
                 self.snake_dead()
@@ -160,7 +170,7 @@ class snake(organism):
 
 
 class kangaroo_rat(organism):
-    def __init__(self,boundary_x=800,boundary_y = 800):
+    def __init__(self,boundary_x,boundary_y):
         super().__init__(boundary_x,boundary_y)
         self.color = (0,0,255)
         #animal_color('red')
@@ -169,7 +179,11 @@ class kangaroo_rat(organism):
         self.boundary_y = boundary_y
         self.energy_counter = random.randrange(50,60)
         self.alive = True
-        self.metabolism = .8
+        self.metabolism = 0.8
+        self.hunger_level = 75
+        self.max_energy = 100
+        self.litters_per_year = (random.choice([1,2])/365)
+        self.children = random.randrange(1,7)
     
     def krat_move_distance(self):
         y_short_distance = random.randrange(1,4)
@@ -242,10 +256,13 @@ class kangaroo_rat(organism):
 
     def krat_energy(self,time):
         if self.alive == True:
-            if time % 5 == 0:
+            if time % 3 == 0:
                 self.energy_counter = self.energy_counter - 1
-            elif time % 5 != 0:
-                self.energy_counter = round(self.energy_counter)
+            else:
+                if self.energy_counter > self.max_energy:
+                    self.energy_counter = self.max_energy
+                else:
+                    self.energy_counter = round(self.energy_counter)
             if self.energy_counter == 1:
                 self.alive = False
                 self.krat_dead()           
@@ -297,4 +314,3 @@ class grass:
             self.energy_counter = 0
 if __name__ == "__main__":
     pass
-

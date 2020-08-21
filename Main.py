@@ -8,7 +8,7 @@ class sim:
     def __init__(self,initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop, end_time=0):
         # Parameters
         self.width = 800
-        self.height = 500
+        self.height = 600
         self.background_color=(255,255,255)
         self.start = pygame.init()
         self.initial_snake_pop = initial_snake_pop
@@ -20,6 +20,7 @@ class sim:
         self.game_display = pygame.display.set_mode((self.width,self.height))
         self.caption = pygame.display.set_caption(self.title)
         self.font = pygame.font.SysFont(None, 25)
+        self.climate_grid = {}
         self.dead_kr_list = []
         self.dead_snake_list = []
         self.dead_grass_list = []
@@ -31,6 +32,31 @@ class sim:
     def background(self):
         '''Generates Game Background. This should be run first.'''
         self.game_display.fill(self.background_color)
+
+    def microclimate_grid_gen(self,origin,height,width):
+        '''origin is a tuple (x,y), height and width are the desired sizes of the microclimates
+        x and y are discrete integers.'''
+        origin_x = origin[0]
+        origin_y = origin[1]
+        end_x = origin[0]+width
+        end_y = origin[1]+height
+        climate_grid = []
+        for x in range(origin_x,end_x):
+            for y in range(origin_y,end_y):
+                climate_tuple_point=(x,y)
+                climate_grid.append(climate_tuple_point)
+        return climate_grid
+
+    def climate_grid_gen(self):
+        ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
+        The microclimate sizes are 200(h) x 160(w) pixels'''
+        height = 200
+        width = 160
+        origin = (0,0)
+        microclimate_key = 1
+        #while key <= 15:
+        #    climate_type = random.choice['open','bush']
+        #    climate_key = climate_type + str()
 
     def set_organisms(self):
         '''Initiates enumierated dictionaries of all the organism objects based on initial populations and randomly 

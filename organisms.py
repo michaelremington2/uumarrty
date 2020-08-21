@@ -66,7 +66,7 @@ class organism:
 
         
 class snake(organism):
-    def __init__(self,boundary_x=800,boundary_y = 800):
+    def __init__(self,boundary_x,boundary_y):
         super().__init__(boundary_x,boundary_y)
         self.color = (255,0,0)
         #animal_color('red')

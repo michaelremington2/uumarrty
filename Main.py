@@ -2,7 +2,7 @@ import pygame
 import random
 import organisms
 import time
-import numpy as np
+
 
 class sim:
     def __init__(self,initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop, end_time=0):
@@ -218,7 +218,7 @@ class sim:
 
     def main(self):
         '''Main function that runs and compiles the program'''
-        fps = 30
+        fps = 40
         start = round(time.time())
         self.time_counter = 0
         self.set_organisms()
@@ -253,4 +253,3 @@ if __name__ ==  "__main__":
     initial_grass_pop = 500
     sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop)
     sim.main()
-    

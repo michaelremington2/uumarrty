@@ -2,6 +2,7 @@ import pygame
 import random
 import organisms
 import time
+import numpy as np 
 
 
 class sim:
@@ -34,31 +35,22 @@ class sim:
         '''Generates Game Background. This should be run first.'''
         self.game_display.fill(self.background_color)
 
-    def microclimate_grid_gen(self,origin,height,width):
-        '''origin is a tuple (x,y), height and width are the desired sizes of the microclimates
-        x and y are discrete integers.'''
-        origin_x = origin[0]
-        origin_y = origin[1]
-        end_x = origin[0]+width
-        end_y = origin[1]+height
-        climate_range = (range(origin_x,end_x),range(origin_y,end_y))
-        return climate_range
-
     def climate_grid_gen(self):
         ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
         The microclimate sizes are 200(h) x 160(w) pixels'''
-        height = 200
-        width = 160
-        origin = [0,0]
+        micro_height = 200
+        micro_width = 160
         microclimate_key = 1
         while microclimate_key <= 15:
-            climate_type = random.choice(['open','bush'])
-            if microclimate_key not in self.climate_grid:
-                microclimate_grid = self.microclimate_grid_gen(origin,height,width)
-                self.climate_grid[microclimate_key] = [climate_type,microclimate_grid]
-                origin[0] += width
-                origin[1] += height
-                microclimate_key += 1 
+            for y in range(0,self.height, micro_height):
+                for x in range(0,self.width,micro_width):
+                    climate_type = random.choice(['open','bush'])
+                    if microclimate_key not in self.climate_grid:
+                        microclimate_grid = (np.arange(x,x+micro_width),np.arange(y,y+micro_height))
+                        self.climate_grid[microclimate_key] = [climate_type,microclimate_grid]
+                    microclimate_key += 1
+
+                 
 
     def set_organisms(self):
         '''Initiates enumierated dictionaries of all the organism objects based on initial populations and randomly 
@@ -225,7 +217,6 @@ class sim:
     def program_quit(self):
         '''Quits python and pygame when run.'''
         #print(np.array(self.krat_energy_check))
-        print(self.climate_grid)
         pygame.quit()
         quit() 
 

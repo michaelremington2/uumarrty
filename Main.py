@@ -21,6 +21,7 @@ class sim:
         self.caption = pygame.display.set_caption(self.title)
         self.font = pygame.font.SysFont(None, 25)
         self.climate_grid = {}
+        self.climate_grid_gen()
         self.dead_kr_list = []
         self.dead_snake_list = []
         self.dead_grass_list = []
@@ -40,23 +41,24 @@ class sim:
         origin_y = origin[1]
         end_x = origin[0]+width
         end_y = origin[1]+height
-        climate_grid = []
-        for x in range(origin_x,end_x):
-            for y in range(origin_y,end_y):
-                climate_tuple_point=(x,y)
-                climate_grid.append(climate_tuple_point)
-        return climate_grid
+        climate_range = (range(origin_x,end_x),range(origin_y,end_y))
+        return climate_range
 
     def climate_grid_gen(self):
         ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
         The microclimate sizes are 200(h) x 160(w) pixels'''
         height = 200
         width = 160
-        origin = (0,0)
+        origin = [0,0]
         microclimate_key = 1
-        #while key <= 15:
-        #    climate_type = random.choice['open','bush']
-        #    climate_key = climate_type + str()
+        while microclimate_key <= 15:
+            climate_type = random.choice(['open','bush'])
+            if microclimate_key not in self.climate_grid:
+                microclimate_grid = self.microclimate_grid_gen(origin,height,width)
+                self.climate_grid[microclimate_key] = [climate_type,microclimate_grid]
+                origin[0] += width
+                origin[1] += height
+                microclimate_key += 1 
 
     def set_organisms(self):
         '''Initiates enumierated dictionaries of all the organism objects based on initial populations and randomly 
@@ -223,7 +225,7 @@ class sim:
     def program_quit(self):
         '''Quits python and pygame when run.'''
         #print(np.array(self.krat_energy_check))
-        print(self.time_history)
+        print(self.climate_grid)
         pygame.quit()
         quit() 
 
@@ -232,6 +234,7 @@ class sim:
         if self.end_time !=0:
             if self.time_counter == self.end_time:
                 self.program_quit()
+                
 
     def history(self):
         '''Creates a dictionary for analysis on how things change over time in the system.'''

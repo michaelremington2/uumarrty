@@ -271,16 +271,25 @@ class kangaroo_rat(organism):
 
    
 class bush:
-    def __init__(self,boundary_x=800,boundary_y= 600):
+    def __init__(self,climate_grid, bush_microclimate_list,boundary_x=800,boundary_y= 600):
         self.color = (0,255,0)
-        self.wid= 15
-        self.length = 15
+        self.wid= 25
+        self.length = 25
         self.boundary_y = boundary_y
         self.boundary_x = boundary_x
-        self.x = random.randrange(0,boundary_x)
-        self.y = random.randrange(0,boundary_y)
+        self.climate_grid = climate_grid
+        self.assigned_grid_key = random.choice(bush_microclimate_list)
+        self.climate_grid_assign()
+        #self.x = random.randrange(0,boundary_x)
+        #self.y = random.randrange(0,boundary_y)
         self.energy_counter = random.randrange(2000,3000)
         self.alive = True
+
+    def climate_grid_assign(self):
+        assigned_grid = self.climate_grid[self.assigned_grid_key]
+        grid = assigned_grid[1] 
+        self.x = random.choice(grid[0])
+        self.y = random.choice(grid[1])
 
     def bush_dead(self):
         if self.energy_counter <=0:
@@ -294,16 +303,25 @@ class bush:
             self.energy_counter = 0
         
 class grass:
-    def __init__(self,boundary_x=800,boundary_y= 600):
+    def __init__(self,climate_grid, open_microclimate_list, boundary_x=800,boundary_y= 600):
         self.color = (0,255,0)
         self.wid= 2
         self.length = 2
         self.boundary_y = boundary_y
         self.boundary_x = boundary_x
-        self.x = random.randrange(0,boundary_x)
-        self.y = random.randrange(0,boundary_y)
+        self.climate_grid = climate_grid
+        self.assigned_grid_key = random.choice(open_microclimate_list)
+        #self.x = random.randrange(0,boundary_x)
+        #self.y = random.randrange(0,boundary_y)
+        self.climate_grid_assign()
         self.energy_counter = random.randrange(50,60)
         self.alive = True
+
+    def climate_grid_assign(self):
+        assigned_grid = self.climate_grid[self.assigned_grid_key]
+        grid = assigned_grid[1] 
+        self.x = random.choice(grid[0])
+        self.y = random.choice(grid[1])
 
     def grass_dead(self):
         if self.alive == False:

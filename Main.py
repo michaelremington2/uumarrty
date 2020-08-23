@@ -22,6 +22,8 @@ class sim:
         self.caption = pygame.display.set_caption(self.title)
         self.font = pygame.font.SysFont(None, 25)
         self.climate_grid = {}
+        self.open_area_keys = []
+        self.bush_area_keys = []
         self.climate_grid_gen()
         self.dead_kr_list = []
         self.dead_snake_list = []
@@ -35,6 +37,14 @@ class sim:
         '''Generates Game Background. This should be run first.'''
         self.game_display.fill(self.background_color)
 
+    def microclimate_key_list_gen(self,microclimate_key,climate_type):
+        if climate_type == 'bush':
+            self.bush_area_keys.append(microclimate_key)
+        elif climate_type == 'open':
+            self.open_area_keys.append(microclimate_key)
+        else:
+            raise ValueError('Too many microclimates defined')
+
     def climate_grid_gen(self):
         ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
         The microclimate sizes are 200(h) x 160(w) pixels'''
@@ -45,6 +55,7 @@ class sim:
             for y in range(0,self.height, micro_height):
                 for x in range(0,self.width,micro_width):
                     climate_type = random.choice(['open','bush'])
+                    self.microclimate_key_list_gen(microclimate_key,climate_type)
                     if microclimate_key not in self.climate_grid:
                         microclimate_grid = (np.arange(x,x+micro_width),np.arange(y,y+micro_height))
                         self.climate_grid[microclimate_key] = [climate_type,microclimate_grid]
@@ -55,18 +66,19 @@ class sim:
     def set_organisms(self):
         '''Initiates enumierated dictionaries of all the organism objects based on initial populations and randomly 
         places objects across the area of the board.'''
+        self.bushes_dict = dict(enumerate(
+            [organisms.bush(self.climate_grid,self.bush_area_keys,self.width,self.height) for i in range(self.initial_bush_pop)]
+            ))
+        self.grasses_dict = dict(enumerate(
+            [organisms.grass(self.climate_grid,self.open_area_keys,self.width,self.height) for i in range(self.initial_grass_pop)]
+            ))
         self.snake_dict = dict(enumerate(
             [organisms.snake(self.width,self.height) for i in range(self.initial_snake_pop)]
             ))
         self.krat_dict = dict(enumerate(
             [organisms.kangaroo_rat(self.width,self.height) for i in range(self.initial_kr_pop)]
             ))
-        self.bushes_dict = dict(enumerate(
-            [organisms.bush(self.width,self.height) for i in range(self.initial_bush_pop)]
-            ))
-        self.grasses_dict = dict(enumerate(
-            [organisms.grass(self.width,self.height) for i in range(self.initial_grass_pop)]
-            ))
+
 
     def add_organisms(self,org_list,org_type):
         '''Designates shape, color, and sets energy and move counters of objects depending on the organism type.
@@ -216,7 +228,6 @@ class sim:
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
-        #print(np.array(self.krat_energy_check))
         pygame.quit()
         quit() 
 
@@ -269,7 +280,7 @@ class sim:
 if __name__ ==  "__main__":
     initial_snake_pop = 15
     initial_kr_pop = 40
-    initial_bush_pop = 2
+    initial_bush_pop = 40
     initial_grass_pop = 500
     sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop)
     sim.main()

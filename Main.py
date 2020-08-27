@@ -228,6 +228,7 @@ class sim:
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
+        print(self.climate_grid[1])
         pygame.quit()
         quit() 
 

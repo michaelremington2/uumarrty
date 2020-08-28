@@ -22,9 +22,11 @@ class sim:
         self.caption = pygame.display.set_caption(self.title)
         self.font = pygame.font.SysFont(None, 25)
         self.climate_grid = {}
+        self.climate_grid_beta = {}
         self.open_area_keys = []
         self.bush_area_keys = []
         self.climate_grid_gen()
+        self.climate_grid_gen_beta()
         self.dead_kr_list = []
         self.dead_snake_list = []
         self.dead_grass_list = []
@@ -61,6 +63,37 @@ class sim:
                         self.climate_grid[microclimate_key] = [climate_type,microclimate_grid]
                     microclimate_key += 1
 
+    def micro_climate_grid_gen_beta(self,start_x,start_y):
+        ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
+        The microclimate sizes are 200(h) x 160(w) pixels'''
+        micro_height = 200
+        micro_width = 160
+        micro_grid = []
+        for x in range(start_x,start_x+micro_width):
+            for y in range(start_y,start_y+micro_height):
+                point = (x,y)
+                micro_grid.append(point)
+        return np.array(micro_grid)
+
+    def climate_grid_gen_beta(self):
+        ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
+        The microclimate sizes are 200(h) x 160(w) pixels'''
+        micro_height = 200
+        micro_width = 160
+        microclimate_key = 1
+        start_x_list = list(range(0,self.width,micro_width))
+        start_y_list = list(range(0,self.height,micro_height))
+        microclimate_key = 1
+        for x in start_x_list:
+            for y in start_y_list:
+                climate_type = random.choice(['open','bush'])
+                #self.microclimate_key_list_gen(microclimate_key,climate_type)
+                if microclimate_key not in self.climate_grid_beta:
+                    microclimate_grid = self.micro_climate_grid_gen_beta(x,y)
+                    self.climate_grid_beta[microclimate_key] = [climate_type,microclimate_grid]
+                microclimate_key += 1
+                if microclimate_key > 15:
+                    break
                  
 
     def set_organisms(self):
@@ -78,6 +111,10 @@ class sim:
         self.krat_dict = dict(enumerate(
             [organisms.kangaroo_rat(self.width,self.height) for i in range(self.initial_kr_pop)]
             ))
+
+    #def org_microhabitat_check(self,org_x_coord,org_y_coord):
+    #    for key, microclimates in self.climate_grid.items():
+
 
 
     def add_organisms(self,org_list,org_type):
@@ -228,7 +265,8 @@ class sim:
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
-        print(self.climate_grid[1])
+        print(self.climate_grid_beta[1])
+        print(self.climate_grid_beta[15])
         pygame.quit()
         quit() 
 

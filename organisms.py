@@ -78,8 +78,6 @@ class snake(organism):
         self.metabolism = 0.5 #ability to metabolize food
         self.hunger_level = 100
         self.max_energy = 400
-        #self.litters_per_year = (1/365)
-        #self.children = 1
         self.litters_per_year = (1/365)
         self.children = 1
     
@@ -288,8 +286,9 @@ class bush:
     def climate_grid_assign(self):
         assigned_grid = self.climate_grid[self.assigned_grid_key]
         grid = assigned_grid[1] 
-        self.x = random.choice(grid[0])
-        self.y = random.choice(grid[1])
+        point = random.choice(grid)
+        self.x = point[0] 
+        self.y = point[1] 
 
     def bush_dead(self):
         if self.energy_counter <=0:
@@ -320,8 +319,9 @@ class grass:
     def climate_grid_assign(self):
         assigned_grid = self.climate_grid[self.assigned_grid_key]
         grid = assigned_grid[1] 
-        self.x = random.choice(grid[0])
-        self.y = random.choice(grid[1])
+        point = random.choice(grid)
+        self.x = point[0] 
+        self.y = point[1] 
 
     def grass_dead(self):
         if self.alive == False:

@@ -29,7 +29,6 @@ class sim:
         self.dead_snake_list = []
         self.dead_grass_list = []
         self.krat_energy_check = []
-        self.snake_energy = 0
         self.time_history = {}
         self.end_time = end_time
 
@@ -258,13 +257,11 @@ class sim:
         self.game_display.blit(self.text2,(0,20))
         self.text3 = self.font.render("Kangaroo Rats: "+ str(len(self.krat_dict)), True, (0,0,0))
         self.game_display.blit(self.text3,(0,40))
-        self.text4 = self.font.render("Grass: "+ str(num_grass- len(self.dead_grass_list)), True, (0,0,0))
+        self.text4 = self.font.render("Grass: "+ str(len(self.grasses_dict)), True, (0,0,0))
         self.game_display.blit(self.text4,(0,55))
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
-        print(self.climate_grid[1])
-        print(self.climate_grid[15])
         pygame.quit()
         quit() 
 
@@ -282,7 +279,33 @@ class sim:
         grass_count = len(self.grasses_dict)
         data = [snake_count,krat_count,grass_count]
         if self.time_counter not in self.time_history:
-            self.time_history[self.time_counter] = data           
+            self.time_history[self.time_counter] = data
+
+    def climate_use_analysis_setup(self,animal_dict):
+        '''input animal dictionary: (krat or snake) and this function sets for the class whether or not
+        the animal is in the open or in bush microhabitiat. '''
+        for animal_keys, animal in animal_dict.items(): 
+            for climate_keys, microclimate in self.climate_grid.items():
+                microclimate_type = microclimate[0]
+                grid = microclimate[1]
+                animal_loc = (animal.x,animal.y)
+                if animal_loc in grid:
+                    if microclimate_type == 'bush':
+                        animal.in_open == False
+                        animal.in_bush == True
+                    elif microclimate_type == 'open':
+                        animal.in_bush == False
+                        animal.in_open == True
+
+    def climate_use_analysis(self,animal_dict):
+        open_animals = []
+        for animal_key, animal in animal_dict.items():
+            if animal.in_open == True and animal_key not in open_animals:
+                open_animals.append(animal_key)
+            elif animal.in_open == False and animal_key in open_animals:
+                open_animals = [n for n in open_animals if n != animal_key]
+
+
 
     def main(self):
         '''Main function that runs and compiles the program'''

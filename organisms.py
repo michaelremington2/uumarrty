@@ -80,6 +80,8 @@ class snake(organism):
         self.max_energy = 400
         self.litters_per_year = (1/365)
         self.children = 1
+        self.in_open = bool() 
+        self.in_bush = bool()
     
 
     def snake_move_distance(self):
@@ -184,6 +186,8 @@ class kangaroo_rat(organism):
         self.max_energy = 100
         self.litters_per_year = (random.choice([1,2])/365)
         self.children = random.randrange(1,7)
+        self.in_open = bool() 
+        self.in_bush = bool()
     
     def krat_move_distance(self):
         y_short_distance = random.randrange(1,4)

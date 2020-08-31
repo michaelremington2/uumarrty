@@ -12,7 +12,8 @@ class organism:
         self.boundary_x = boundary_x
         self.x = random.randrange(0,boundary_x)
         self.y = random.randrange(0,boundary_x)
-        self.point =(self.x,self.y)
+        self.point =[self.x,self.y]
+        self.alive = True
     
     def animal_color(self,color_name):
         ''' red, blue, green, white, black, random'''
@@ -186,8 +187,8 @@ class kangaroo_rat(organism):
         self.max_energy = 100
         self.litters_per_year = (random.choice([1,2])/365)
         self.children = random.randrange(1,7)
-        self.in_open = bool() 
-        self.in_bush = bool()
+        self.in_open = False
+        self.in_bush = False
     
     def krat_move_distance(self):
         y_short_distance = random.randrange(1,4)
@@ -332,8 +333,6 @@ class grass:
             self.color = (255,255,255)
             self.move_x = 0
             self.move_y = 0
-            #self.x = 0 
-            #self.y = 0 
             self.size = 1
             self.energy_counter = 0
 if __name__ == "__main__":

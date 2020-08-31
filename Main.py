@@ -29,6 +29,10 @@ class sim:
         self.dead_snake_list = []
         self.dead_grass_list = []
         self.krat_energy_check = []
+        self.krat_open = []
+        self.krat_bush = []
+        self.snake_open = []
+        self.snake_bush = []
         self.time_history = {}
         self.end_time = end_time
 
@@ -68,9 +72,9 @@ class sim:
         micro_grid = []
         for x in range(start_x,start_x+micro_width):
             for y in range(start_y,start_y+micro_height):
-                point = (x,y)
+                point = [x,y]
                 micro_grid.append(point)
-        return np.array(micro_grid)
+        return micro_grid
 
     def climate_grid_gen(self):
         ''' This function breaks the game grid into 15 rectangular microclimates and labels them as such.
@@ -94,7 +98,7 @@ class sim:
                  
 
     def set_organisms(self):
-        '''Initiates enumierated dictionaries of all the organism objects based on initial populations and randomly 
+        '''Initiates enumierated dictionaries of all thfe organism objects based on initial populations and randomly 
         places objects across the area of the board.'''
         self.bushes_dict = dict(enumerate(
             [organisms.bush(self.climate_grid,self.bush_area_keys,self.width,self.height) for i in range(self.initial_bush_pop)]
@@ -224,6 +228,8 @@ class sim:
         for j, kr in self.krat_dict.items():
             if kr.alive == False:
                 self.dead_kr_list.append(j)
+            self.krat_bush = [n for n in self.krat_bush if n not in self.dead_kr_list]
+            self.krat_open = [n for n in self.krat_open if n not in self.dead_kr_list]
             self.krat_dict = dict((j, self.krat_dict[j]) for j in self.krat_dict if j not in self.dead_kr_list)
 
     def snake_grave(self):
@@ -241,7 +247,67 @@ class sim:
             if grass.alive == False:
                 self.dead_grass_list.append(j)
             self.grasses_dict = dict((j, self.grasses_dict[j]) for j in self.grasses_dict if j not in self.dead_grass_list)
+
+    def climate_use_analysis_setup(self,animal_dict):
+        '''input animal dictionary: (krat or snake) and this function sets for the class whether or not
+        the animal is in the open or in bush microhabitiat. '''
+        for animal_keys, animal in animal_dict.items(): 
+            for climate_keys, microclimate in self.climate_grid.items():
+                microclimate_type = microclimate[0]
+                grid = microclimate[1]
+                animal_loc = [animal.x,animal.y]
+                if animal_loc in grid:
+                    if microclimate_type == 'bush':
+                        animal.in_open = False
+                        animal.in_bush = True
+                    elif microclimate_type == 'open':
+                        animal.in_bush = False
+                        animal.in_open = True
     
+    def krat_climate_use_sets(self):
+        '''Function generates sets of krat keys that are in open or in bush. If they transition this algorythm should catch the movement
+        and adjust sets appropriatly so that krat_open and krat_bush are accurate sets'''
+        for krat_key, krat in self.krat_dict.items():
+            if krat.in_open == True and krat_key not in self.krat_open:
+                self.krat_open.append(krat_key)
+            elif krat.in_open == False and krat_key in self.krat_open:
+                self.krat_open = [n for n in self.krat_open if n not in self.krat_bush]
+            elif krat.in_bush == True and krat_key not in self.krat_bush:
+                self.krat_bush.append(krat_key)
+            elif krat.in_bush == False and krat_key in self.krat_bush:
+                self.krat_bush = [n for n in self.krat_bush if n not in self.krat_open]
+
+    def krat_climate_use_analysis(self):
+        if len(self.krat_dict) != 0:
+            krat_open_ratio = float(len(self.krat_open))/float(len(self.krat_dict))
+            krat_bush_ratio = float(len(self.krat_bush))/float(len(self.krat_dict))
+        else:
+            krat_open_ratio = 0
+            krat_bush_ratio = 0
+        return [round(krat_open_ratio,3),round(krat_bush_ratio,3)]
+
+    def snake_climate_use_sets(self):
+        '''Function generates sets of krat keys that are in open or in bush. If they transition this algorythm should catch the movement
+        and adjust sets appropriatly so that krat_open and krat_bush are accurate sets'''
+        for snake_key, snake in self.snake_dict.items():
+            if snake.in_open == True and snake_key not in self.snake_open:
+                self.snake_open.append(snake_key)
+            elif snake.in_open == False and snake_key in self.snake_open:
+                self.snake_open = [n for n in self.snake_open if n not in self.snake_bush]
+            elif snake.in_bush == True and snake_key not in self.snake_bush:
+                self.snake_bush.append(snake_key)
+            elif snake.in_bush == False and snake_key in self.snake_bush:
+                self.snake_bush = [n for n in self.snake_bush if n not in self.snake_open]
+
+    def snake_climate_use_analysis(self):
+        if len(self.snake_dict) != 0:
+            snake_open_ratio = float(len(self.snake_open))/float(len(self.snake_dict))
+            snake_bush_ratio = float(len(self.snake_bush))/float(len(self.snake_dict))
+        else:
+            snake_open_ratio = 0
+            snake_bush_ratio = 0
+        return [round(snake_open_ratio,3),round(snake_bush_ratio,3)]
+
     def stopwatch(self,seconds):
         '''This function was just for tests of the systems clock.'''
         start = round(time.time())
@@ -262,6 +328,7 @@ class sim:
 
     def program_quit(self):
         '''Quits python and pygame when run.'''
+        print(self.time_history)
         pygame.quit()
         quit() 
 
@@ -277,39 +344,16 @@ class sim:
         snake_count = len(self.snake_dict)
         krat_count = len(self.krat_dict)
         grass_count = len(self.grasses_dict)
-        data = [snake_count,krat_count,grass_count]
+        krat_microclimate_ratios = self.krat_climate_use_analysis()
+        snake_microclimate_ratios = self.snake_climate_use_analysis()
+        data = [snake_count,krat_count,grass_count,krat_microclimate_ratios,snake_microclimate_ratios]
         if self.time_counter not in self.time_history:
             self.time_history[self.time_counter] = data
-
-    def climate_use_analysis_setup(self,animal_dict):
-        '''input animal dictionary: (krat or snake) and this function sets for the class whether or not
-        the animal is in the open or in bush microhabitiat. '''
-        for animal_keys, animal in animal_dict.items(): 
-            for climate_keys, microclimate in self.climate_grid.items():
-                microclimate_type = microclimate[0]
-                grid = microclimate[1]
-                animal_loc = (animal.x,animal.y)
-                if animal_loc in grid:
-                    if microclimate_type == 'bush':
-                        animal.in_open == False
-                        animal.in_bush == True
-                    elif microclimate_type == 'open':
-                        animal.in_bush == False
-                        animal.in_open == True
-
-    def climate_use_analysis(self,animal_dict):
-        open_animals = []
-        for animal_key, animal in animal_dict.items():
-            if animal.in_open == True and animal_key not in open_animals:
-                open_animals.append(animal_key)
-            elif animal.in_open == False and animal_key in open_animals:
-                open_animals = [n for n in open_animals if n != animal_key]
-
 
 
     def main(self):
         '''Main function that runs and compiles the program'''
-        fps = 40
+        fps = 30
         start = round(time.time())
         self.time_counter = 0
         self.set_organisms()
@@ -323,6 +367,10 @@ class sim:
             self.add_organisms(self.krat_dict.values(),'KRAT')
             self.add_organisms(self.bushes_dict.values(),'BUSH')
             self.add_organisms(self.grasses_dict.values(),'GRASS')
+            self.climate_use_analysis_setup(self.krat_dict)
+            self.climate_use_analysis_setup(self.snake_dict)
+            self.krat_climate_use_sets()
+            self.snake_climate_use_sets()
             self.snake_attack()
             self.krat_grass_attack()
             self.krat_bush_attack()
@@ -338,9 +386,9 @@ class sim:
             self.program_time()
     
 if __name__ ==  "__main__":
-    initial_snake_pop = 15
-    initial_kr_pop = 40
-    initial_bush_pop = 40
+    initial_snake_pop = 3
+    initial_kr_pop = 10
+    initial_bush_pop = 10
     initial_grass_pop = 500
-    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop)
+    sim = sim(initial_snake_pop,initial_kr_pop,initial_bush_pop,initial_grass_pop,20)
     sim.main()

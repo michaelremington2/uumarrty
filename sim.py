@@ -1,3 +1,4 @@
+import random
 class Cell(object):
 	def __init__(self,landscape, habitat_type,rat_energy_cost,snake_energy_cost,rat_energy_gain,strike_success_probability):
 		# Order: open, bush
@@ -29,13 +30,13 @@ class Cell(object):
 
 	def pop_rat(self):
 		# Selects a rat at random from population and removes it and return it
-		rat_index = self.rng.randint(0,len(self.rats)-1)
+		rat_index = random.randint(0,len(self.rats)-1)
 		return self.rats.pop(rat_index)
 
 	def pop_snake(self):
 		# Selects a snake at random from population and removes it and return it
 		snake_index = self.rng.randint(0,len(self.snakes)-1)
-		return self.snakes.pop(rat_index)
+		return self.snakes.pop(snake_index)
 
 	def predation_cycle_snake(self):
 		for snake in self.snakes:

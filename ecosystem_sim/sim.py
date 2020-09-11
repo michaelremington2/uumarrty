@@ -41,6 +41,7 @@ class Cell(object):
 
 	def pop_snake(self):
 		# Selects a snake at random from population and removes it and return it
+		for snake in self.snakes
 		return self.snakes.pop(snake_index)
 
 	def predation_cycle_snake(self):
@@ -52,9 +53,8 @@ class Cell(object):
 
 	def foraging_rat(self):
 		for krat in self.krats:
-			if krat.foraging == True:
-				krat.expend_energy(self.krat_energy_cost)
-				krat.gain_energy(self.krat_energy_gain)
+			krat.expend_energy(self.krat_energy_cost)
+			krat.gain_energy(self.krat_energy_gain)
 
 
 class Landscape(object):

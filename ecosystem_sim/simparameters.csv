@@ -1,0 +1,2 @@
+﻿Sim Number,size_of_landscape,initial_snake_pop,initial_krat_pop,cell_energy_pool,krat_initial_energy,snake_initial_energy,krat_energy_cost,snake_energy_cost,krat_energy_gain,strike_success_probability
+1,15,3,20,1000,30,120,1,1,5,0.1

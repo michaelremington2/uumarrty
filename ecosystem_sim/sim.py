@@ -1,11 +1,12 @@
 #rng = random.Random()
 #rng = random.Random(random_seed)
 import random
-from organismsim import krat 
-from organismsim import snake
+import csv
+from organismsim import Krat 
+from organismsim import Snake
 
 class Cell(object):
-    def __init__(self, time_of_day, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,,rng):
+    def __init__(self, time_of_day, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,rng):
         #cell represents the microhabitat and governs shorter geospatial interactions
         # Order: open, bush
         self.time_of_day = time_of_day
@@ -68,7 +69,8 @@ class Cell(object):
 
 
 class Landscape(object):
-    def __init__(self,size_of_landscape,krat_initial_energy,krat_energy_cost,krat_energy_gain,snake_initial_energy, snake_energy_cost,snake_strike_success_probability,cell_energy_pool, initial_snake_pop,initial_krat_pop,rng):
+    def __init__(self,size_of_landscape,cell_energy_pool,rng,open_to_bush_proportion = [0.5,0.5]):
+        '''Cells are 10 x 10m'''
         #landscape is a container for cells and governs movements of critters in cells, and large sclae climate parameters.
         #boskilla 1 x 0.8km 80,000 m^2
         #bush (Larrea tridentata) under canopy of creosote up to 10m in diameter Square assumption (10x10m) = 100m^2 circle assumption pi*5^2 = 78.53m^2
@@ -76,25 +78,78 @@ class Landscape(object):
         #grass under or within 50cm of grass
         #bush cover 1.9% (1520m^2), grass 24.1%(19,280m^2), open 74% (59000^2)
         self.cells = []
-        self.size_of_landscape = size_of_landscape
-        self.initial_snake_pop = initial_snake_pop
-        self.initial_krat_pop = initial_krat_pop
-        self.krat_initial_energy = krat_initial_energy
-        self.snake_initial_energy = snake_initial_energy
-        self.krat_energy_cost = krat_energy_cost
-        self.snake_energy_cost = snake_energy_cost
-        self.krat_energy_gain = krat_energy_gain
-        self.cell_energy_pool = cell_energy_pool
-        self.snake_strike_success_probability = snake_strike_success_probability
+        self.size_of_landscape = size_of_landscape # tuple of width and height
+        self.open_to_bush_proportion = open_to_bush_proportion
         self.rng = rng
         self.gen_cell_list()
 
     def assign_cell_type(self):
-        microclimate_type = self.rng.choice(['open','bush'])
+        microclimate_type = self.rng.choices(['open','bush'],self.open_to_bush_proportion, k = 1)
         return microclimate_type
 
     def add_cell(self,cell):
         self.cells.append(cell)
+
+    def gen_cell_list(self):
+        for i in range(size_of_landscape):
+            habitat_type = self.assign_cell_type()
+            cell = Cell(habitat_type,self.krat_energy_cost,self.snake_energy_cost,self.krat_energy_gain,self.cell_energy_pool, self.initial_snake_pop,self.initial_krat_pop,self.rng)
+            self.add_snakes(cell)
+            self.add_cell(cell)
+
+    def cell_size(self):
+        m = round(self.size_of_landscape[0]/10)
+        n = round(self.size_of_landscape[1]/10)
+        return (m,n)
+
+
+
+
+class Sim(object):
+    #compiles landscape and designates parameters to the landscape. allows landscape to progress through time.
+    def __init__(self,csv_file_path):
+        self.csv_file_path = csv_file_path
+        self.sim_number = 1
+        self.time_of_day = 0
+        self.set_parameters()
+        self.rng = random.Random()
+
+    def open_file(self):
+        '''Enter the general file name. This command opens the file then appends the data to a list.'''
+        with open(self.csv_file_path, 'r') as sim_file:
+            sim_parameters= []
+            for row in csv.reader(sim_file):
+                sim_parameters.append(row)
+            self.number_of_sims = len(sim_parameters)- 1
+            return sim_parameters
+
+    def unpack_parameters(self,sim_number):
+        sim_parameters = self.open_file()
+        if self.number_of_sims == 0:
+            RaiseValueError('Input sim parameters')
+        return sim_parameters[sim_number]
+
+    def set_parameters(self):
+        parameters = self.unpack_parameters(1)
+        self.end_time = int(parameters[1])*24
+        self.time_line = range(0,self.end_time)
+        self.landscape_width = int(parameters[2])
+        self.landscape_height = int(parameters[3])
+        self.initial_snake_pop = int(parameters[4])
+        self.initial_krat_pop = int(parameters[5])
+        self.cell_energy_pool = int(parameters[6])
+        self.snake_initial_energy = int(parameters[7])
+        self.krat_initial_energy = int(parameters[8])
+        self.snake_energy_cost = int(parameters[9])
+        self.krat_energy_cost = int(parameters[10])
+        self.snake_strike_success_probability = float(parameters[11])
+        self.krat_energy_gain = int(parameters[12])
+
+    def hour_tick(self):
+        if self.time_of_day >= 24:
+            self.time_of_day = 0
+        else:
+            self.time_of_day += 1
 
     def add_snakes(self,cell):
         for i in range(self.initial_snake_pop):
@@ -106,26 +161,13 @@ class Landscape(object):
             krat = Krat(energy_counter = self.krat_initial_energy,home_cell = cell, rng = self.rng)
             cell.add_krat(krat)
 
-    def gen_cell_list(self):
-        for i in range(size_of_landscape):
-            habitat_type = self.assign_cell_type()
-            cell = Cell(habitat_type,self.krat_energy_cost,self.snake_energy_cost,self.krat_energy_gain,self.cell_energy_pool, self.initial_snake_pop,self.initial_krat_pop,self.rng)
-            self.add_snakes(cell)
-            self.add_cell(cell)
+    def initialize_cell(self):
+        pass
 
+    def initialize_landscape(self):
+        pass
 
-
-class.Sim(object):
-    #compiles landscape and designates parameters to the landscape. allows landscape to progress through time.
-    def __init__(self,size_of_landscape,number_of_days):
-        self.end_time = length_of_time_days*24
-        self.time_line = range(0,self.end_time)
-        self.time_of_day = 0
-        self.rng = random.Random()
-
-    def hour_tick(self):
-        if self.time_of_day >= 24:
-            self.time_of_day = 0
-        else:
-            self.time_of_day += 1
+if __name__ ==  "__main__":
+    sim = Sim('simparameters.csv')
+    print(sim.end_time)
 

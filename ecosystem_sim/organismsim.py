@@ -30,7 +30,7 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,energy_counter,strike_success_probability,hunting_hours = None,rng):
+    def __init__(self,energy_counter,strike_success_probability,rng,hunting_hours = None):
         super().__init__(landscape,energy_counter)
         self.energy_counter = energy_counter
         self.strike_success_probability = strike_success_probability
@@ -51,14 +51,15 @@ class Snake(Organism):
 
 
 class Krat(Organism):
-    def __init__(self,energy_counter,home_cell,rng):
+    def __init__(self,energy_counter,home_cell,rng,foraging_hours = None):
         super().__init__(landscape,energy_counter)
         self.energy_counter = energy_counter
         self.home_cell = home_cell
         self.foraging = False
+        self.foraging_hours = self.foraging_period_gen(foraging_hours)
         self.rng = rng
 
-    def hunting_period_gen(self,foraging_hours):
+    def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
             foraging_hours = [0,1,2,3,4,5,20,21,22,23]
         return foraging_hours

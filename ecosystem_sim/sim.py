@@ -113,6 +113,8 @@ class Sim(object):
         self.time_of_day = 0
         self.set_parameters()
         self.rng = random.Random()
+        self.landscape_dimensions = [self.landscape_width,self.landscape_height]
+        self.landscape = Landscape(self.landscape_dimensions,self.cell_energy_pool,self.rng)
 
     def open_file(self):
         '''Enter the general file name. This command opens the file then appends the data to a list.'''

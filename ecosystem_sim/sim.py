@@ -1,6 +1,7 @@
 #rng = random.Random()
 #rng = random.Random(random_seed)
 import random
+import numpy as np
 import csv
 from organismsim import Krat 
 from organismsim import Snake
@@ -55,7 +56,7 @@ class Cell(object):
     def predation_cycle_snake(self):
         for snake in self.snakes:
             snake.expend_energy(self.snake_energy_cost)
-            if self.rng < self.strike_success_probability:
+            if self.rng < snake.strike_success_probability:
                 krat = self.select_krat()
                 snake.consume(krat)
                 self.pop_krat() 
@@ -81,17 +82,14 @@ class Landscape(object):
         self.size_of_landscape = size_of_landscape # tuple of width and height
         self.open_to_bush_proportion = open_to_bush_proportion
         self.rng = rng
-        self.gen_cell_list()
+        #self.gen_cell_list()
 
     def assign_cell_type(self):
         microclimate_type = self.rng.choices(['open','bush'],self.open_to_bush_proportion, k = 1)
         return microclimate_type
 
-    def add_cell(self,cell):
-        self.cells.append(cell)
-
     def gen_cell_list(self):
-        for i in range(size_of_landscape):
+        for i in range(self.size_of_landscape):
             habitat_type = self.assign_cell_type()
             cell = Cell(habitat_type,self.krat_energy_cost,self.snake_energy_cost,self.krat_energy_gain,self.cell_energy_pool, self.initial_snake_pop,self.initial_krat_pop,self.rng)
             self.add_snakes(cell)
@@ -114,7 +112,8 @@ class Sim(object):
         self.set_parameters()
         self.rng = random.Random()
         self.landscape_dimensions = [self.landscape_width,self.landscape_height]
-        self.landscape = Landscape(self.landscape_dimensions,self.cell_energy_pool,self.rng)
+        self.landscape = Landscape(size_of_landscape = self.landscape_dimensions,cell_energy_pool = self.cell_energy_pool,rng = self.rng)
+        self.populate_landscape()
 
     def open_file(self):
         '''Enter the general file name. This command opens the file then appends the data to a list.'''
@@ -159,17 +158,30 @@ class Sim(object):
             cell.add_snake(snake)
 
     def add_krats(self,cell):
-        for i in range(self.initial_snake_pop):
+        for i in range(self.initial_krat_pop):
             krat = Krat(energy_counter = self.krat_initial_energy,home_cell = cell, rng = self.rng)
             cell.add_krat(krat)
 
     def initialize_cell(self):
-        pass
+        cell = Cell(time_of_day = self.time_of_day, habitat_type = self.landscape.assign_cell_type(),krat_energy_cost = self.krat_energy_cost,snake_energy_cost = self.snake_energy_cost,krat_energy_gain = self.krat_energy_gain,cell_energy_pool = self.cell_energy_pool,rng = self.rng)
+        return cell
 
-    def initialize_landscape(self):
-        pass
+    def populate_landscape(self):
+        cells_wide = int(round(self.landscape_width/10))
+        cells_height = int(round(self.landscape_height/10))
+        for j in range(cells_height):
+            x_cells = []
+            for i in range(cells_wide):
+                cell = self.initialize_cell()
+                x_cells.append(cell)
+            self.landscape.cells.append(x_cells)
+
+    def get_landscape(self):
+        return self.landscape.cells
+
 
 if __name__ ==  "__main__":
     sim = Sim('simparameters.csv')
-    print(sim.end_time)
+    landscape_cells = sim.get_landscape()
+    print(landscape_cells)
 

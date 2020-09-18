@@ -1,2 +1,2 @@
 ﻿Sim Number,days_of_sim,width_of_landscape,height_of_landscape,initial_snake_pop,initial_krat_pop,cell_energy_pool,snake_initial_energy,krat_initial_energy,snake_energy_cost,krat_energy_cost,strike_success_probability,krat_energy_gain
-1,90,1000,800,3,20,1000,120,30,1,1,0.1,5
+1,90,100,80,3,20,1000,120,30,1,1,0.1,5

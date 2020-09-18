@@ -7,7 +7,7 @@ from organismsim import Krat
 from organismsim import Snake
 
 class Cell(object):
-    def __init__(self, time_of_day, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,rng):
+    def __init__(self, time_of_day, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,cell_id,rng):
         #cell represents the microhabitat and governs shorter geospatial interactions
         # Order: open, bush
         self.time_of_day = time_of_day
@@ -18,6 +18,7 @@ class Cell(object):
         self.snake_energy_cost = snake_energy_cost
         self.krat_energy_gain = krat_energy_gain
         self.cell_energy_pool = cell_energy_pool
+        self.cell_id = cell_id
         self.rng = rng
 
     def add_krat(self, krat):
@@ -113,7 +114,9 @@ class Sim(object):
         self.rng = random.Random()
         self.landscape_dimensions = [self.landscape_width,self.landscape_height]
         self.landscape = Landscape(size_of_landscape = self.landscape_dimensions,cell_energy_pool = self.cell_energy_pool,rng = self.rng)
-        self.populate_landscape()
+        self.add_cells()
+        self.add_snakes()
+        self.add_krats()
 
     def open_file(self):
         '''Enter the general file name. This command opens the file then appends the data to a list.'''
@@ -143,7 +146,7 @@ class Sim(object):
         self.krat_initial_energy = int(parameters[8])
         self.snake_energy_cost = int(parameters[9])
         self.krat_energy_cost = int(parameters[10])
-        self.snake_strike_success_probability = float(parameters[11])
+        self.strike_success_probability = float(parameters[11])
         self.krat_energy_gain = int(parameters[12])
 
     def hour_tick(self):
@@ -152,36 +155,67 @@ class Sim(object):
         else:
             self.time_of_day += 1
 
-    def add_snakes(self,cell):
-        for i in range(self.initial_snake_pop):
-            snake = Snake(energy_counter = self.snake_initial_energy,strike_success_probability = self.snake_strike_success_probability, rng = self.rng)
-            cell.add_snake(snake)
+    def initialize_krat(self,cell_id):
+        krat = Krat(energy_counter = self.krat_initial_energy,home_cell_id = cell_id, rng = self.rng)
+        return krat
 
-    def add_krats(self,cell):
-        for i in range(self.initial_krat_pop):
-            krat = Krat(energy_counter = self.krat_initial_energy,home_cell = cell, rng = self.rng)
-            cell.add_krat(krat)
+    def initialize_snake(self):
+        snake = Snake(energy_counter = self.snake_initial_energy,strike_success_probability = self.strike_success_probability, rng = self.rng)
+        return snake
 
-    def initialize_cell(self):
-        cell = Cell(time_of_day = self.time_of_day, habitat_type = self.landscape.assign_cell_type(),krat_energy_cost = self.krat_energy_cost,snake_energy_cost = self.snake_energy_cost,krat_energy_gain = self.krat_energy_gain,cell_energy_pool = self.cell_energy_pool,rng = self.rng)
+    def initialize_cell(self,cell_id):
+        cell = Cell(time_of_day = self.time_of_day, habitat_type = self.landscape.assign_cell_type(),krat_energy_cost = self.krat_energy_cost,snake_energy_cost = self.snake_energy_cost,krat_energy_gain = self.krat_energy_gain,cell_energy_pool = self.cell_energy_pool,cell_id = cell_id,rng = self.rng)
         return cell
 
-    def populate_landscape(self):
-        cells_wide = int(round(self.landscape_width/10))
-        cells_height = int(round(self.landscape_height/10))
-        for j in range(cells_height):
+    def add_cells(self):
+        self.cells_wide = int(round(self.landscape_width/10))
+        self.cells_height = int(round(self.landscape_height/10))
+        for j in range(self.cells_height):
             x_cells = []
-            for i in range(cells_wide):
-                cell = self.initialize_cell()
+            for i in range(self.cells_wide):
+                cell_id = (i,j)
+                cell = self.initialize_cell(cell_id)
                 x_cells.append(cell)
             self.landscape.cells.append(x_cells)
 
     def get_landscape(self):
         return self.landscape.cells
 
+    def get_random_cell(self):
+        row = self.rng.randrange(0,self.cells_height)
+        column = self.rng.randrange(0,self.cells_wide)
+        temp = self.landscape.cells[row]
+        random_cell = temp[column]
+        return random_cell
+
+    def add_snakes(self):
+        x = self.initial_snake_pop
+        while x > 0:
+            cell = self.get_random_cell()
+            snake = self.initialize_snake()
+            cell.add_snake(snake)
+            x = x-1
+
+    def add_krats(self):
+        y = self.initial_krat_pop
+        while y > 0:
+            cell = self.get_random_cell()
+            krat = self.initialize_krat(cell.cell_id)
+            cell.add_krat(krat)
+            y = y-1
+
 
 if __name__ ==  "__main__":
     sim = Sim('simparameters.csv')
-    landscape_cells = sim.get_landscape()
-    print(landscape_cells)
+    cells = sim.get_landscape()
+    counter = 0
+    print(str(np.shape(cells)))
+    for cell_width in cells:
+        for cell in cell_width:
+            cell_id = '{},{}'.format(cell.cell_id[0],cell.cell_id[1])
+            krat_count = str(len(cell.krats))
+            snake_count = str(len(cell.snakes))
+            prompt = 'iter {}, cell_id {}, krats {}, snakes {}'.format(counter,cell_id,krat_count,snake_count)
+            print(prompt)
+            counter = counter + 1
 

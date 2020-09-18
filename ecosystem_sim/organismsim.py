@@ -1,9 +1,8 @@
 class Organism(object):
     def __init__(self,energy_counter,rng):
         self.energy_counter = energy_counter
-        self.landscape = landscape
         self.alive = True
-        self.rng = landscape.rng
+        self.rng = rng
 
     def consume(self,energy_gain):
         if energy_cost < 0:
@@ -31,7 +30,7 @@ class Organism(object):
 
 class Snake(Organism):
     def __init__(self,energy_counter,strike_success_probability,rng,hunting_hours = None):
-        super().__init__(landscape,energy_counter)
+        super().__init__(energy_counter,rng)
         self.energy_counter = energy_counter
         self.strike_success_probability = strike_success_probability
         self.hunting = False
@@ -51,10 +50,10 @@ class Snake(Organism):
 
 
 class Krat(Organism):
-    def __init__(self,energy_counter,home_cell,rng,foraging_hours = None):
-        super().__init__(landscape,energy_counter)
+    def __init__(self,energy_counter,home_cell_id,rng,foraging_hours = None):
+        super().__init__(energy_counter,rng)
         self.energy_counter = energy_counter
-        self.home_cell = home_cell
+        self.home_cell_id = home_cell_id
         self.foraging = False
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
         self.rng = rng

@@ -1,25 +1,55 @@
 #rng = random.Random()
 #rng = random.Random(random_seed)
+import enum
 import random
 import numpy as np
 import csv
-from organismsim import Krat 
+from organismsim import Krat
 from organismsim import Snake
 
 class Cell(object):
-    def __init__(self, time_of_day, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,cell_id,rng):
+    def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,cell_id,rng):
         #cell represents the microhabitat and governs shorter geospatial interactions
         # Order: open, bush
-        self.time_of_day = time_of_day
+        self.sim = sim
         self.krats = []
         self.snakes = []
+        self._krat_energy_cost = None
+        self._snake_energy_cost = None
+
         self.habitat_type = habitat_type
+        self.landscape = sim.landscape
+
+        self.landscape.energy
+
+        sim.landscape.energy = new lasdmasd
+
         self.krat_energy_cost = krat_energy_cost
         self.snake_energy_cost = snake_energy_cost
         self.krat_energy_gain = krat_energy_gain
         self.cell_energy_pool = cell_energy_pool
         self.cell_id = cell_id
         self.rng = rng
+
+    @property
+    def krat_energy_cost(self):
+        return self._krat_energy_cost
+    @krat_energy_cost.setter
+    def krat_energy_cost(self, value):
+        self._krat_energy_cost = value
+    @krat_energy_cost.deleter
+    def krat_energy_cost(self):
+        del self._krat_energy_cost
+
+    @property
+    def snake_energy_cost(self):
+        return self._snake_energy_cost
+    @snake_energy_cost.setter
+    def snake_energy_cost(self, value):
+        self._snake_energy_cost = value
+    @snake_energy_cost.deleter
+    def snake_energy_cost(self):
+        del self._snake_energy_cost
 
     def add_krat(self, krat):
         # Add a krat to the population of this cells krats
@@ -60,8 +90,8 @@ class Cell(object):
             if self.rng < snake.strike_success_probability:
                 krat = self.select_krat()
                 snake.consume(krat)
-                self.pop_krat() 
-                
+                self.pop_krat()
+
     def foraging_rat(self):
         for krat in self.krats:
             if krat.foraging == True:
@@ -71,21 +101,52 @@ class Cell(object):
 
 
 class Landscape(object):
-    def __init__(self,size_of_landscape,cell_energy_pool,rng,open_to_bush_proportion = [0.5,0.5]):
-        '''Cells are 10 x 10m'''
-        #landscape is a container for cells and governs movements of critters in cells, and large sclae climate parameters.
-        #boskilla 1 x 0.8km 80,000 m^2
-        #bush (Larrea tridentata) under canopy of creosote up to 10m in diameter Square assumption (10x10m) = 100m^2 circle assumption pi*5^2 = 78.53m^2
-        #grass cells (Hilaria rigida) 1 m^2 clump +0.5 m^2 radius
-        #grass under or within 50cm of grass
-        #bush cover 1.9% (1520m^2), grass 24.1%(19,280m^2), open 74% (59000^2)
-        self.cells = []
-        self.size_of_landscape = size_of_landscape # tuple of width and height
-        self.open_to_bush_proportion = open_to_bush_proportion
-        self.rng = rng
-        #self.gen_cell_list()
+    '''Cells are 10 x 10m'''
+    #landscape is a container for cells and governs movements of critters in cells, and large sclae climate parameters.
+    #boskilla 1 x 0.8km 80,000 m^2
+    #bush (Larrea tridentata) under canopy of creosote up to 10m in diameter Square assumption (10x10m) = 100m^2 circle assumption pi*5^2 = 78.53m^2
+    #grass cells (Hilaria rigida) 1 m^2 clump +0.5 m^2 radius
+    #grass under or within 50cm of grass
+    #bush cover 1.9% (1520m^2), grass 24.1%(19,280m^2), open 74% (59000^2)
 
-    def assign_cell_type(self):
+    class MicrohabitatType(Enum):
+        OPEN = 0
+        BUSH = 1
+
+    def __init__(self,
+            sim,
+            size_x,
+            size_y,
+            microhabitat_type_proportions,
+            ):
+        self.sim = sim
+        self.size_x = size_x
+        self.size_y = size_y
+        self.cells = None
+        self.microhabitat_type_proportions = microhabitat_type_proportions
+
+        # self.microhabitat_type_proportions[Landscape.MicrohabitatType.OPEN]
+        # self.microhabitat_type_proportions[Landscape.MicrohabitatType.BUSH]
+
+
+    def build(self):
+        self.cells = []
+        for xidx in range(self.size_x):
+            self.cells[xidx] = []
+            for yidx in range(self.size_y):
+                cell = Cell(
+                        habitat_type,
+                        self.krat_energy_cost,
+                        self.snake_energy_cost,
+                        self.krat_energy_gain,
+                        self.cell_energy_pool,
+                        self.initial_snake_pop,
+                        self.initial_krat_pop,
+                        self.rng)
+                self.cells[xidx].append(cell)
+
+
+    def select_random_cell_type(self):
         microclimate_type = self.rng.choices(['open','bush'],self.open_to_bush_proportion, k = 1)
         return microclimate_type
 
@@ -106,14 +167,59 @@ class Landscape(object):
 
 class Sim(object):
     #compiles landscape and designates parameters to the landscape. allows landscape to progress through time.
+
+    def __init__(rng):
+        self.sim_time =
+        self.time_of_day = 0
+        if rng is None:
+            self.rng = random.Random()
+        else:
+            self.rng = rng
+
+    def configure(self, config_d):
+        self.landscape = Landscape(
+                sim=self,
+                size_x=config_d["landscape_size_x"],
+                size_y=config_d["landscape_size_y"],
+                microhabitat_type_proportions = config_d["microhabitat_type_proportions"],
+                )
+        self.landscape.build()
+        self.landscape.initialize_snake_pop(
+                snake_initial_population_size=config_d["snake_initial_population_size"],
+                snake_initial_energy=config_d["snake_initial_energy"],
+                )
+        self.landscape.initialize_krat_pop(
+                krat_initial_population_size=config_d["krat_initial_population_size"],
+                krat_initial_energy=config_d["krat_initial_energy"],
+                )
+        pass
+
+    def read_configuration_file(self, filepath):
+        config_d = json.read(...)
+        self.configure(config_d)
+
+    def report(self):
+        pass
+
+    def sample(self):
+        pass
+
+
+
+
+
     def __init__(self,csv_file_path):
         self.csv_file_path = csv_file_path
         self.sim_number = 1
         self.time_of_day = 0
         self.set_parameters()
         self.rng = random.Random()
-        self.landscape_dimensions = [self.landscape_width,self.landscape_height]
-        self.landscape = Landscape(size_of_landscape = self.landscape_dimensions,cell_energy_pool = self.cell_energy_pool,rng = self.rng)
+        self.landscape = Landscape(
+            size_x=size_x,
+            size_y=size_y,
+            ...
+            )
+        self.landscape.build()
         self.add_cells()
         self.add_snakes()
         self.add_krats()
@@ -164,7 +270,7 @@ class Sim(object):
         return snake
 
     def initialize_cell(self,cell_id):
-        cell = Cell(time_of_day = self.time_of_day, habitat_type = self.landscape.assign_cell_type(),krat_energy_cost = self.krat_energy_cost,snake_energy_cost = self.snake_energy_cost,krat_energy_gain = self.krat_energy_gain,cell_energy_pool = self.cell_energy_pool,cell_id = cell_id,rng = self.rng)
+        cell = Cell(sim=self, habitat_type = self.landscape.assign_cell_type(),krat_energy_cost = self.krat_energy_cost,snake_energy_cost = self.snake_energy_cost,krat_energy_gain = self.krat_energy_gain,cell_energy_pool = self.cell_energy_pool,cell_id = cell_id,rng = self.rng)
         return cell
 
     def add_cells(self):
@@ -177,9 +283,6 @@ class Sim(object):
                 cell = self.initialize_cell(cell_id)
                 x_cells.append(cell)
             self.landscape.cells.append(x_cells)
-
-    def get_landscape(self):
-        return self.landscape.cells
 
     def get_random_cell(self):
         row = self.rng.randrange(0,self.cells_height)
@@ -204,10 +307,9 @@ class Sim(object):
             cell.add_krat(krat)
             y = y-1
 
-
 if __name__ ==  "__main__":
     sim = Sim('simparameters.csv')
-    cells = sim.get_landscape()
+    cells = sim.landscape.cells
     counter = 0
     print(str(np.shape(cells)))
     for cell_width in cells:

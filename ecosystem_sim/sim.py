@@ -39,7 +39,7 @@ class Cell(object):
         self._krat_energy_cost = value
     @krat_energy_cost.deleter
     def krat_energy_cost(self):
-        del self._krat_energy_cost
+        self._krat_energy_cost = None
 
     @property
     def snake_energy_cost(self):
@@ -110,23 +110,19 @@ class Landscape(object):
     #bush cover 1.9% (1520m^2), grass 24.1%(19,280m^2), open 74% (59000^2)
 
     class MicrohabitatType(Enum):
-        OPEN = 0
-        BUSH = 1
+        OPEN = 0.5
+        BUSH = 0.5
 
     def __init__(self,
             sim,
             size_x,
-            size_y,
-            microhabitat_type_proportions,
+            size_y
             ):
         self.sim = sim
         self.size_x = size_x
         self.size_y = size_y
         self.cells = None
-        self.microhabitat_type_proportions = microhabitat_type_proportions
-
-        # self.microhabitat_type_proportions[Landscape.MicrohabitatType.OPEN]
-        # self.microhabitat_type_proportions[Landscape.MicrohabitatType.BUSH]
+        self.microhabitat_type_proportions = [self.MicrohabitatType.OPEN, self.MicrohabitatType.BUSH]
 
 
     def build(self):
@@ -152,7 +148,7 @@ class Landscape(object):
 
     def gen_cell_list(self):
         for i in range(self.size_of_landscape):
-            habitat_type = self.assign_cell_type()
+            habitat_type = self.select_random_cell_type()
             cell = Cell(habitat_type,self.krat_energy_cost,self.snake_energy_cost,self.krat_energy_gain,self.cell_energy_pool, self.initial_snake_pop,self.initial_krat_pop,self.rng)
             self.add_snakes(cell)
             self.add_cell(cell)
@@ -168,9 +164,9 @@ class Landscape(object):
 class Sim(object):
     #compiles landscape and designates parameters to the landscape. allows landscape to progress through time.
 
-    def __init__(rng):
-        self.sim_time =
+    def __init__(file_path,rng):
         self.time_of_day = 0
+        self.file_path = file_path
         if rng is None:
             self.rng = random.Random()
         else:
@@ -192,10 +188,10 @@ class Sim(object):
                 krat_initial_population_size=config_d["krat_initial_population_size"],
                 krat_initial_energy=config_d["krat_initial_energy"],
                 )
-        pass
+
 
     def read_configuration_file(self, filepath):
-        config_d = json.read(...)
+        config_d = json.read(self.file_path)
         self.configure(config_d)
 
     def report(self):

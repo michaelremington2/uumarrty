@@ -1,8 +1,9 @@
 class Organism(object):
-    def __init__(self,energy_counter,rng):
+    def __init__(self,sim, energy_counter):
+        self.sim = sim
         self.energy_counter = energy_counter
         self.alive = True
-        self.rng = rng
+        self.rng = self.sim.rng
 
     def consume(self,energy_gain):
         if energy_cost < 0:
@@ -29,13 +30,14 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,energy_counter,strike_success_probability,rng,hunting_hours = None):
-        super().__init__(energy_counter,rng)
+    def __init__(self,sim, energy_counter,strike_success_probability,hunting_hours = None):
+        super().__init__(sim,energy_counter)
+        self.sim = sim
         self.energy_counter = energy_counter
         self.strike_success_probability = strike_success_probability
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
-        self.rng = rng
+        self.rng = self.sim.rng
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
@@ -50,13 +52,14 @@ class Snake(Organism):
 
 
 class Krat(Organism):
-    def __init__(self,energy_counter,home_cell_id,rng,foraging_hours = None):
-        super().__init__(energy_counter,rng)
+    def __init__(self,sim,energy_counter,home_cell_id,foraging_hours = None):
+        super().__init__(sim,energy_counter)
+        self.sim = sim
         self.energy_counter = energy_counter
         self.home_cell_id = home_cell_id
         self.foraging = False
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
-        self.rng = rng
+        self.rng = self.sim.rng
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:

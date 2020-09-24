@@ -14,9 +14,6 @@ class Cell(object):
         self.sim = sim
         self.krats = []
         self.snakes = []
-        self._krat_energy_cost = None
-        self._snake_energy_cost = None
-
         self.habitat_type = habitat_type
         self.landscape = sim.landscape
         self.krat_energy_cost = krat_energy_cost
@@ -25,26 +22,6 @@ class Cell(object):
         self.cell_energy_pool = cell_energy_pool
         self.cell_id = cell_id
         self.rng = self.sim.rng
-
-    @property
-    def krat_energy_cost(self):
-        return self._krat_energy_cost
-    @krat_energy_cost.setter
-    def krat_energy_cost(self, value):
-        self._krat_energy_cost = value
-    @krat_energy_cost.deleter
-    def krat_energy_cost(self):
-        self._krat_energy_cost = None
-
-    @property
-    def snake_energy_cost(self):
-        return self._snake_energy_cost
-    @snake_energy_cost.setter
-    def snake_energy_cost(self, value):
-        self._snake_energy_cost = value
-    @snake_energy_cost.deleter
-    def snake_energy_cost(self):
-        del self._snake_energy_cost
 
     def add_krat(self, krat):
         # Add a krat to the population of this cells krats
@@ -77,7 +54,7 @@ class Cell(object):
         return self.snakes.pop(snake_index)
 
     def cell_forage(self,energy_consumed):
-        self.self.cell_energy_pool -= energy_consumed
+        self.cell_energy_pool -= energy_consumed
 
     def predation_cycle_snake(self):
         for snake in self.snakes:
@@ -156,6 +133,7 @@ class Landscape(object):
             cell = self.get_random_cell()
             snake = self.initialize_snake(sim = self.sim,energy_counter = snake_initial_energy,strike_success_probability= strike_success_probability)
             cell.add_snake(snake)
+            snake.current_cell(cell)
             x = x-1
 
     def initialize_krat_pop(self,initial_krat_pop,energy_counter):
@@ -164,6 +142,7 @@ class Landscape(object):
             cell = self.get_random_cell()
             krat = self.initialize_krat(sim = self.sim, energy_counter = energy_counter, cell_id = cell.cell_id)
             cell.add_krat(krat)
+            krat.current_cell(cell)
             y = y-1
 
 
@@ -179,6 +158,7 @@ class Sim(object):
             self.rng = rng
 
     def configure(self, config_d):
+        self.end_time = config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -211,6 +191,10 @@ class Sim(object):
             self.time_of_day = 0
         else:
             self.time_of_day += 1
+
+    def main(self):
+        time = 0
+        while time <=
 
     def report(self):
         cells = sim.landscape.cells

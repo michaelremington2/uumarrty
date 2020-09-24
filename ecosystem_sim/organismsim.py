@@ -28,6 +28,10 @@ class Organism(object):
         else:
             RaiseValueError('Not an appropriate time of day')
 
+    def current_cell(self,cell):
+        self.current_cell = cell
+        self.current_microhabitat = cell.habitat_type 
+
 
 class Snake(Organism):
     def __init__(self,sim, energy_counter,strike_success_probability,hunting_hours = None):
@@ -35,9 +39,27 @@ class Snake(Organism):
         self.sim = sim
         self.energy_counter = energy_counter
         self.strike_success_probability = strike_success_probability
+        self._strike_success_probability = None
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
+
+    @property
+    def strike_success_probability(self):
+        return self._strike_success_probability
+    @strike_success_probability.setter
+    def strike_success_probability(self, camofloage_coeffiecent):
+        new_ss = self._strike_success_probability + camofloage_coeffiecent
+        if new_ss >= 1:
+            statment = 'Strike success probability ({}) is greater than 1. camofloage_coeffiecent should range between .01 to .05'.format(new_ss)
+            RaiseValueError(statment)
+        elif new_ss < 0:
+            statment = 'camofloage_coeffiecent should not be negative {}'.format(camofloage_coeffiecent)
+            RaiseValueError(statment)
+        self._strike_success_probability = new_ss
+    @strike_success_probability.deleter
+    def strike_success_probability(self):
+        self._strike_success_probability = None
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:

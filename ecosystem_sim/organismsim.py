@@ -1,3 +1,4 @@
+#!/usr/bin/python
 class Organism(object):
     def __init__(self,sim, energy_counter):
         self.sim = sim
@@ -6,9 +7,10 @@ class Organism(object):
         self.rng = self.sim.rng
 
     def consume(self,energy_gain):
-        if energy_cost < 0:
+        if energy_gain < 0:
             RaiseValueError('gains should be positive integers')
-        self.energy_counter += energy_gain
+        if self.current_cell.cell_energy_pool > 0:
+            self.energy_counter += energy_gain
 
     def get_energy_counter(self):
         return self.energy_counter
@@ -38,8 +40,7 @@ class Snake(Organism):
         super().__init__(sim,energy_counter)
         self.sim = sim
         self.energy_counter = energy_counter
-        self.strike_success_probability = strike_success_probability
-        self._strike_success_probability = None
+        self._strike_success_probability = strike_success_probability
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
@@ -47,27 +48,27 @@ class Snake(Organism):
     @property
     def strike_success_probability(self):
         return self._strike_success_probability
-    @strike_success_probability.setter
-    def strike_success_probability(self, camofloage_coeffiecent):
-        new_ss = self._strike_success_probability + camofloage_coeffiecent
-        if new_ss >= 1:
-            statment = 'Strike success probability ({}) is greater than 1. camofloage_coeffiecent should range between .01 to .05'.format(new_ss)
-            RaiseValueError(statment)
-        elif new_ss < 0:
-            statment = 'camofloage_coeffiecent should not be negative {}'.format(camofloage_coeffiecent)
-            RaiseValueError(statment)
-        self._strike_success_probability = new_ss
-    @strike_success_probability.deleter
-    def strike_success_probability(self):
-        self._strike_success_probability = None
+    #@strike_success_probability.setter
+    # def strike_success_probability(self, camofloage_coeffiecent):
+    #     new_ss = self._strike_success_probability + camofloage_coeffiecent
+    #     if new_ss >= 1:
+    #         statment = 'Strike success probability ({}) is greater than 1. camofloage_coeffiecent should range between .01 to .05'.format(new_ss)
+    #         RaiseValueError(statment)
+    #     elif new_ss < 0:
+    #         statment = 'camofloage_coeffiecent should not be negative {}'.format(camofloage_coeffiecent)
+    #         RaiseValueError(statment)
+    #     self._strike_success_probability = new_ss
+    # @strike_success_probability.deleter
+    # def strike_success_probability(self):
+    #     self._strike_success_probability = None
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
             hunting_hours = [0,1,2,3,4,5,20,21,22,23]
         return hunting_hours
 
-    def hunting_period(self,time_of_day):
-        if time_of_day in hunting_hours:
+    def hunting_period(self):
+        if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:
             self.hunting = False
@@ -88,8 +89,8 @@ class Krat(Organism):
             foraging_hours = [0,1,2,3,4,5,20,21,22,23]
         return foraging_hours
 
-    def foraging_period(self,time_of_day):
-        if time_of_day in foraging_hours:
+    def foraging_period(self):
+        if self.sim.time_of_day in self.foraging_hours:
             self.foraging = True
         else:
             self.foraging = False

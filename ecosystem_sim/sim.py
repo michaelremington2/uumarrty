@@ -1,5 +1,5 @@
-#rng = random.Random()
-#rng = random.Random(random_seed)
+#!/usr/bin/python
+
 from enum import Enum,auto
 import random
 import numpy as np
@@ -34,16 +34,16 @@ class Cell(object):
     def select_krat(self,krat_index = None):
         #returns a random index for the krat
         if krat_index == None:
-            krat_index = self.rng.randint(0,len(self.krats))
+            krat_index = self.rng.randint(0,len(self.krats)-1)
         krat = self.krats[krat_index]
         return krat
 
     def select_snake(self,snake_index = None):
         #returns a snake object from this cells population of snakes
         if snake_index == None:
-            snake_index = self.rng.randint(0,len(self.snake))
+            snake_index = self.rng.randint(0,len(self.snake)-1)
         snake = self.snakes[snake_index]
-        return snake_index
+        return snake
 
     def pop_krat(self,krat_index):
         # Selects a krat at random from population and removes it and return it
@@ -56,19 +56,25 @@ class Cell(object):
     def cell_forage(self,energy_consumed):
         self.cell_energy_pool -= energy_consumed
 
+    #def camoflouge_coefficent(self):
+    #    if self.habitat_type == 
+
     def predation_cycle_snake(self):
         for snake in self.snakes:
-            snake.expend_energy(self.snake_energy_cost)
-            if self.rng < snake.strike_success_probability:
+            snake.hunting_period()
+            if self.rng.random() < snake.strike_success_probability and len(self.krats) > 0:
+                print('successful_strike!')
+                snake.expend_energy(self.snake_energy_cost)
                 krat = self.select_krat()
-                snake.consume(krat)
-                self.pop_krat()
+                snake.consume(krat.energy_counter)
+                self.pop_krat(self.krats.index(krat))
 
     def foraging_rat(self):
         for krat in self.krats:
+            krat.foraging_period()
+            krat.expend_energy(self.krat_energy_cost)
             if krat.foraging == True:
-                krat.expend_energy(self.krat_energy_cost)
-                krat.gain_energy(self.krat_energy_gain)
+                krat.consume(self.krat_energy_gain)
                 self.cell_forage(self.krat_energy_gain)
 
 
@@ -124,7 +130,9 @@ class Landscape(object):
         return krat
 
     def initialize_snake(self,sim,energy_counter,strike_success_probability):
-        snake = Snake(sim = sim, energy_counter = energy_counter,strike_success_probability = strike_success_probability)
+        snake = Snake(sim = sim,
+         energy_counter = energy_counter,
+         strike_success_probability = strike_success_probability)
         return snake
 
     def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,strike_success_probability):
@@ -145,6 +153,13 @@ class Landscape(object):
             krat.current_cell(cell)
             y = y-1
 
+    def landscape_dynamics(self):
+        for cell_width in self.cells:
+            for cell in cell_width:
+                cell.predation_cycle_snake()
+                cell.foraging_rat()
+
+
 
 
 
@@ -158,7 +173,7 @@ class Sim(object):
             self.rng = rng
 
     def configure(self, config_d):
-        self.end_time = config_d["days_of_sim"]*24
+        self.end_time = 48 #config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -187,14 +202,20 @@ class Sim(object):
         self.configure(sim1)
 
     def hour_tick(self):
-        if self.time_of_day >= 24:
+        if self.time_of_day >= 23:
             self.time_of_day = 0
         else:
             self.time_of_day += 1
 
     def main(self):
-        time = 0
-        while time <=
+        self.time = 0
+        self.time_of_day = 0
+        self.read_configuration_file()
+        while self.time <= self.end_time:
+            self.landscape.landscape_dynamics()
+            self.hour_tick()
+            self.time += 1
+
 
     def report(self):
         cells = sim.landscape.cells
@@ -215,7 +236,7 @@ class Sim(object):
 
 if __name__ ==  "__main__":
     sim = Sim('data.txt')
-    sim.read_configuration_file()
-    sim.report()
+    sim.main()
+
 
 

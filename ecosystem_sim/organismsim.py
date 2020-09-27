@@ -94,3 +94,41 @@ class Krat(Organism):
             self.foraging = True
         else:
             self.foraging = False
+
+
+class Movement(object):
+    def __init__(self,rng):
+        self.rng = rng
+
+    def move_options(self,current_cell):
+        self.move_coordinates = []
+        for x in [-1,0,1]:
+            for y in [-1,0,1]:
+                #print('{},{}'.format(x,y))
+                x_coord = current_cell[0] + x
+                y_coord = current_cell[0] + y
+                if x_coord >= 0 and y_coord >= 0:
+                    new_id = (x_coord,y_coord)
+                    self.move_coordinates.append(new_id)
+
+    def move_probability_base_vector(self):
+        self.probability_vector = []
+        for i in range(len(self.move_coordinates)):
+            probability = 1/len(self.move_coordinates)
+            self.probability_vector.append(probability)
+
+    def new_cell(self,current_cell):
+        self.move_options(current_cell)
+        self.move_probability_vector()
+        new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
+        return new_cell[0]
+
+if __name__ ==  "__main__":
+    import random 
+    rng = random.Random()
+    cell_id = (1,0)
+    move = Movement(rng)
+    move.move_options()
+    print(move.new_cell(cell_id))
+
+

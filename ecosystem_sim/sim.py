@@ -119,8 +119,8 @@ class Landscape(object):
         return microclimate_type
 
     def get_random_cell(self):
-        row = self.sim.rng.randrange(0,self.cells_y)
-        column = self.sim.rng.randrange(0,self.cells_x)
+        row = self.rng.randrange(0,self.cells_y)
+        column = self.rng.randrange(0,self.cells_x)
         temp = self.cells[row]
         random_cell = temp[column]
         return random_cell

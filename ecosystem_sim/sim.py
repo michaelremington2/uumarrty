@@ -56,6 +56,22 @@ class Cell(object):
     def cell_forage(self,energy_consumed):
         self.cell_energy_pool -= energy_consumed
 
+    def krat_move(self):
+        for krat in self.krats:
+            new_cell_id = krat.organism_movement()
+            if new_cell_id != self.cell_id:
+                moving_krat = (new_cell_id,krat,self.cell_id)
+                self.landscape.krat_move_pool.append(moving_krat)
+                self.pop_krat(self.krats.index(krat))
+
+    def snake_move(self):
+        for snake in self.snakes:
+            new_cell_id = snake.organism_movement()
+            if new_cell_id != self.cell_id:
+                moving_snake = (new_cell_id,snake)
+                self.landscape.snake_move_pool.append(moving_snake)
+                self.pop_snake(self.snakes.index(snake))
+
     #def camoflouge_coefficent(self):
     #    if self.habitat_type == 
 
@@ -63,7 +79,7 @@ class Cell(object):
         for snake in self.snakes:
             snake.hunting_period()
             if self.rng.random() < snake.strike_success_probability and len(self.krats) > 0:
-                print('successful_strike!')
+                #print('successful_strike!')
                 snake.expend_energy(self.snake_energy_cost)
                 krat = self.select_krat()
                 snake.consume(krat.energy_counter)
@@ -90,18 +106,20 @@ class Landscape(object):
         self.size_x = size_x
         self.size_y = size_y
         self.cells = None
-        self.cells_x = int(round(self.size_x/10))
-        self.cells_y = int(round(self.size_y/10))
+        self.cells_x_columns = int(round(self.size_x/10))
+        self.cells_y_rows = int(round(self.size_y/10))
         self.microhabitat_open_bush_proportions = microhabitat_open_bush_proportions
+        self.krat_move_pool = []
+        self.snake_move_pool = []
         self.rng = self.sim.rng
 
 
     def build(self,cell_energy_pool,krat_energy_cost,snake_energy_cost, krat_energy_gain):
         self.cells = []
-        for yidx in range(self.cells_y):
+        for yidx in range(self.cells_y_rows):
             temp_x = []
-            for xidx in range(self.cells_x):
-                cell_id = (xidx,yidx)
+            for xidx in range(self.cells_x_columns):
+                cell_id = (yidx,xidx)
                 cell = Cell(
                     sim = self.sim,
                     habitat_type = self.select_random_cell_type(),
@@ -118,12 +136,19 @@ class Landscape(object):
         microclimate_type = self.rng.choices([self.MicrohabitatType.OPEN,self.MicrohabitatType.BUSH],self.microhabitat_open_bush_proportions, k = 1)
         return microclimate_type
 
-    def get_random_cell(self):
-        row = self.rng.randrange(0,self.cells_y)
-        column = self.rng.randrange(0,self.cells_x)
+    def select_random_cell(self):
+        row = self.rng.randrange(0,self.cells_y_rows)
+        column = self.rng.randrange(0,self.cells_x_columns)
         temp = self.cells[row]
         random_cell = temp[column]
         return random_cell
+
+    def select_cell(self,cell_id):
+        row = cell_id[0]
+        column = cell_id[1]
+        temp = self.cells[row]
+        cell = temp[column]
+        return cell
 
     def initialize_krat(self,sim,energy_counter,cell_id):
         krat = Krat(sim = sim,energy_counter = energy_counter,home_cell_id = cell_id)
@@ -138,7 +163,7 @@ class Landscape(object):
     def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,strike_success_probability):
         x = initial_snake_pop
         while x > 0:
-            cell = self.get_random_cell()
+            cell = self.select_random_cell()
             snake = self.initialize_snake(sim = self.sim,energy_counter = snake_initial_energy,strike_success_probability= strike_success_probability)
             cell.add_snake(snake)
             snake.current_cell(cell)
@@ -147,20 +172,43 @@ class Landscape(object):
     def initialize_krat_pop(self,initial_krat_pop,energy_counter):
         y = initial_krat_pop
         while y > 0:
-            cell = self.get_random_cell()
+            cell = self.select_random_cell()
             krat = self.initialize_krat(sim = self.sim, energy_counter = energy_counter, cell_id = cell.cell_id)
             cell.add_krat(krat)
             krat.current_cell(cell)
             y = y-1
+
+    def relocate_krats(self):
+        for i, krat in enumerate(self.krat_move_pool):
+            new_cell_id = krat[0]
+            krat_object = krat[1]
+            new_cell = self.select_cell(new_cell_id)
+            new_cell.add_krat(krat_object)
+            krat_object.current_cell(new_cell)
+            self.krat_move_pool.pop(i)
+
+    def relocate_snakes(self):
+        for j, snake in enumerate(self.snake_move_pool):
+            new_cell_id = snake[0]
+            snake_object = snake[1]
+            new_cell = self.select_cell(new_cell_id)
+            new_cell.add_snake(snake_object)
+            snake_object.current_cell(new_cell)
+            self.snake_move_pool.pop(j)
 
     def landscape_dynamics(self):
         for cell_width in self.cells:
             for cell in cell_width:
                 cell.predation_cycle_snake()
                 cell.foraging_rat()
-
-
-
+                cell.snake_move()
+                cell.krat_move()
+        self.relocate_krats()
+        self.relocate_snakes()
+        print('krats')
+        print(self.krat_move_pool)
+        print('snake')
+        print(self.krat_move_pool)
 
 
 class Sim(object):
@@ -173,7 +221,7 @@ class Sim(object):
             self.rng = rng
 
     def configure(self, config_d):
-        self.end_time = 48 #config_d["days_of_sim"]*24
+        self.end_time = 10 #config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -216,6 +264,14 @@ class Sim(object):
             self.hour_tick()
             self.time += 1
 
+    def test(self):
+        self.read_configuration_file()
+        cells = self.landscape.cells
+        for cell_width in cells:
+            for cell in cell_width:
+                cell_id = '{},{}'.format(cell.cell_id[0],cell.cell_id[1])
+                print(cell_id)
+        
 
     def report(self):
         cells = sim.landscape.cells

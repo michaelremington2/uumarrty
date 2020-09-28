@@ -5,10 +5,11 @@ class Organism(object):
         self.energy_counter = energy_counter
         self.alive = True
         self.rng = self.sim.rng
+        self.move = Movement(self.sim)
 
     def consume(self,energy_gain):
         if energy_gain < 0:
-            RaiseValueError('gains should be positive integers')
+            raise ValueError('gains should be positive integers')
         if self.current_cell.cell_energy_pool > 0:
             self.energy_counter += energy_gain
 
@@ -17,8 +18,9 @@ class Organism(object):
 
     def expend_energy(self,energy_cost):
         if energy_cost < 0:
-            RaiseValueError('Costs should be positive integers')
+            raise ValueError('Costs should be positive integers')
         self.energy_counter -= energy_cost
+        self.natural_death
 
     def natural_death(self):
         if self.energy_counter == 0:
@@ -28,11 +30,18 @@ class Organism(object):
         if time_of_day >= 0 and time_of_day < 24:
             pass
         else:
-            RaiseValueError('Not an appropriate time of day')
+            raise ValueError('Not an appropriate time of day')
 
     def current_cell(self,cell):
         self.current_cell = cell
         self.current_microhabitat = cell.habitat_type 
+
+    def organism_movement(self):
+        self.move.move_options(self.current_cell.cell_id)
+        new_cell_id = self.move.new_cell(self.current_cell.cell_id)
+        return new_cell_id
+
+
 
 
 class Snake(Organism):
@@ -95,21 +104,27 @@ class Krat(Organism):
         else:
             self.foraging = False
 
-
 class Movement(object):
-    def __init__(self,rng):
-        self.rng = rng
+    def __init__(self,sim):
+        self.column_boundary = sim.landscape.cells_x_columns - 1
+        self.row_boundary = sim.landscape.cells_y_rows - 1
+        self.rng = sim.rng
 
     def move_options(self,current_cell):
         self.move_coordinates = []
         for x in [-1,0,1]:
             for y in [-1,0,1]:
                 #print('{},{}'.format(x,y))
-                x_coord = current_cell[0] + x
-                y_coord = current_cell[0] + y
-                if x_coord >= 0 and y_coord >= 0:
-                    new_id = (x_coord,y_coord)
+                row_coord = current_cell[0] + y
+                column_coord = current_cell[1] + x
+                if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
+                    new_id = (row_coord,column_coord)
                     self.move_coordinates.append(new_id)
+        if len(self.move_coordinates) == 0:
+            print(current_cell)
+            print(self.row_boundary)
+            print(self.column_boundary)
+            raise ValueError('No move options')
 
     def move_probability_base_vector(self):
         self.probability_vector = []
@@ -117,18 +132,18 @@ class Movement(object):
             probability = 1/len(self.move_coordinates)
             self.probability_vector.append(probability)
 
+    #def weighted_probability_vector(self,enhancment_coeffiecent):
+        #self.weighted_probability_vector = []
+        #for i in self.probability_vector:
+
+
     def new_cell(self,current_cell):
         self.move_options(current_cell)
-        self.move_probability_vector()
+        self.move_probability_base_vector()
         new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
         return new_cell[0]
 
-if __name__ ==  "__main__":
-    import random 
-    rng = random.Random()
-    cell_id = (1,0)
-    move = Movement(rng)
-    move.move_options()
-    print(move.new_cell(cell_id))
 
+if __name__ ==  "__main__":
+    pass
 

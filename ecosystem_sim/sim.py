@@ -6,6 +6,7 @@ import numpy as np
 import json
 from organismsim import Krat
 from organismsim import Snake
+from organismsim import Movement
 
 class Cell(object):
     def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,cell_id):
@@ -90,7 +91,7 @@ class Cell(object):
             krat.foraging_period()
             krat.expend_energy(self.krat_energy_cost)
             if krat.foraging == True:
-                krat.consume(self.krat_energy_gain)
+                krat.consume(self.krat_energy_gain,self.cell_energy_pool)
                 self.cell_forage(self.krat_energy_gain)
 
 
@@ -166,7 +167,7 @@ class Landscape(object):
             cell = self.select_random_cell()
             snake = self.initialize_snake(sim = self.sim,energy_counter = snake_initial_energy,strike_success_probability= strike_success_probability)
             cell.add_snake(snake)
-            snake.current_cell(cell)
+            snake.current_cell(cell.cell_id)
             x = x-1
 
     def initialize_krat_pop(self,initial_krat_pop,energy_counter):
@@ -175,7 +176,7 @@ class Landscape(object):
             cell = self.select_random_cell()
             krat = self.initialize_krat(sim = self.sim, energy_counter = energy_counter, cell_id = cell.cell_id)
             cell.add_krat(krat)
-            krat.current_cell(cell)
+            krat.current_cell(cell.cell_id)
             y = y-1
 
     def relocate_krats(self):
@@ -184,7 +185,7 @@ class Landscape(object):
             krat_object = krat[1]
             new_cell = self.select_cell(new_cell_id)
             new_cell.add_krat(krat_object)
-            krat_object.current_cell(new_cell)
+            krat_object.current_cell(new_cell_id)
             self.krat_move_pool.pop(i)
 
     def relocate_snakes(self):
@@ -193,7 +194,7 @@ class Landscape(object):
             snake_object = snake[1]
             new_cell = self.select_cell(new_cell_id)
             new_cell.add_snake(snake_object)
-            snake_object.current_cell(new_cell)
+            snake_object.current_cell(new_cell_id)
             self.snake_move_pool.pop(j)
 
     def landscape_dynamics(self):
@@ -205,10 +206,7 @@ class Landscape(object):
                 cell.krat_move()
         self.relocate_krats()
         self.relocate_snakes()
-        print('krats')
-        print(self.krat_move_pool)
-        print('snake')
-        print(self.krat_move_pool)
+        #print(len(self.krat_move_pool))
 
 
 class Sim(object):
@@ -221,7 +219,7 @@ class Sim(object):
             self.rng = rng
 
     def configure(self, config_d):
-        self.end_time = 10 #config_d["days_of_sim"]*24
+        self.end_time = 24 #config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -259,10 +257,12 @@ class Sim(object):
         self.time = 0
         self.time_of_day = 0
         self.read_configuration_file()
-        while self.time <= self.end_time:
+        for i in range(self.end_time):
             self.landscape.landscape_dynamics()
             self.hour_tick()
-            self.time += 1
+            self.time += i
+            print(self.time)
+            print(time_of_day)
 
     def test(self):
         self.read_configuration_file()
@@ -292,7 +292,11 @@ class Sim(object):
 
 if __name__ ==  "__main__":
     sim = Sim('data.txt')
-    sim.main()
+    sim.read_configuration_file()
+    move = Movement(sim)
+    cell = (5,6)
+    new_cell = move.new_cell(cell,weight = 1.5)
+    print(new_cell)
 
 
 

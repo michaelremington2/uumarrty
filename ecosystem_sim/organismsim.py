@@ -7,10 +7,13 @@ class Organism(object):
         self.rng = self.sim.rng
         self.move = Movement(self.sim)
 
-    def consume(self,energy_gain):
+    def consume(self,energy_gain,cell_energy_pool = None):
         if energy_gain < 0:
             raise ValueError('gains should be positive integers')
-        if self.current_cell.cell_energy_pool > 0:
+        if cell_energy_pool != None:
+            if cell_energy_pool > 0:
+                self.energy_counter += energy_gain
+        else:
             self.energy_counter += energy_gain
 
     def get_energy_counter(self):
@@ -20,7 +23,7 @@ class Organism(object):
         if energy_cost < 0:
             raise ValueError('Costs should be positive integers')
         self.energy_counter -= energy_cost
-        self.natural_death
+        self.natural_death()
 
     def natural_death(self):
         if self.energy_counter == 0:
@@ -32,13 +35,13 @@ class Organism(object):
         else:
             raise ValueError('Not an appropriate time of day')
 
-    def current_cell(self,cell):
-        self.current_cell = cell
-        self.current_microhabitat = cell.habitat_type 
+    def current_cell(self,cell_id):
+        self.current_cell_id = cell_id
+
 
     def organism_movement(self):
-        self.move.move_options(self.current_cell.cell_id)
-        new_cell_id = self.move.new_cell(self.current_cell.cell_id)
+        self.move.move_options(self.current_cell_id)
+        new_cell_id = self.move.new_cell(self.current_cell_id)
         return new_cell_id
 
 
@@ -112,38 +115,65 @@ class Movement(object):
 
     def move_options(self,current_cell):
         self.move_coordinates = []
+        self.current_cell = current_cell
         for x in [-1,0,1]:
             for y in [-1,0,1]:
                 #print('{},{}'.format(x,y))
-                row_coord = current_cell[0] + y
-                column_coord = current_cell[1] + x
+                row_coord = self.current_cell[0] + y
+                column_coord = self.current_cell[1] + x
                 if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
                     new_id = (row_coord,column_coord)
                     self.move_coordinates.append(new_id)
         if len(self.move_coordinates) == 0:
-            print(current_cell)
+            print(self.current_cell)
             print(self.row_boundary)
             print(self.column_boundary)
             raise ValueError('No move options')
 
     def move_probability_base_vector(self):
-        self.probability_vector = []
-        for i in range(len(self.move_coordinates)):
+        base_probability_vector = []
+        for i in self.move_coordinates:
             probability = 1/len(self.move_coordinates)
-            self.probability_vector.append(probability)
+            coord_prob = (i,probability)
+            base_probability_vector.append(coord_prob)
+        return base_probability_vector
 
-    #def weighted_probability_vector(self,enhancment_coeffiecent):
-        #self.weighted_probability_vector = []
-        #for i in self.probability_vector:
+    def gen_probability_vector(self,weight = 1):
+        base_probability_vector = self.move_probability_base_vector()
+        temp_probability_vector = []
+        for i in base_probability_vector:
+            cell_id = i[0]
+            probability = i[1]
+            if cell_id == self.current_cell:
+                enhanced_prob = probability*weight
+                temp_probability_vector.append(enhanced_prob)
+            else:
+                temp_probability_vector.append(probability)
+        return temp_probability_vector
+
+    def normalize_probability_vector(self,weight = 1):
+        temp_probability_vector = self.gen_probability_vector(weight = weight)
+        denom = sum(temp_probability_vector)
+        if denom != 1:
+            self.probability_vector = []
+            for i in temp_probability_vector:
+                probability = i/denom
+                self.probability_vector.append(probability)
+        else:
+            self.probability_vector = temp_probability_vector
 
 
-    def new_cell(self,current_cell):
+    def new_cell(self,current_cell,weight = 1):
         self.move_options(current_cell)
-        self.move_probability_base_vector()
+        self.normalize_probability_vector(weight = weight)
+        print(self.move_coordinates)
+        print(self.probability_vector)
         new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
         return new_cell[0]
 
 
 if __name__ ==  "__main__":
     pass
+
+
 

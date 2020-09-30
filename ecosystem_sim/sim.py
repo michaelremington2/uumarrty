@@ -9,7 +9,7 @@ from organismsim import Snake
 from organismsim import Movement
 
 class Cell(object):
-    def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,krat_energy_gain,cell_energy_pool,cell_id):
+    def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,cell_energy_pool,cell_id):
         #cell represents the microhabitat and governs shorter geospatial interactions
         # Order: open, bush
         self.sim = sim
@@ -19,7 +19,6 @@ class Cell(object):
         self.landscape = sim.landscape
         self.krat_energy_cost = krat_energy_cost
         self.snake_energy_cost = snake_energy_cost
-        self.krat_energy_gain = krat_energy_gain
         self.cell_energy_pool = cell_energy_pool
         self.cell_id = cell_id
         self.rng = self.sim.rng
@@ -55,6 +54,7 @@ class Cell(object):
         return self.snakes.pop(snake_index)
 
     def cell_forage(self,energy_consumed):
+        #if energy_consumed != None:
         self.cell_energy_pool -= energy_consumed
 
     def krat_move(self):
@@ -73,8 +73,13 @@ class Cell(object):
                 self.landscape.snake_move_pool.append(moving_snake)
                 self.pop_snake(self.snakes.index(snake))
 
-    #def camoflouge_coefficent(self):
-    #    if self.habitat_type == 
+    def krat_grave(self,krat):
+        if krat.alive == False:
+            self.pop_krat(self.krats.index(krat))
+
+    def snake_grave(self,snake):
+        if snake.alive == False:
+            self.pop_krat(self.krats.index(snake))
 
     def predation_cycle_snake(self):
         for snake in self.snakes:
@@ -85,14 +90,18 @@ class Cell(object):
                 krat = self.select_krat()
                 snake.consume(krat.energy_counter)
                 self.pop_krat(self.krats.index(krat))
+            self.snake_grave(snake)
 
     def foraging_rat(self):
         for krat in self.krats:
             krat.foraging_period()
             krat.expend_energy(self.krat_energy_cost)
-            if krat.foraging == True:
-                krat.consume(self.krat_energy_gain,self.cell_energy_pool)
-                self.cell_forage(self.krat_energy_gain)
+            if krat.foraging == True and krat.alive == True:
+                krat_energy_gain = krat.energy_gain(self.cell_energy_pool)
+                if self.cell_energy_pool > 0:
+                    krat.forage(krat_energy_gain)
+                    self.cell_forage(krat_energy_gain)
+            self.krat_grave(krat)
 
 
 class Landscape(object):
@@ -115,7 +124,7 @@ class Landscape(object):
         self.rng = self.sim.rng
 
 
-    def build(self,cell_energy_pool,krat_energy_cost,snake_energy_cost, krat_energy_gain):
+    def build(self,cell_energy_pool,krat_energy_cost,snake_energy_cost):
         self.cells = []
         for yidx in range(self.cells_y_rows):
             temp_x = []
@@ -127,7 +136,6 @@ class Landscape(object):
                     cell_energy_pool = cell_energy_pool,
                     krat_energy_cost = krat_energy_cost,
                     snake_energy_cost = snake_energy_cost,
-                    krat_energy_gain = krat_energy_gain,
                     cell_id = cell_id)
                 temp_x.append(cell)
             self.cells.append(temp_x)
@@ -151,8 +159,8 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_krat(self,sim,energy_counter,cell_id):
-        krat = Krat(sim = sim,energy_counter = energy_counter,home_cell_id = cell_id)
+    def initialize_krat(self,sim,energy_counter,cell_id,foraging_rate):
+        krat = Krat(sim = sim,energy_counter = energy_counter,home_cell_id = cell_id,foraging_rate = foraging_rate)
         return krat
 
     def initialize_snake(self,sim,energy_counter,strike_success_probability):
@@ -170,11 +178,14 @@ class Landscape(object):
             snake.current_cell(cell.cell_id)
             x = x-1
 
-    def initialize_krat_pop(self,initial_krat_pop,energy_counter):
+    def initialize_krat_pop(self,initial_krat_pop,energy_counter,foraging_rate):
         y = initial_krat_pop
         while y > 0:
             cell = self.select_random_cell()
-            krat = self.initialize_krat(sim = self.sim, energy_counter = energy_counter, cell_id = cell.cell_id)
+            krat = self.initialize_krat(sim = self.sim,
+                                        energy_counter = energy_counter,
+                                        cell_id = cell.cell_id, 
+                                        foraging_rate = foraging_rate)
             cell.add_krat(krat)
             krat.current_cell(cell.cell_id)
             y = y-1
@@ -202,6 +213,8 @@ class Landscape(object):
             for cell in cell_width:
                 cell.predation_cycle_snake()
                 cell.foraging_rat()
+                if cell.cell_id == (2,2):
+                    print('time of day: {} cell energy pool: {} krats: {}'.format(sim.time_of_day,cell.cell_energy_pool,len(cell.krats)))
                 cell.snake_move()
                 cell.krat_move()
         self.relocate_krats()
@@ -219,7 +232,7 @@ class Sim(object):
             self.rng = rng
 
     def configure(self, config_d):
-        self.end_time = 24 #config_d["days_of_sim"]*24
+        self.end_time = config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -229,8 +242,7 @@ class Sim(object):
         self.landscape.build(
                 cell_energy_pool = config_d["cell_energy_pool"],
                 krat_energy_cost = config_d["krat_energy_cost"],
-                snake_energy_cost = config_d["snake_energy_cost"],
-                krat_energy_gain = config_d["krat_energy_gain"])
+                snake_energy_cost = config_d["snake_energy_cost"])
         self.landscape.initialize_snake_pop(
                 initial_snake_pop=config_d["initial_snake_pop"],
                 snake_initial_energy=config_d["snake_initial_energy"],
@@ -238,7 +250,8 @@ class Sim(object):
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
-                energy_counter=config_d["krat_initial_energy"]
+                energy_counter=config_d["krat_initial_energy"],
+                foraging_rate = float(config_d["krat_energy_gain"])
                 )
 
     def read_configuration_file(self):
@@ -260,9 +273,7 @@ class Sim(object):
         for i in range(self.end_time):
             self.landscape.landscape_dynamics()
             self.hour_tick()
-            self.time += i
-            print(self.time)
-            print(time_of_day)
+            self.time += 1
 
     def test(self):
         self.read_configuration_file()
@@ -270,7 +281,7 @@ class Sim(object):
         for cell_width in cells:
             for cell in cell_width:
                 cell_id = '{},{}'.format(cell.cell_id[0],cell.cell_id[1])
-                print(cell_id)
+                #print(cell_id)
         
 
     def report(self):
@@ -283,7 +294,7 @@ class Sim(object):
                 krat_count = str(len(cell.krats))
                 snake_count = str(len(cell.snakes))
                 prompt = 'iter {}, cell_id {}, krats {}, snakes {}'.format(counter,cell_id,krat_count,snake_count)
-                print(prompt)
+                #print(prompt)
                 counter = counter + 1
 
     def sample(self):
@@ -292,11 +303,12 @@ class Sim(object):
 
 if __name__ ==  "__main__":
     sim = Sim('data.txt')
-    sim.read_configuration_file()
-    move = Movement(sim)
-    cell = (5,6)
-    new_cell = move.new_cell(cell,weight = 1.5)
-    print(new_cell)
+    sim.main()
+    #sim.read_configuration_file()
+    #move = Movement(sim)
+    #cell = (5,6)
+    #new_cell = move.new_cell(cell,weight = 1.5)
+    #print(new_cell)
 
 
 

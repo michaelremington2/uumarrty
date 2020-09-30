@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import math
+
 class Organism(object):
     def __init__(self,sim, energy_counter):
         self.sim = sim
@@ -7,44 +9,27 @@ class Organism(object):
         self.rng = self.sim.rng
         self.move = Movement(self.sim)
 
-    def consume(self,energy_gain,cell_energy_pool = None):
-        if energy_gain < 0:
-            raise ValueError('gains should be positive integers')
-        if cell_energy_pool != None:
-            if cell_energy_pool > 0:
-                self.energy_counter += energy_gain
-        else:
-            self.energy_counter += energy_gain
-
     def get_energy_counter(self):
         return self.energy_counter
 
     def expend_energy(self,energy_cost):
-        if energy_cost < 0:
-            raise ValueError('Costs should be positive integers')
-        self.energy_counter -= energy_cost
         self.natural_death()
+        if self.alive == True:
+            if energy_cost < 0:
+                raise ValueError('Costs should be positive integers')
+            self.energy_counter -= energy_cost    
 
     def natural_death(self):
         if self.energy_counter == 0:
             self.alive = False
 
-    def time_of_day(self,time_of_day):
-        if time_of_day >= 0 and time_of_day < 24:
-            pass
-        else:
-            raise ValueError('Not an appropriate time of day')
-
     def current_cell(self,cell_id):
         self.current_cell_id = cell_id
-
 
     def organism_movement(self):
         self.move.move_options(self.current_cell_id)
         new_cell_id = self.move.new_cell(self.current_cell_id)
         return new_cell_id
-
-
 
 
 class Snake(Organism):
@@ -85,15 +70,22 @@ class Snake(Organism):
         else:
             self.hunting = False
 
+    def consume(self,energy_gain):
+        if energy_gain < 0:
+            raise ValueError('gains should be positive integers')
+        else:
+            self.energy_counter += energy_gain
+
 
 class Krat(Organism):
-    def __init__(self,sim,energy_counter,home_cell_id,foraging_hours = None):
+    def __init__(self,sim,energy_counter,home_cell_id,foraging_rate,foraging_hours = None):
         super().__init__(sim,energy_counter)
         self.sim = sim
         self.energy_counter = energy_counter
         self.home_cell_id = home_cell_id
         self.foraging = False
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
+        self.foraging_rate = foraging_rate
         self.rng = self.sim.rng
 
     def foraging_period_gen(self,foraging_hours):
@@ -106,6 +98,33 @@ class Krat(Organism):
             self.foraging = True
         else:
             self.foraging = False
+
+    def energy_calculator(self,cell_energy_pool):
+        '''Function takes partial seeds / energy left over from the foraging rate and uses this as a probability
+        to whether or not the krat gets an extra unit or not.'''
+        base_gain = math.floor(self.foraging_rate*cell_energy_pool)
+        extra_energy_probability = float((self.foraging_rate*cell_energy_pool))- base_gain
+        if extra_energy_probability > 1:
+            raise ValueError('Probability is too high.')
+        energy_probability_vector = [(1-extra_energy_probability),extra_energy_probability]
+        extra_energy = self.rng.choices([0,1],energy_probability_vector, k = 1)
+        energy_gain = extra_energy[0]+base_gain
+        return energy_gain
+
+    def energy_gain(self,cell_energy_pool):
+        if self.alive == True:
+            if self.foraging_rate*cell_energy_pool % 1 != 0:
+                energy_gain = self.energy_calculator(cell_energy_pool)
+            else:
+                energy_gain = self.foraging_rate*cell_energy_pool
+            return energy_gain
+
+    def forage(self,energy_gain):
+        if self.alive == True:
+            self.energy_counter += energy_gain
+
+
+
 
 class Movement(object):
     def __init__(self,sim):
@@ -166,8 +185,8 @@ class Movement(object):
     def new_cell(self,current_cell,weight = 1):
         self.move_options(current_cell)
         self.normalize_probability_vector(weight = weight)
-        print(self.move_coordinates)
-        print(self.probability_vector)
+        #print(self.move_coordinates)
+        #print(self.probability_vector)
         new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
         return new_cell[0]
 

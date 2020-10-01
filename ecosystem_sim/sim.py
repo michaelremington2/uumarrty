@@ -208,13 +208,18 @@ class Landscape(object):
             snake_object.current_cell(new_cell_id)
             self.snake_move_pool.pop(j)
 
+    def landscape_stats(self,cell):
+        cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])
+        cell_snake_energy = sum([snake.energy_counter for snake in cell.snakes])
+        data = [sim.time,sim.time_of_day,cell.cell_id,cell.cell_energy_pool,len(cell.krats),cell_krat_energy,len(cell.snakes),cell_snake_energy ]
+        sim.report.append(data)
+
     def landscape_dynamics(self):
         for cell_width in self.cells:
             for cell in cell_width:
                 cell.predation_cycle_snake()
                 cell.foraging_rat()
-                if cell.cell_id == (2,2):
-                    print('time of day: {} cell energy pool: {} krats: {}'.format(sim.time_of_day,cell.cell_energy_pool,len(cell.krats)))
+                self.landscape_stats(cell)
                 cell.snake_move()
                 cell.krat_move()
         self.relocate_krats()
@@ -226,13 +231,14 @@ class Sim(object):
     #compiles landscape and designates parameters to the landscape. 
     def __init__(self,file_path,rng = None):
         self.file_path = file_path
+        self.report = []
         if rng is None:
             self.rng = random.Random()
         else:
             self.rng = rng
 
     def configure(self, config_d):
-        self.end_time = config_d["days_of_sim"]*24
+        self.end_time = 24 #config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -274,6 +280,7 @@ class Sim(object):
             self.landscape.landscape_dynamics()
             self.hour_tick()
             self.time += 1
+        self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
 
     def test(self):
         self.read_configuration_file()
@@ -284,21 +291,14 @@ class Sim(object):
                 #print(cell_id)
         
 
-    def report(self):
-        cells = sim.landscape.cells
-        counter = 0
-        print(str(np.shape(cells)))
-        for cell_width in cells:
-            for cell in cell_width:
-                cell_id = '{},{}'.format(cell.cell_id[0],cell.cell_id[1])
-                krat_count = str(len(cell.krats))
-                snake_count = str(len(cell.snakes))
-                prompt = 'iter {}, cell_id {}, krats {}, snakes {}'.format(counter,cell_id,krat_count,snake_count)
-                #print(prompt)
-                counter = counter + 1
+    def report_writer(self,array,file_name):
+        import csv
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(array)
 
-    def sample(self):
-        pass
+
+
 
 
 if __name__ ==  "__main__":

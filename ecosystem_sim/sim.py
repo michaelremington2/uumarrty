@@ -197,7 +197,7 @@ class Landscape(object):
             new_cell = self.select_cell(new_cell_id)
             new_cell.add_krat(krat_object)
             krat_object.current_cell(new_cell_id)
-            self.krat_move_pool.pop(i)
+        self.krat_move_pool = []
 
     def relocate_snakes(self):
         for j, snake in enumerate(self.snake_move_pool):
@@ -206,7 +206,7 @@ class Landscape(object):
             new_cell = self.select_cell(new_cell_id)
             new_cell.add_snake(snake_object)
             snake_object.current_cell(new_cell_id)
-            self.snake_move_pool.pop(j)
+        self.snake_move_pool = []
 
     def landscape_stats(self,cell):
         cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])

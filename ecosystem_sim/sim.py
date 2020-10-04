@@ -58,39 +58,42 @@ class Cell(object):
         self.cell_energy_pool -= energy_consumed
 
     def krat_move(self):
+        moving_krats = []
         for krat in self.krats:
             new_cell_id = krat.organism_movement()
             if new_cell_id != self.cell_id:
                 moving_krat = (new_cell_id,krat,self.cell_id)
                 self.landscape.krat_move_pool.append(moving_krat)
-                self.pop_krat(self.krats.index(krat))
+                moving_krats.append(krat)
+        self.krats = [krat for krat in self.krats if krat not in moving_krats]
 
     def snake_move(self):
+        moving_snakes = []
         for snake in self.snakes:
             new_cell_id = snake.organism_movement()
             if new_cell_id != self.cell_id:
                 moving_snake = (new_cell_id,snake)
                 self.landscape.snake_move_pool.append(moving_snake)
-                self.pop_snake(self.snakes.index(snake))
+                moving_snakes.append(snake)        
+        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
 
-    def krat_grave(self,krat):
-        if krat.alive == False:
-            self.pop_krat(self.krats.index(krat))
+    def krat_grave(self):
+        self.krats = [ krat for krat in self.krats if krat.alive == True ]
 
-    def snake_grave(self,snake):
-        if snake.alive == False:
-            self.pop_krat(self.krats.index(snake))
+    def snake_grave(self):
+        self.snakes = [ snake for snake in self.snakes if snake.alive == True ]
 
     def predation_cycle_snake(self):
+        probability_of_encounter = (1/80) #Snakes take up about 1 square meter of land, there is about 100 square meters in a plot, 80% is usable by orgs
         for snake in self.snakes:
             snake.hunting_period()
-            if self.rng.random() < snake.strike_success_probability and len(self.krats) > 0:
-                #print('successful_strike!')
+            if self.rng.random() < probability_of_encounter and len(self.krats) > 0:
                 snake.expend_energy(self.snake_energy_cost)
-                krat = self.select_krat()
-                snake.consume(krat.energy_counter)
-                self.pop_krat(self.krats.index(krat))
-            self.snake_grave(snake)
+                if self.rng.random() < snake.strike_success_probability:
+                    #print('successful_strike!')
+                    krat = self.select_krat()
+                    snake.consume(krat.energy_counter)
+                    self.pop_krat(self.krats.index(krat))
 
     def foraging_rat(self):
         for krat in self.krats:
@@ -101,7 +104,6 @@ class Cell(object):
                 if self.cell_energy_pool > 0:
                     krat.forage(krat_energy_gain)
                     self.cell_forage(krat_energy_gain)
-            self.krat_grave(krat)
 
 
 class Landscape(object):
@@ -217,9 +219,9 @@ class Landscape(object):
     def landscape_dynamics(self):
         for cell_width in self.cells:
             for cell in cell_width:
+                self.landscape_stats(cell)
                 cell.predation_cycle_snake()
                 cell.foraging_rat()
-                self.landscape_stats(cell)
                 cell.snake_move()
                 cell.krat_move()
         self.relocate_krats()
@@ -236,9 +238,11 @@ class Sim(object):
             self.rng = random.Random()
         else:
             self.rng = rng
+        self.time = 0
+        self.time_of_day = 0
 
     def configure(self, config_d):
-        self.end_time = 24 #config_d["days_of_sim"]*24
+        self.end_time = config_d["days_of_sim"]*24
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -273,8 +277,6 @@ class Sim(object):
             self.time_of_day += 1
 
     def main(self):
-        self.time = 0
-        self.time_of_day = 0
         self.read_configuration_file()
         for i in range(self.end_time):
             self.landscape.landscape_dynamics()
@@ -288,7 +290,7 @@ class Sim(object):
         for cell_width in cells:
             for cell in cell_width:
                 cell_id = '{},{}'.format(cell.cell_id[0],cell.cell_id[1])
-                #print(cell_id)
+                print(cell_id)
         
 
     def report_writer(self,array,file_name):

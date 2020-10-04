@@ -1,2 +1,4 @@
 /__pycache__/*
 ecosystem_sim/__pycache__/*
+ecosystem_sim/scratch.py
+ecosystem_sim/.ipynb_checkpoints/*

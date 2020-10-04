@@ -84,9 +84,11 @@ class Cell(object):
         self.snakes = [ snake for snake in self.snakes if snake.alive == True ]
 
     def predation_cycle_snake(self):
+        self.snake_grave()
         probability_of_encounter = (1/80) #Snakes take up about 1 square meter of land, there is about 100 square meters in a plot, 80% is usable by orgs
         for snake in self.snakes:
             snake.hunting_period()
+            snake.expend_energy(self.snake_energy_cost)
             if self.rng.random() < probability_of_encounter and len(self.krats) > 0:
                 snake.expend_energy(self.snake_energy_cost)
                 if self.rng.random() < snake.strike_success_probability:
@@ -96,6 +98,7 @@ class Cell(object):
                     self.pop_krat(self.krats.index(krat))
 
     def foraging_rat(self):
+        self.krat_grave()
         for krat in self.krats:
             krat.foraging_period()
             krat.expend_energy(self.krat_energy_cost)

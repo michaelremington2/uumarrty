@@ -20,7 +20,7 @@ class Organism(object):
             self.energy_counter -= energy_cost    
 
     def natural_death(self):
-        if self.energy_counter == 0:
+        if round(self.energy_counter) <= 0:
             self.alive = False
 
     def current_cell(self,cell_id):

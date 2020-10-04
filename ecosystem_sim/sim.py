@@ -245,7 +245,7 @@ class Sim(object):
         self.time_of_day = 0
 
     def configure(self, config_d):
-        self.end_time = config_d["days_of_sim"]*24
+        self.end_time = config_d["days_of_sim"]*4
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -274,17 +274,17 @@ class Sim(object):
         self.configure(sim1)
 
     def hour_tick(self):
-        if self.time_of_day >= 23:
+        if self.time_of_day >= 18:
             self.time_of_day = 0
         else:
-            self.time_of_day += 1
+            self.time_of_day += 6
 
     def main(self):
         self.read_configuration_file()
-        for i in range(self.end_time):
+        for i in range(0,self.end_time,6):
             self.landscape.landscape_dynamics()
             self.hour_tick()
-            self.time += 1
+            self.time += 6
         self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
 
     def test(self):

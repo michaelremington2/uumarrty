@@ -5,8 +5,8 @@ data = {}
 data['sim'] = []
 data['sim'].append({
     "days_of_sim": 365,
-    "landscape_size_x": 100,
-    "landscape_size_y": 80,
+    "landscape_size_x": 1000,
+    "landscape_size_y": 800,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 15,
     "initial_krat_pop": 100,

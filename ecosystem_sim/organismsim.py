@@ -61,7 +61,7 @@ class Snake(Organism):
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
-            hunting_hours = [0,1,2,3,4,5,20,21,22,23]
+            hunting_hours = [0,18]
         return hunting_hours
 
     def hunting_period(self):
@@ -90,7 +90,7 @@ class Krat(Organism):
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
-            foraging_hours = [0,1,2,3,4,5,20,21,22,23]
+            foraging_hours = [0,18]
         return foraging_hours
 
     def foraging_period(self):

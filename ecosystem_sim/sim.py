@@ -85,14 +85,13 @@ class Cell(object):
 
     def predation_cycle_snake(self):
         self.snake_grave()
-        probability_of_encounter = (1/80) #Snakes take up about 1 square meter of land, there is about 100 square meters in a plot, 80% is usable by orgs
+        probability_of_encounter = len(self.krats)*(1/10) #len(self.krats)*(1/10) #need to figure out a good interaction rate
         for snake in self.snakes:
             snake.hunting_period()
             snake.expend_energy(self.snake_energy_cost)
-            if self.rng.random() < probability_of_encounter and len(self.krats) > 0:
-                snake.expend_energy(self.snake_energy_cost)
+            if self.rng.random() < probability_of_encounter and len(self.krats) > 0 and snake.hunting == True:
                 if self.rng.random() < snake.strike_success_probability:
-                    #print('successful_strike!')
+                    snake.expend_energy(self.snake_energy_cost,2)
                     krat = self.select_krat()
                     snake.consume(krat.energy_counter)
                     self.pop_krat(self.krats.index(krat))
@@ -214,10 +213,11 @@ class Landscape(object):
         self.snake_move_pool = []
 
     def landscape_stats(self,cell):
-        cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])
-        cell_snake_energy = sum([snake.energy_counter for snake in cell.snakes])
-        data = [sim.time,sim.time_of_day,cell.cell_id,cell.cell_energy_pool,len(cell.krats),cell_krat_energy,len(cell.snakes),cell_snake_energy ]
-        sim.report.append(data)
+        if self.sim.time_of_day in [0,12]:
+            cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])
+            cell_snake_energy = sum([snake.energy_counter for snake in cell.snakes])
+            data = [sim.time,sim.time_of_day,cell.cell_id,cell.cell_energy_pool,len(cell.krats),cell_krat_energy,len(cell.snakes),cell_snake_energy ]
+            sim.report.append(data)
 
     def landscape_dynamics(self):
         for cell_width in self.cells:
@@ -245,7 +245,9 @@ class Sim(object):
         self.time_of_day = 0
 
     def configure(self, config_d):
-        self.end_time = config_d["days_of_sim"]*4
+        self.time_step = int(config_d["time_step"])
+        self.time_steps_in_a_day = int(24/self.time_step)
+        self.end_time = config_d["days_of_sim"]*self.time_steps_in_a_day
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -254,8 +256,8 @@ class Sim(object):
                 )
         self.landscape.build(
                 cell_energy_pool = config_d["cell_energy_pool"],
-                krat_energy_cost = config_d["krat_energy_cost"],
-                snake_energy_cost = config_d["snake_energy_cost"])
+                krat_energy_cost = config_d["krat_energy_cost"]/self.time_step ,
+                snake_energy_cost = config_d["snake_energy_cost"]/self.time_step )
         self.landscape.initialize_snake_pop(
                 initial_snake_pop=config_d["initial_snake_pop"],
                 snake_initial_energy=config_d["snake_initial_energy"],
@@ -274,17 +276,17 @@ class Sim(object):
         self.configure(sim1)
 
     def hour_tick(self):
-        if self.time_of_day >= 18:
+        if self.time_of_day >= (24-self.time_step):
             self.time_of_day = 0
         else:
-            self.time_of_day += 6
+            self.time_of_day += self.time_step
 
     def main(self):
         self.read_configuration_file()
-        for i in range(0,self.end_time,6):
+        for i in range(0,self.end_time,self.time_step):
             self.landscape.landscape_dynamics()
             self.hour_tick()
-            self.time += 6
+            self.time += 2
         self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
 
     def test(self):

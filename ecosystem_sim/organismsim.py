@@ -5,19 +5,28 @@ class Organism(object):
     def __init__(self,sim, energy_counter):
         self.sim = sim
         self.energy_counter = energy_counter
+        self.max_energy = energy_counter
         self.alive = True
+        self.hungry = True
         self.rng = self.sim.rng
-        self.move = Movement(self.sim)
 
     def get_energy_counter(self):
         return self.energy_counter
 
-    def expend_energy(self,energy_cost):
+    def expend_energy(self,energy_cost,energy_weight = 1):
         self.natural_death()
         if self.alive == True:
             if energy_cost < 0:
                 raise ValueError('Costs should be positive integers')
-            self.energy_counter -= energy_cost    
+            self.energy_counter -= energy_cost*energy_weight
+
+    def set_hungry(self):
+        if self.energy_counter < self.max_energy/2:
+            self.hungry =  True
+        elif self.energy_counter > self.max_energy*1.5:
+            self.hungry = False
+        else:
+            pass
 
     def natural_death(self):
         if round(self.energy_counter) <= 0:
@@ -41,6 +50,7 @@ class Snake(Organism):
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
+        self.move = Movement(sim = self.sim, move_range = 1)
 
     @property
     def strike_success_probability(self):
@@ -61,11 +71,12 @@ class Snake(Organism):
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
-            hunting_hours = [0,18]
+            hunting_hours = [0,1,2,3,4,5,18,19,20,21,22,23]
         return hunting_hours
 
     def hunting_period(self):
-        if self.sim.time_of_day in self.hunting_hours:
+        self.set_hungry()
+        if self.sim.time_of_day in self.hunting_hours and self.hungry == True:
             self.hunting = True
         else:
             self.hunting = False
@@ -87,14 +98,16 @@ class Krat(Organism):
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
         self.foraging_rate = foraging_rate
         self.rng = self.sim.rng
+        self.move = Movement(sim = self.sim, move_range = 2)
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
-            foraging_hours = [0,18]
+            foraging_hours = [0,1,2,3,4,5,18,19,20,21,22,23]
         return foraging_hours
 
     def foraging_period(self):
-        if self.sim.time_of_day in self.foraging_hours:
+        self.set_hungry()
+        if self.sim.time_of_day in self.foraging_hours and self.hungry == True:
             self.foraging = True
         else:
             self.foraging = False
@@ -127,16 +140,17 @@ class Krat(Organism):
 
 
 class Movement(object):
-    def __init__(self,sim):
+    def __init__(self,move_range,sim):
         self.column_boundary = sim.landscape.cells_x_columns - 1
         self.row_boundary = sim.landscape.cells_y_rows - 1
+        self.move_range = move_range
         self.rng = sim.rng
 
     def move_options(self,current_cell):
         self.move_coordinates = []
         self.current_cell = current_cell
-        for x in [-1,0,1]:
-            for y in [-1,0,1]:
+        for x in range(-self.move_range,self.move_range+1):
+            for y in range(-self.move_range,self.move_range+1):
                 #print('{},{}'.format(x,y))
                 row_coord = self.current_cell[0] + y
                 column_coord = self.current_cell[1] + x

@@ -2,3 +2,4 @@
 ecosystem_sim/__pycache__/*
 ecosystem_sim/scratch.py
 ecosystem_sim/.ipynb_checkpoints/*
+ecosystem_sim/Cell_stats_sim_1.csv

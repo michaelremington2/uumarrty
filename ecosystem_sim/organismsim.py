@@ -42,14 +42,17 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, energy_counter,strike_success_probability,hunting_hours = None):
+    def __init__(self,sim, energy_counter,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
         super().__init__(sim,energy_counter)
         self.sim = sim
         self.energy_counter = energy_counter
         self._strike_success_probability = strike_success_probability
+        self.snake_max_litter_size = snake_max_litter_size
+        self.snake_litter_frequency = snake_litter_frequency*self.sim.time_step
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
+        self.sex = self.rng.choice(['F','M'])
         self.move = Movement(sim = self.sim, move_range = 1)
 
     @property
@@ -87,17 +90,31 @@ class Snake(Organism):
         else:
             self.energy_counter += energy_gain
 
+    def reproduction(self,cell_incubation_list):
+        if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 6:
+            litter_size = self.rng.randrange(0,self.snake_max_litter_size)
+            for i in range(litter_size+1):
+                snake_stats = {"energy_counter": self.energy_counter,
+                              "strike_success_probability": self.strike_success_probability,
+                              "snake_max_litter_size": self.snake_max_litter_size,
+                              "snake_litter_frequency": self.snake_litter_frequency,
+                              "hunting_hours": self.hunting_hours}
+                cell_incubation_list.append(snake_stats)
+
 
 class Krat(Organism):
-    def __init__(self,sim,energy_counter,home_cell_id,foraging_rate,foraging_hours = None):
+    def __init__(self,sim,energy_counter,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
         super().__init__(sim,energy_counter)
         self.sim = sim
         self.energy_counter = energy_counter
+        self.krat_max_litter_size = krat_max_litter_size
+        self.krat_litter_frequency = krat_litter_frequency
         self.home_cell_id = home_cell_id
         self.foraging = False
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
         self.foraging_rate = foraging_rate
         self.rng = self.sim.rng
+        self.sex = self.rng.choice(['F','M'])
         self.move = Movement(sim = self.sim, move_range = 2)
 
     def foraging_period_gen(self,foraging_hours):
@@ -135,6 +152,19 @@ class Krat(Organism):
     def forage(self,energy_gain):
         if self.alive == True:
             self.energy_counter += energy_gain
+
+    def reproduction(self,cell_incubation_list):
+        random_prob = self.rng.random()
+        if (random_prob < self.krat_litter_frequency) and self.sex == 'F':
+            #print('prob {}, krat_freq {}, sex {}'.format(random_prob,self.krat_litter_frequency,self.sex))
+            litter_size = self.rng.randrange(0,self.krat_max_litter_size)
+            for i in range(litter_size+1):
+                krat_stats = {"energy_counter": self.energy_counter,
+                              "foraging_rate": self.foraging_rate,
+                              "krat_max_litter_size": self.krat_max_litter_size,
+                              "krat_litter_frequency": self.krat_litter_frequency,
+                              "foraging_hours":self.foraging_hours}
+                cell_incubation_list.append(krat_stats)
 
 
 

@@ -65,6 +65,7 @@ class Organism(object):
         self.current_cell_id = cell_id
 
     def organism_movement(self):
+        '''Runs movement algorithm and returns the new cell id for the object to move to.'''
         self.move.move_options(self.current_cell_id)
         new_cell_id = self.move.new_cell(self.current_cell_id)
         return new_cell_id

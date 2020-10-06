@@ -2,6 +2,19 @@
 import math
 
 class Organism(object):
+    '''
+    The base class that any tyoe of vertabrate organism can use to set up the object that represents the individual.
+    
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter.
+        energy counter -- The base energy stat that dictates the state of the organismand dictates feeding tendancies. This can be an int or a float.
+
+    Attributes:
+        max_energy -- initial energy counter.
+        alive -- if true the object is alive, if false the object is dead (boolean initial set to True).
+        hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
+        rng -- random number generator in the sim.
+    '''
     def __init__(self,sim, energy_counter):
         self.sim = sim
         self.energy_counter = energy_counter
@@ -9,11 +22,29 @@ class Organism(object):
         self.alive = True
         self.hungry = True
         self.rng = self.sim.rng
+        self.move = Movement(sim = self.sim, move_range = 1)
 
     def get_energy_counter(self):
+        '''Returns the organisms energy counter'''
         return self.energy_counter
 
+    def natural_death(self):
+        '''If the energy counter falls below zero, this function sets the alive attribute to false signifying it is dead.'''
+        if round(self.energy_counter) <= 0:
+            self.alive = False
+
     def expend_energy(self,energy_cost,energy_weight = 1):
+        '''
+        Sets the object to dead if there is not enough energy in the object.If alive, 
+        deducts the energy cost* the energy weight from the classes energy_counter attribute.
+        
+        Args:
+            energy_cost -- base constant to deduct from energy_counter (int/ float)
+            energy_weight -- multiplier coefficent for the energy_cost factor.(optional set to 1 in no args passed.)
+        
+        Raises:
+            ValueError: if energy_cost is less than zero
+        '''
         self.natural_death()
         if self.alive == True:
             if energy_cost < 0:
@@ -21,6 +52,7 @@ class Organism(object):
             self.energy_counter -= energy_cost*energy_weight
 
     def set_hungry(self):
+        '''Controls hunger parameter true are false based on the energy counter and max_energy.'''
         if self.energy_counter < self.max_energy/2:
             self.hungry =  True
         elif self.energy_counter > self.max_energy*1.5:
@@ -28,11 +60,8 @@ class Organism(object):
         else:
             pass
 
-    def natural_death(self):
-        if round(self.energy_counter) <= 0:
-            self.alive = False
-
     def current_cell(self,cell_id):
+        '''Creates an attribute called current cell for the object that is used in the movment algorithm.'''
         self.current_cell_id = cell_id
 
     def organism_movement(self):

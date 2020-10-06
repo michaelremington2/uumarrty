@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 from enum import Enum,auto
 import random
 import numpy as np
@@ -7,6 +6,7 @@ import json
 from organismsim import Krat
 from organismsim import Snake
 from organismsim import Movement
+import time
 
 class Cell(object):
     def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,cell_energy_pool,cell_id):
@@ -120,15 +120,15 @@ class Cell(object):
 
     def predation_cycle_snake(self):
         self.snake_grave()
-        probability_of_encounter = (len(self.krats)*0.5) #len(self.krats)*(1/10) #need to figure out a good interaction rate
+        probability_of_encounter = (len(self.krats)*(1/5)) #len(self.krats)*(1/10) #need to figure out a good interaction rate
         for snake in self.snakes:
             snake.hunting_period()
             if self.sim.time_of_day == 6:
                 snake.reproduction(self.snake_incubation_list)
-            snake.expend_energy(self.snake_energy_cost)
+            snake.expend_energy(self.snake_energy_cost,0.5)
             if self.rng.random() < probability_of_encounter and len(self.krats) > 0 and snake.hunting == True:
                 if self.rng.random() < snake.strike_success_probability:
-                    snake.expend_energy(self.snake_energy_cost,2)
+                    snake.expend_energy(self.snake_energy_cost)
                     krat = self.select_krat()
                     snake.consume(krat.energy_counter)
                     self.pop_krat(self.krats.index(krat))
@@ -341,12 +341,15 @@ class Sim(object):
             self.time_of_day += self.time_step
 
     def main(self):
+        start = round(time.time())
         self.read_configuration_file()
         for i in range(0,self.end_time,self.time_step):
             self.landscape.landscape_dynamics()
             self.hour_tick()
             self.time += 2
         self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
+        time_elapsed = round(time.time()) - start
+        print(time_elapsed)
 
     def test(self):
         self.read_configuration_file()

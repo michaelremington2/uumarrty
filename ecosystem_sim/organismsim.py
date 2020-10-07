@@ -15,10 +15,11 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim, energy_counter):
+    def __init__(self,sim, initial_energy_counter):
         self.sim = sim
-        self.energy_counter = energy_counter
-        self.max_energy = energy_counter
+        self.energy_counter = initial_energy_counter
+        self.max_energy = initial_energy_counter*1.25
+        self.hunger_level = initial_energy_counter*.75
         self.alive = True
         self.hungry = True
         self.rng = self.sim.rng
@@ -53,9 +54,9 @@ class Organism(object):
 
     def set_hungry(self):
         '''Controls hunger parameter true are false based on the energy counter and max_energy.'''
-        if self.energy_counter < self.max_energy/2:
+        if self.energy_counter < self.hunger_level:
             self.hungry =  True
-        elif self.energy_counter > self.max_energy*1.5:
+        elif self.energy_counter > self.max_energy:
             self.hungry = False
         else:
             pass
@@ -72,10 +73,10 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, energy_counter,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
-        super().__init__(sim,energy_counter)
+    def __init__(self,sim, initial_energy_counter,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
+        super().__init__(sim,initial_energy_counter)
         self.sim = sim
-        self.energy_counter = energy_counter
+        self.energy_counter = initial_energy_counter
         self._strike_success_probability = strike_success_probability
         self.snake_max_litter_size = snake_max_litter_size
         self.snake_litter_frequency = snake_litter_frequency*self.sim.time_step
@@ -133,10 +134,10 @@ class Snake(Organism):
 
 
 class Krat(Organism):
-    def __init__(self,sim,energy_counter,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
-        super().__init__(sim,energy_counter)
+    def __init__(self,sim,initial_energy_counter,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
+        super().__init__(sim,initial_energy_counter)
         self.sim = sim
-        self.energy_counter = energy_counter
+        self.energy_counter = initial_energy_counter
         self.krat_max_litter_size = krat_max_litter_size
         self.krat_litter_frequency = krat_litter_frequency
         self.home_cell_id = home_cell_id

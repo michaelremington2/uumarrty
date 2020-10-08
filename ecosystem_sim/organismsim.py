@@ -17,13 +17,16 @@ class Organism(object):
     '''
     def __init__(self,sim, initial_energy_counter):
         self.sim = sim
+        self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
         self.max_energy = initial_energy_counter*1.25
         self.hunger_level = initial_energy_counter*.75
         self.alive = True
         self.hungry = True
+        self.predation_counter = 0
         self.rng = self.sim.rng
-        self.move = Movement(sim = self.sim, move_range = 1)
+        self.move = Movement(sim = self.sim, move_range = self.sim.time_step)
+        self.number_of_movements = 0
 
     def get_energy_counter(self):
         '''Returns the organisms energy counter'''
@@ -65,10 +68,29 @@ class Organism(object):
         '''Creates an attribute called current cell for the object that is used in the movment algorithm.'''
         self.current_cell_id = cell_id
 
-    def organism_movement(self):
+    def predation_event(self):
+        self.predation_counter += 1
+
+    def reset_predation_history(self):
+        self.predation_counter = 0
+
+    def homeostasis_state(self,x):
+        e = (self.energy_counter - x**self.predation_counter)/self.initial_energy_counter
+        if e < 0:
+            e = 0
+        return e
+
+    def organism_movement(self, energy_dependence = True):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
         self.move.move_options(self.current_cell_id)
-        new_cell_id = self.move.new_cell(self.current_cell_id)
+        if energy_dependence == True:
+            e = self.homeostasis_state(x=1.5)
+            new_cell_id = self.move.new_cell(self.current_cell_id,weight = e)
+        else:
+            new_cell_id = self.move.new_cell(self.current_cell_id)
+        if new_cell_id != self.current_cell_id:
+                self.reset_predation_history()
+                self.number_of_movements += 1
         return new_cell_id
 
 
@@ -76,6 +98,7 @@ class Snake(Organism):
     def __init__(self,sim, initial_energy_counter,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
         super().__init__(sim,initial_energy_counter)
         self.sim = sim
+        self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
         self._strike_success_probability = strike_success_probability
         self.snake_max_litter_size = snake_max_litter_size
@@ -84,7 +107,7 @@ class Snake(Organism):
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
         self.sex = self.rng.choice(['F','M'])
-        self.move = Movement(sim = self.sim, move_range = 1)
+        self.move = Movement(sim = self.sim, move_range = self.sim.time_step)
 
     @property
     def strike_success_probability(self):
@@ -125,7 +148,7 @@ class Snake(Organism):
         if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 6:
             litter_size = self.rng.randrange(0,self.snake_max_litter_size)
             for i in range(litter_size+1):
-                snake_stats = {"energy_counter": self.energy_counter,
+                snake_stats = {"energy_counter": self.initial_energy_counter,
                               "strike_success_probability": self.strike_success_probability,
                               "snake_max_litter_size": self.snake_max_litter_size,
                               "snake_litter_frequency": self.snake_litter_frequency,
@@ -137,6 +160,7 @@ class Krat(Organism):
     def __init__(self,sim,initial_energy_counter,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
         super().__init__(sim,initial_energy_counter)
         self.sim = sim
+        self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
         self.krat_max_litter_size = krat_max_litter_size
         self.krat_litter_frequency = krat_litter_frequency
@@ -190,7 +214,7 @@ class Krat(Organism):
             #print('prob {}, krat_freq {}, sex {}'.format(random_prob,self.krat_litter_frequency,self.sex))
             litter_size = self.rng.randrange(0,self.krat_max_litter_size)
             for i in range(litter_size+1):
-                krat_stats = {"energy_counter": self.energy_counter,
+                krat_stats = {"energy_counter": self.initial_energy_counter,
                               "foraging_rate": self.foraging_rate,
                               "krat_max_litter_size": self.krat_max_litter_size,
                               "krat_litter_frequency": self.krat_litter_frequency,

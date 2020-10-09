@@ -5,7 +5,7 @@ import numpy as np
 import json
 from organismsim import Krat
 from organismsim import Snake
-from organismsim import Movement
+import math
 import time
 
 class Cell(object):
@@ -323,6 +323,13 @@ class Sim(object):
         self.time_of_day = 0
         self.day_of_year = 0
 
+    def probability_time_step_adjustment(self,probability_success,time_step,number_of_successes):
+        p = probability_success
+        q = 1-probability_success
+        cn = math.factorial(int(time_step))/(math.factorial(int(time_step - number_of_successes))*math.factorial(int(number_of_successes)))
+        prob = cn*p**(number_of_successes)*q**(time_step - number_of_successes)
+        return prob
+
     def configure(self, config_d):
         self.time_step = int(config_d["time_step"])
         self.time_steps_in_a_day = int(24/self.time_step)
@@ -342,14 +349,14 @@ class Sim(object):
                 initial_snake_pop=config_d["initial_snake_pop"],
                 snake_initial_energy=config_d["snake_initial_energy"],
                 snake_max_litter_size = config_d["snake_max_litter_size"],
-                snake_litter_frequency = config_d["snake_litter_frequency"]*self.time_step,
+                snake_litter_frequency = config_d["snake_litter_frequency"],
                 strike_success_probability = config_d["strike_success_probability"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
                 initial_energy_counter=config_d["krat_initial_energy"],
                 krat_max_litter_size = config_d["krat_max_litter_size"],
-                krat_litter_frequency = config_d["krat_litter_frequency"]*self.time_step,
+                krat_litter_frequency = config_d["krat_litter_frequency"],
                 foraging_rate = float(config_d["krat_energy_gain"]*self.time_step)
                 )
 
@@ -366,6 +373,7 @@ class Sim(object):
             self.time_of_day += self.time_step
 
     def day_tick(self):
+        print('time{}, day {}'.format(self.time_of_day,self.day_of_year))
         if (self.time_of_day+self.time_step) == 24:
             self.day_of_year += 1
         if (self.day_of_year+self.time_step) == 366:

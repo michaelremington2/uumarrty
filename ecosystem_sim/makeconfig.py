@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import json
-
+# add in interaction rate
+# add in movement of organism
 data = {}
 data['sim'] = []
 data['sim'].append({

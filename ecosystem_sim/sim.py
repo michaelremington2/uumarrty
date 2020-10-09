@@ -7,6 +7,8 @@ from organismsim import Krat
 from organismsim import Snake
 import math
 import time
+#look up contact rates based on spatial scale and tempor
+#brownian motion 
 
 class Cell(object):
     def __init__(self, sim, habitat_type,krat_energy_cost,snake_energy_cost,cell_energy_pool,cell_id):
@@ -63,17 +65,6 @@ class Cell(object):
             raise ValueError("Krats mating too much")
         if len(self.snakes) > 20:
             raise ValueError("snakes mating too much")
-
-    def krat_predation(self,snake):
-        probability_of_krat_encounter = len(self.krats)/(len(self.krats)+1) #1 krat has a 1/2 chance in interacting with a snake
-        if self.rng.random() < probability_of_krat_encounter:
-            snake.expend_energy(self.snake_energy_cost)
-            krat = self.select_krat()
-            if self.rng.random() < snake.strike_success_probability:
-                snake.consume(krat.energy_counter)
-                self.pop_krat(self.krats.index(krat))
-            else:
-                krat.predation_event()
 
     def other_critter_predation(self,snake):
         probability_of_encounter = (self.sim.time_step)/len(snake.hunting_hours)
@@ -137,12 +128,25 @@ class Cell(object):
                 snake.current_cell(self.cell_id)
         self.snake_incubation_list = []
 
+    def krat_predation(self,snake):
+        # stand in value and move to config file V
+        probability_of_krat_encounter = len(self.krats)/(len(self.krats)+1)*self.sim.time_step #1 krat has a 1/2 chance in interacting with a snake
+        if self.rng.random() < probability_of_krat_encounter:
+            snake.expend_energy(self.snake_energy_cost)
+            krat = self.select_krat()
+            if self.rng.random() < snake.strike_success_probability:
+                snake.consume(krat.energy_counter)
+                self.pop_krat(self.krats.index(krat))
+            else:
+                krat.predation_event()
+
     def predation_cycle_snake(self):
         self.snake_grave()
         for snake in self.snakes:
             snake.hunting_period()
             if self.sim.time_of_day == 6:
                 snake.reproduction(self.snake_incubation_list)
+            # added in a twice energy 
             snake.expend_energy(self.snake_energy_cost,0.5)
             if snake.hunting == True:
                 self.other_critter_predation(snake)
@@ -285,7 +289,7 @@ class Landscape(object):
         self.snake_move_pool = []
 
     def landscape_stats(self,cell):
-        if self.sim.time_of_day in [0,12]:
+        if self.sim.time_of_day in [0,12]: #specify in documentation
             cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])
             cell_krat_movement_history = sum([krat.number_of_movements for krat in cell.krats])
             cell_snake_energy = sum([snake.energy_counter for snake in cell.snakes])
@@ -369,6 +373,9 @@ class Sim(object):
     def hour_tick(self):
         if self.time_of_day >= (24-self.time_step):
             self.time_of_day = 0
+            self.day_of_year += 1
+            if (self.day_of_year+self.time_step) == 366:
+                self.day_of_year = 0
         else:
             self.time_of_day += self.time_step
 

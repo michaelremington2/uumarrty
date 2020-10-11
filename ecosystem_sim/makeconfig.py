@@ -23,7 +23,9 @@ data['sim'].append({
     "krat_max_litter_size": 6,
     "snake_max_litter_size":1,
     "krat_litter_frequency":(1/420),
-    "snake_litter_frequency": (1/365)
+    "snake_litter_frequency": (1/365),
+    "krat_move_range":2,
+    "snake_move_range":1
     })
 
 with open('data.txt', 'w') as outfile:

@@ -15,7 +15,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim, initial_energy_counter):
+    def __init__(self,sim, initial_energy_counter,move_range):
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -25,7 +25,9 @@ class Organism(object):
         self.hungry = True
         self.predation_counter = 0
         self.rng = self.sim.rng
-        self.move = Movement(sim = self.sim, move_range = self.sim.time_step)
+        self.move_range = move_range
+        self.column_boundary = self.sim.landscape.cells_x_columns - 1
+        self.row_boundary = self.sim.landscape.cells_y_rows - 1
         self.number_of_movements = 0
 
     def get_energy_counter(self):
@@ -80,14 +82,70 @@ class Organism(object):
             e = 0
         return e
 
+    def move_options(self):
+        self.move_coordinates = []
+        for x in range(-self.move_range,self.move_range+1):
+            for y in range(-self.move_range,self.move_range+1):
+                #print('{},{}'.format(x,y))
+                row_coord = self.current_cell_id[0] + y
+                column_coord = self.current_cell_id[1] + x
+                if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
+                    new_id = (row_coord,column_coord)
+                    self.move_coordinates.append(new_id)
+        if len(self.move_coordinates) == 0:
+            print(self.current_cell_id)
+            print(self.row_boundary)
+            print(self.column_boundary)
+            raise ValueError('No move options')
+
+    def move_probability_base_vector(self):
+        base_probability_vector = []
+        for i in self.move_coordinates:
+            probability = 1/len(self.move_coordinates)
+            coord_prob = (i,probability)
+            base_probability_vector.append(coord_prob)
+        return base_probability_vector
+
+    def gen_probability_vector(self,weight = 1):
+        base_probability_vector = self.move_probability_base_vector()
+        temp_probability_vector = []
+        for i in base_probability_vector:
+            cell_id = i[0]
+            probability = i[1]
+            if cell_id == self.current_cell_id:
+                enhanced_prob = probability*weight
+                temp_probability_vector.append(enhanced_prob)
+            else:
+                temp_probability_vector.append(probability)
+        return temp_probability_vector
+
+    def normalize_probability_vector(self,weight = 1):
+        temp_probability_vector = self.gen_probability_vector(weight = weight)
+        denom = sum(temp_probability_vector)
+        if denom != 1:
+            self.probability_vector = []
+            for i in temp_probability_vector:
+                probability = i/denom
+                self.probability_vector.append(probability)
+        else:
+            self.probability_vector = temp_probability_vector
+
+    def new_cell(self,weight = 1):
+        self.move_options()
+        self.normalize_probability_vector(weight = weight)
+        #print(self.move_coordinates)
+        #print(self.probability_vector)
+        new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
+        return new_cell[0]
+
     def organism_movement(self, energy_dependence = True):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
-        self.move.move_options(self.current_cell_id)
+        self.move_options()
         if energy_dependence == True:
             e = self.homeostasis_state(x=1.5)
-            new_cell_id = self.move.new_cell(self.current_cell_id,weight = e)
+            new_cell_id = self.new_cell(weight = e)
         else:
-            new_cell_id = self.move.new_cell(self.current_cell_id)
+            new_cell_id = self.new_cell()
         if new_cell_id != self.current_cell_id:
                 self.reset_predation_history()
                 self.number_of_movements += 1
@@ -95,8 +153,8 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, initial_energy_counter,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
-        super().__init__(sim,initial_energy_counter)
+    def __init__(self,sim, initial_energy_counter,move_range,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
+        super().__init__(sim,initial_energy_counter,move_range)
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -107,7 +165,7 @@ class Snake(Organism):
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
         self.sex = self.rng.choice(['F','M'])
-        self.move = Movement(sim = self.sim, move_range = self.sim.time_step)
+
 
     @property
     def strike_success_probability(self):
@@ -149,16 +207,17 @@ class Snake(Organism):
             litter_size = self.rng.randrange(0,self.snake_max_litter_size)
             for i in range(litter_size+1):
                 snake_stats = {"energy_counter": self.initial_energy_counter,
-                              "strike_success_probability": self.strike_success_probability,
-                              "snake_max_litter_size": self.snake_max_litter_size,
-                              "snake_litter_frequency": self.snake_litter_frequency,
-                              "hunting_hours": self.hunting_hours}
+                               "move_range": self.move_range,
+                               "strike_success_probability": self.strike_success_probability,
+                               "snake_max_litter_size": self.snake_max_litter_size,
+                               "snake_litter_frequency": self.snake_litter_frequency,
+                               "hunting_hours": self.hunting_hours}
                 cell_incubation_list.append(snake_stats)
 
 
 class Krat(Organism):
-    def __init__(self,sim,initial_energy_counter,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
-        super().__init__(sim,initial_energy_counter)
+    def __init__(self,sim,initial_energy_counter,move_range,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
+        super().__init__(sim,initial_energy_counter,move_range)
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -170,7 +229,6 @@ class Krat(Organism):
         self.foraging_rate = foraging_rate
         self.rng = self.sim.rng
         self.sex = self.rng.choice(['F','M'])
-        self.move = Movement(sim = self.sim, move_range = 2)
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
@@ -215,6 +273,7 @@ class Krat(Organism):
             litter_size = self.rng.randrange(0,self.krat_max_litter_size)
             for i in range(litter_size+1):
                 krat_stats = {"energy_counter": self.initial_energy_counter,
+                              "move_range": self.move_range,
                               "foraging_rate": self.foraging_rate,
                               "krat_max_litter_size": self.krat_max_litter_size,
                               "krat_litter_frequency": self.krat_litter_frequency,

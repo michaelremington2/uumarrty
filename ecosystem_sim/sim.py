@@ -106,6 +106,7 @@ class Cell(object):
             for baby_krat in self.krat_incubation_list:
                 krat = Krat(sim = self.sim,
                     initial_energy_counter = baby_krat["energy_counter"],
+                    move_range = baby_krat["move_range"],
                     home_cell_id = self.cell_id,
                     foraging_rate = baby_krat["foraging_rate"],
                     krat_max_litter_size = baby_krat["krat_max_litter_size"],
@@ -120,6 +121,7 @@ class Cell(object):
             for baby_snake in self.snake_incubation_list:
                 snake = Snake(sim = self.sim,
                     initial_energy_counter = baby_snake["energy_counter"],
+                    move_range = baby_snake["move_range"],
                     strike_success_probability = baby_snake["strike_success_probability"],
                     snake_max_litter_size = baby_snake["snake_max_litter_size"],
                     snake_litter_frequency = baby_snake["snake_litter_frequency"],
@@ -226,24 +228,26 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_krat(self,sim,initial_energy_counter,cell_id,krat_max_litter_size,krat_litter_frequency,foraging_rate):
+    def initialize_krat(self,sim,initial_energy_counter,cell_id,krat_max_litter_size,krat_litter_frequency,foraging_rate,move_range):
         krat = Krat(sim = sim,
             initial_energy_counter = initial_energy_counter,
+            move_range = move_range,
             home_cell_id = cell_id,
             krat_max_litter_size = krat_max_litter_size,
             krat_litter_frequency = krat_litter_frequency,
             foraging_rate = foraging_rate)
         return krat
 
-    def initialize_snake(self,sim,initial_energy_counter,snake_litter_frequency,snake_max_litter_size,strike_success_probability):
+    def initialize_snake(self,sim,initial_energy_counter,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
         snake = Snake(sim = sim,
          initial_energy_counter = initial_energy_counter,
+         move_range = move_range,
          snake_litter_frequency = snake_litter_frequency,
          snake_max_litter_size = snake_max_litter_size,
          strike_success_probability = strike_success_probability)
         return snake
 
-    def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,snake_litter_frequency,snake_max_litter_size,strike_success_probability):
+    def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
         x = initial_snake_pop
         while x > 0:
             cell = self.select_random_cell()
@@ -251,17 +255,19 @@ class Landscape(object):
                                           initial_energy_counter = snake_initial_energy,
                                           snake_litter_frequency = snake_litter_frequency,
                                           snake_max_litter_size = snake_max_litter_size,
-                                          strike_success_probability= strike_success_probability)
+                                          strike_success_probability= strike_success_probability,
+                                          move_range =move_range)
             cell.add_snake(snake)
             snake.current_cell(cell.cell_id)
             x = x-1
 
-    def initialize_krat_pop(self,initial_krat_pop,initial_energy_counter,krat_litter_frequency,krat_max_litter_size,foraging_rate):
+    def initialize_krat_pop(self,initial_krat_pop,initial_energy_counter,krat_litter_frequency,krat_max_litter_size,foraging_rate, move_range):
         y = initial_krat_pop
         while y > 0:
             cell = self.select_random_cell()
             krat = self.initialize_krat(sim = self.sim,
                                         initial_energy_counter = initial_energy_counter,
+                                        move_range = move_range,
                                         cell_id = cell.cell_id,
                                         krat_litter_frequency = krat_litter_frequency,
                                         krat_max_litter_size = krat_max_litter_size,
@@ -354,14 +360,16 @@ class Sim(object):
                 snake_initial_energy=config_d["snake_initial_energy"],
                 snake_max_litter_size = config_d["snake_max_litter_size"],
                 snake_litter_frequency = config_d["snake_litter_frequency"],
-                strike_success_probability = config_d["strike_success_probability"]
+                strike_success_probability = config_d["strike_success_probability"],
+                move_range = config_d["snake_move_range"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
                 initial_energy_counter=config_d["krat_initial_energy"],
                 krat_max_litter_size = config_d["krat_max_litter_size"],
                 krat_litter_frequency = config_d["krat_litter_frequency"],
-                foraging_rate = float(config_d["krat_energy_gain"]*self.time_step)
+                foraging_rate = float(config_d["krat_energy_gain"]*self.time_step),
+                move_range = config_d["krat_move_range"]
                 )
 
     def read_configuration_file(self):
@@ -391,7 +399,7 @@ class Sim(object):
         self.read_configuration_file()
         for i in range(0,self.end_time,self.time_step):
             self.landscape.landscape_dynamics()
-            self.day_tick()
+            #self.day_tick()
             #print(self.day_of_year)
             self.hour_tick()
             self.time += self.time_step

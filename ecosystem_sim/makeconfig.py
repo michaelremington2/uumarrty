@@ -22,8 +22,8 @@ data['sim'].append({
     "krat_energy_gain": 0.00142,
     "krat_max_litter_size": 6,
     "snake_max_litter_size":1,
-    "krat_litter_frequency":(1/420),
-    "snake_litter_frequency": (1/365),
+    "krat_litter_frequency":(1/365),
+    "snake_litter_frequency": (1/420),
     "krat_move_range":2,
     "snake_move_range":1
     })

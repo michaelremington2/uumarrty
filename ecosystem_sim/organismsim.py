@@ -24,6 +24,7 @@ class Organism(object):
         self.alive = True
         self.hungry = True
         self.predation_counter = 0
+        self.home_cell_id = home_cell_id
         self.rng = self.sim.rng
         self.move_range = move_range
         self.column_boundary = self.sim.landscape.cells_x_columns - 1
@@ -138,6 +139,7 @@ class Organism(object):
         new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
         return new_cell[0]
 
+
     def organism_movement(self, energy_dependence = True):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
         self.move_options()
@@ -151,9 +153,12 @@ class Organism(object):
                 self.number_of_movements += 1
         return new_cell_id
 
+    def return_home(self):
+        return self.home_cell_id
+
 
 class Snake(Organism):
-    def __init__(self,sim, initial_energy_counter,move_range,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
+    def __init__(self,sim, initial_energy_counter,move_range,home_cell_id,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
         super().__init__(sim,initial_energy_counter,move_range)
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
@@ -161,6 +166,7 @@ class Snake(Organism):
         self._strike_success_probability = strike_success_probability
         self.snake_max_litter_size = snake_max_litter_size
         self.snake_litter_frequency = snake_litter_frequency*self.sim.time_step
+        self.home_cell_id = home_cell_id
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng

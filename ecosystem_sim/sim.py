@@ -27,6 +27,9 @@ class Cell(object):
         self.snake_incubation_list = []      
         self.rng = self.sim.rng
 
+    def __repr__(self):
+        return "cell {}, habitat_type {}".format(self.cell_id, self.habitat_type)
+
     def add_krat(self, krat):
         # Add a krat to the population of this cells krats
         self.krats.append(krat)

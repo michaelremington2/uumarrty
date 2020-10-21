@@ -77,7 +77,12 @@ class Cell(object):
     def krat_move(self):
         moving_krats = []
         for krat in self.krats:
-            new_cell_id = krat.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+            if self.sim.time_of_day == krat.foraging_hours[-1]+1:
+                new_cell_id = krat.return_home()
+            elif self.sim.time_of_day in krat.foraging_hours:
+                new_cell_id = krat.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+            else:
+                new_cell_id = self.cell_id
             if new_cell_id != self.cell_id:
                 moving_krat = (new_cell_id,krat,self.cell_id)
                 self.landscape.krat_move_pool.append(moving_krat)
@@ -87,11 +92,16 @@ class Cell(object):
     def snake_move(self):
         moving_snakes = []
         for snake in self.snakes:
-            new_cell_id = snake.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+            if self.sim.time_of_day == snake.hunting_hours[-1]+1:
+                new_cell_id = snake.return_home()
+            elif self.sim.time_of_day in snake.hunting_hours:
+                new_cell_id = snake.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+            else:
+                new_cell_id = self.cell_id
             if new_cell_id != self.cell_id:
-                moving_snake = (new_cell_id,snake)
+                moving_snake = (new_cell_id,snake,self.cell_id)
                 self.landscape.snake_move_pool.append(moving_snake)
-                moving_snakes.append(snake)        
+                moving_snakes.append(snake)       
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
 
     def krat_grave(self):
@@ -122,6 +132,7 @@ class Cell(object):
                 snake = Snake(sim = self.sim,
                     initial_energy_counter = baby_snake["energy_counter"],
                     move_range = baby_snake["move_range"],
+                    home_cell_id = self.cell_id,
                     strike_success_probability = baby_snake["strike_success_probability"],
                     snake_max_litter_size = baby_snake["snake_max_litter_size"],
                     snake_litter_frequency = baby_snake["snake_litter_frequency"],
@@ -238,32 +249,34 @@ class Landscape(object):
             foraging_rate = foraging_rate)
         return krat
 
-    def initialize_snake(self,sim,initial_energy_counter,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
+    def initialize_snake(self,sim,initial_energy_counter,cell_id,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
         snake = Snake(sim = sim,
          initial_energy_counter = initial_energy_counter,
          move_range = move_range,
+         home_cell_id = cell_id,
          snake_litter_frequency = snake_litter_frequency,
          snake_max_litter_size = snake_max_litter_size,
          strike_success_probability = strike_success_probability)
         return snake
 
     def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
-        x = initial_snake_pop
-        while x > 0:
+        isp = initial_snake_pop
+        while isp > 0:
             cell = self.select_random_cell()
             snake = self.initialize_snake(sim = self.sim,
                                           initial_energy_counter = snake_initial_energy,
                                           snake_litter_frequency = snake_litter_frequency,
+                                          cell_id = cell.cell_id,
                                           snake_max_litter_size = snake_max_litter_size,
                                           strike_success_probability= strike_success_probability,
                                           move_range =move_range)
             cell.add_snake(snake)
             snake.current_cell(cell.cell_id)
-            x = x-1
+            isp = isp-1
 
     def initialize_krat_pop(self,initial_krat_pop,initial_energy_counter,krat_litter_frequency,krat_max_litter_size,foraging_rate, move_range):
-        y = initial_krat_pop
-        while y > 0:
+        ikp = initial_krat_pop
+        while ikp > 0:
             cell = self.select_random_cell()
             krat = self.initialize_krat(sim = self.sim,
                                         initial_energy_counter = initial_energy_counter,
@@ -274,7 +287,7 @@ class Landscape(object):
                                         foraging_rate = foraging_rate)
             cell.add_krat(krat)
             krat.current_cell(cell.cell_id)
-            y = y-1
+            ikp = ikp-1
 
     def relocate_krats(self):
         for i, krat in enumerate(self.krat_move_pool):
@@ -399,8 +412,6 @@ class Sim(object):
         self.read_configuration_file()
         for i in range(0,self.end_time,self.time_step):
             self.landscape.landscape_dynamics()
-            #self.day_tick()
-            #print(self.day_of_year)
             self.hour_tick()
             self.time += self.time_step
         self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')

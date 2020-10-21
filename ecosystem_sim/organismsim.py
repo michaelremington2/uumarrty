@@ -15,7 +15,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim, initial_energy_counter,move_range):
+    def __init__(self,sim,home_cell_id,initial_energy_counter,move_range):
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -159,7 +159,7 @@ class Organism(object):
 
 class Snake(Organism):
     def __init__(self,sim, initial_energy_counter,move_range,home_cell_id,strike_success_probability,snake_max_litter_size,snake_litter_frequency,hunting_hours = None):
-        super().__init__(sim,initial_energy_counter,move_range)
+        super().__init__(sim,home_cell_id,initial_energy_counter,move_range)
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -192,7 +192,7 @@ class Snake(Organism):
 
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
-            hunting_hours = [0,1,2,3,4,5,18,19,20,21,22,23]
+            hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
         return hunting_hours
 
     def hunting_period(self):
@@ -209,7 +209,7 @@ class Snake(Organism):
             self.energy_counter += energy_gain
 
     def reproduction(self,cell_incubation_list):
-        if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 6:
+        if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 6 and self.energy_counter >= self.initial_energy_counter:
             litter_size = self.rng.randrange(0,self.snake_max_litter_size)
             for i in range(litter_size+1):
                 snake_stats = {"energy_counter": self.initial_energy_counter,
@@ -223,7 +223,7 @@ class Snake(Organism):
 
 class Krat(Organism):
     def __init__(self,sim,initial_energy_counter,move_range,home_cell_id,foraging_rate,krat_max_litter_size,krat_litter_frequency,foraging_hours = None):
-        super().__init__(sim,initial_energy_counter,move_range)
+        super().__init__(sim,home_cell_id,initial_energy_counter,move_range)
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
@@ -238,7 +238,7 @@ class Krat(Organism):
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
-            foraging_hours = [0,1,2,3,4,5,18,19,20,21,22,23]
+            foraging_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
         return foraging_hours
 
     def foraging_period(self):
@@ -274,7 +274,7 @@ class Krat(Organism):
 
     def reproduction(self,cell_incubation_list):
         random_prob = self.rng.random()
-        if (random_prob < self.krat_litter_frequency) and self.sex == 'F':
+        if (random_prob < self.krat_litter_frequency) and self.sex == 'F' and self.energy_counter >= self.initial_energy_counter:
             #print('prob {}, krat_freq {}, sex {}'.format(random_prob,self.krat_litter_frequency,self.sex))
             litter_size = self.rng.randrange(0,self.krat_max_litter_size)
             for i in range(litter_size+1):
@@ -286,73 +286,6 @@ class Krat(Organism):
                               "foraging_hours":self.foraging_hours}
                 cell_incubation_list.append(krat_stats)
 
-
-
-
-class Movement(object):
-    def __init__(self,move_range,sim):
-        self.column_boundary = sim.landscape.cells_x_columns - 1
-        self.row_boundary = sim.landscape.cells_y_rows - 1
-        self.move_range = move_range
-        self.rng = sim.rng
-
-    def move_options(self,current_cell):
-        self.move_coordinates = []
-        self.current_cell = current_cell
-        for x in range(-self.move_range,self.move_range+1):
-            for y in range(-self.move_range,self.move_range+1):
-                #print('{},{}'.format(x,y))
-                row_coord = self.current_cell[0] + y
-                column_coord = self.current_cell[1] + x
-                if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
-                    new_id = (row_coord,column_coord)
-                    self.move_coordinates.append(new_id)
-        if len(self.move_coordinates) == 0:
-            print(self.current_cell)
-            print(self.row_boundary)
-            print(self.column_boundary)
-            raise ValueError('No move options')
-
-    def move_probability_base_vector(self):
-        base_probability_vector = []
-        for i in self.move_coordinates:
-            probability = 1/len(self.move_coordinates)
-            coord_prob = (i,probability)
-            base_probability_vector.append(coord_prob)
-        return base_probability_vector
-
-    def gen_probability_vector(self,weight = 1):
-        base_probability_vector = self.move_probability_base_vector()
-        temp_probability_vector = []
-        for i in base_probability_vector:
-            cell_id = i[0]
-            probability = i[1]
-            if cell_id == self.current_cell:
-                enhanced_prob = probability*weight
-                temp_probability_vector.append(enhanced_prob)
-            else:
-                temp_probability_vector.append(probability)
-        return temp_probability_vector
-
-    def normalize_probability_vector(self,weight = 1):
-        temp_probability_vector = self.gen_probability_vector(weight = weight)
-        denom = sum(temp_probability_vector)
-        if denom != 1:
-            self.probability_vector = []
-            for i in temp_probability_vector:
-                probability = i/denom
-                self.probability_vector.append(probability)
-        else:
-            self.probability_vector = temp_probability_vector
-
-
-    def new_cell(self,current_cell,weight = 1):
-        self.move_options(current_cell)
-        self.normalize_probability_vector(weight = weight)
-        #print(self.move_coordinates)
-        #print(self.probability_vector)
-        new_cell = self.rng.choices(self.move_coordinates,self.probability_vector,k=1)
-        return new_cell[0]
 
 
 if __name__ ==  "__main__":

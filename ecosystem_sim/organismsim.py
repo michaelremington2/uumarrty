@@ -77,12 +77,12 @@ class Organism(object):
         self.predation_counter = 0
 
     def homeostasis_state(self,x):
-        e = (self.energy_counter - x**self.predation_counter)/self.initial_energy_counter
+        e = (self.energy_counter - x**self.predation_counter)/self.initial_energy_counter #
         if e < 0:
             e = 0
         return e
 
-    def move_options(self):
+    def move_options(self): #calc move coordinates
         self.move_coordinates = []
         for x in range(-self.move_range,self.move_range+1):
             for y in range(-self.move_range,self.move_range+1):
@@ -97,6 +97,7 @@ class Organism(object):
             print(self.row_boundary)
             print(self.column_boundary)
             raise ValueError('No move options')
+        #returns move_coordinates
 
     def move_probability_base_vector(self):
         base_probability_vector = []
@@ -141,7 +142,8 @@ class Organism(object):
 
     def organism_movement(self, energy_dependence = True):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
-        self.move_options()
+        #roll dice to see if it moves
+        #dictionary of probabilitys to cells basede on type
         if energy_dependence == True:
             e = self.homeostasis_state(x=1.5)
             new_cell_id = self.new_cell(weight = e)

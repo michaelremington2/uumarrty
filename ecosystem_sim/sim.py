@@ -93,6 +93,7 @@ class Cell(object):
         self.krats = [krat for krat in self.krats if krat not in moving_krats]
 
     def snake_move(self):
+        # think of snake movement
         moving_snakes = []
         for snake in self.snakes:
             if self.sim.time_of_day == snake.hunting_hours[-1]+1:

@@ -7,7 +7,7 @@ data['sim'] = []
 data['sim'].append({
     "days_of_sim": 365,
     "time_step":1,
-    "energy_dependence_movement":True,
+    "energy_dependence_movement":False,
     "landscape_size_x": 500,
     "landscape_size_y": 500,
     "microhabitat_open_bush_proportions": [0.5,0.5],

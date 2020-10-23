@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import math
-
+#doxygen 
+#sphyinxdocumentation format
 class Organism(object):
     '''
     The base class that any tyoe of vertabrate organism can use to set up the object that represents the individual.
@@ -19,8 +20,8 @@ class Organism(object):
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
         self.energy_counter = initial_energy_counter
-        self.max_energy = initial_energy_counter*1.25
-        self.hunger_level = initial_energy_counter*.75
+        self.max_energy = initial_energy_counter*1.25 #Assumption
+        self.hunger_level = initial_energy_counter*.75 #Assumption
         self.alive = True
         self.hungry = True
         self.predation_counter = 0
@@ -33,14 +34,14 @@ class Organism(object):
 
     def get_energy_counter(self):
         '''Returns the organisms energy counter'''
-        return self.energy_counter
+        return self.energy_counter #energy
 
-    def natural_death(self):
+    def natural_death(self): #check_if_natural_death
         '''If the energy counter falls below zero, this function sets the alive attribute to false signifying it is dead.'''
         if round(self.energy_counter) <= 0:
             self.alive = False
 
-    def expend_energy(self,energy_cost,energy_weight = 1):
+    def expend_energy(self, energy_cost, energy_weight=1):
         '''
         Sets the object to dead if there is not enough energy in the object.If alive, 
         deducts the energy cost* the energy weight from the classes energy_counter attribute.
@@ -64,14 +65,12 @@ class Organism(object):
             self.hungry =  True
         elif self.energy_counter > self.max_energy:
             self.hungry = False
-        else:
-            pass
 
-    def current_cell(self,cell_id):
+    def current_cell(self,cell_id): #set current cell
         '''Creates an attribute called current cell for the object that is used in the movment algorithm.'''
         self.current_cell_id = cell_id
 
-    def predation_event(self):
+    def predation_event(self): #register_predation_event
         self.predation_counter += 1
 
     def reset_predation_history(self):

@@ -126,7 +126,7 @@ class Cell(object):
                     krat_litter_frequency = baby_krat["krat_litter_frequency"],
                     foraging_hours = baby_krat["foraging_hours"])
                 self.add_krat(krat)
-                krat.current_cell(self.cell_id)
+                krat.current_cell(self.cell_id) # krat.current_cell_id = self.cell_id
         self.krat_incubation_list = []
 
     def newborn_snakes(self):

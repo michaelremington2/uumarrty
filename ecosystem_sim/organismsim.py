@@ -16,25 +16,22 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell_id,initial_energy_counter,move_range):
+    def __init__(self,sim,home_cell_id,initial_energy,energy_deviation, move_range):
         self.sim = sim
         self.initial_energy_counter = initial_energy_counter
-        self.energy_counter = initial_energy_counter
-        self.max_energy = initial_energy_counter*1.25 #Assumption
-        self.hunger_level = initial_energy_counter*.75 #Assumption
+        self.energy = initial_energy
+        self.max_energy = initial_energy_counter*energy_deviation #Assumption
+        self.hunger_level = initial_energy_counter*energy_deviation #Assumption
         self.alive = True
         self.hungry = True
         self.predation_counter = 0
-        self.home_cell_id = home_cell_id
+        self.home_cell = home_cell
+        self.current_cell = home_cell
         self.rng = self.sim.rng
         self.move_range = move_range
         self.column_boundary = self.sim.landscape.cells_x_columns - 1
         self.row_boundary = self.sim.landscape.cells_y_rows - 1
         self.number_of_movements = 0
-
-    def get_energy_counter(self):
-        '''Returns the organisms energy counter'''
-        return self.energy_counter #energy
 
     def natural_death(self): #check_if_natural_death
         '''If the energy counter falls below zero, this function sets the alive attribute to false signifying it is dead.'''
@@ -66,9 +63,6 @@ class Organism(object):
         elif self.energy_counter > self.max_energy:
             self.hungry = False
 
-    def current_cell(self,cell_id): #set current cell
-        '''Creates an attribute called current cell for the object that is used in the movment algorithm.'''
-        self.current_cell_id = cell_id
 
     def predation_event(self): #register_predation_event
         self.predation_counter += 1

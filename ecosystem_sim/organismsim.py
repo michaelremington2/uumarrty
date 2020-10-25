@@ -18,6 +18,7 @@ class Organism(object):
     '''
     def __init__(self,sim,home_cell_id,initial_energy,energy_deviation, move_range):
         self.sim = sim
+        self.landscape =self.sim.landscape
         self.initial_energy_counter = initial_energy_counter
         self.energy = initial_energy
         self.max_energy = initial_energy_counter*energy_deviation #Assumption
@@ -64,7 +65,7 @@ class Organism(object):
             self.hungry = False
 
 
-    def predation_event(self): #register_predation_event
+    def register_ predation_event(self):
         self.predation_counter += 1
 
     def reset_predation_history(self):
@@ -76,10 +77,19 @@ class Organism(object):
             e = 0
         return e
 
-    def calc_cell_destination_suitability(self, destination_cell):
-        return 1.0
+    def calc_equal_cell_destination_suitability(self):
+        destination_probability = 1/len(self.landscape.cells)
+        return destination_probability
 
     def normalize_destination_cell_probabilities(self, destination_cell_probabilities):
+        denom = sum(destination_cell_probabilities)
+        if denom != 1:
+            normalized_probability_vector = {}
+            for i in destination_cell_probabilities:
+                probability = i/denom
+                 self.normalized_probability_vector.append(probability)
+         else:
+             self.probability_vector = temp_probability_vector
         return destination_cell_probabilities
 
     def calc_destination_cell_probabilities(self): #calc move coordinates

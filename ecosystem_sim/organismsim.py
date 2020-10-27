@@ -71,14 +71,20 @@ class Organism(object):
     def reset_predation_history(self):
         self.predation_counter = 0
 
-    def homeostasis_state(self,x):
+    def homeostasis_state(self, x):
         e = (self.energy_counter - x**self.predation_counter)/self.initial_energy_counter #
         if e < 0:
             e = 0
         return e
 
-    def calc_equal_cell_destination_suitability(self):
-        destination_probability = 1/len(self.landscape.cells)
+    def calc_equal_cell_destination_suitability(self, cell, bush_microhabitat_weight=None, open_microhabitat_weight=None):
+        base_destination_probability = 1/len(self.landscape.cells)
+        if bush_microhabitat_weight != None and cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+            destination_probability = base_destination_probability*bush_microhabitat_weight
+        elif open_microhabitat_weight != None and cell.MicrohabitatType.name == '[<MicrohabitatType.OPEN: 1>]':
+            destination_probability = base_destination_probability*open_microhabitat_weight
+        else:
+            destination_probability = base_destination_probability
         return destination_probability
 
     def normalize_destination_cell_probabilities(self, destination_cell_probabilities):

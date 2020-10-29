@@ -27,9 +27,6 @@ class Cell(object):
         self.snake_incubation_list = []      
         self.rng = self.sim.rng
 
-    def __repr__(self):
-        return "cell {}, habitat_type {}".format(self.cell_id, self.habitat_type)
-
     def add_krat(self, krat):
         # Add a krat to the population of this cells krats
         self.krats.append(krat)
@@ -81,13 +78,13 @@ class Cell(object):
         moving_krats = []
         for krat in self.krats:
             if self.sim.time_of_day == krat.foraging_hours[-1]+1:
-                new_cell_id = krat.return_home()
+                new_cell = krat.return_home()
             elif self.sim.time_of_day in krat.foraging_hours:
-                new_cell_id = krat.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+                new_cell = krat.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
             else:
-                new_cell_id = self.cell_id
-            if new_cell_id != self.cell_id:
-                moving_krat = (new_cell_id,krat,self.cell_id)
+                new_cell = self
+            if new_cell != self:
+                moving_krat = (new_cell,krat,self)
                 self.landscape.krat_move_pool.append(moving_krat)
                 moving_krats.append(krat)
         self.krats = [krat for krat in self.krats if krat not in moving_krats]
@@ -97,13 +94,13 @@ class Cell(object):
         moving_snakes = []
         for snake in self.snakes:
             if self.sim.time_of_day == snake.hunting_hours[-1]+1:
-                new_cell_id = snake.return_home()
+                new_cell = snake.return_home()
             elif self.sim.time_of_day in snake.hunting_hours:
-                new_cell_id = snake.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
+                new_cell = snake.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
             else:
-                new_cell_id = self.cell_id
-            if new_cell_id != self.cell_id:
-                moving_snake = (new_cell_id,snake,self.cell_id)
+                new_cell = self
+            if new_cell != self:
+                moving_snake = (new_cell,snake,self)
                 self.landscape.snake_move_pool.append(moving_snake)
                 moving_snakes.append(snake)       
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
@@ -119,30 +116,36 @@ class Cell(object):
             #print('time{},krats{}'.format(self.sim.time_of_day,len(self.krat_incubation_list)))
             for baby_krat in self.krat_incubation_list:
                 krat = Krat(sim = self.sim,
-                    initial_energy_counter = baby_krat["energy_counter"],
+                    initial_energy = baby_krat["energy"],
+                    energy_deviation = baby_krat["energy_deviation"],
                     move_range = baby_krat["move_range"],
-                    home_cell_id = self.cell_id,
+                    home_cell = self,
                     foraging_rate = baby_krat["foraging_rate"],
                     krat_max_litter_size = baby_krat["krat_max_litter_size"],
                     krat_litter_frequency = baby_krat["krat_litter_frequency"],
+                    open_preference_weight = baby_krat["open_preference_weight"],
+                    bush_preference_weight = baby_krat["bush_preference_weight"],
                     foraging_hours = baby_krat["foraging_hours"])
                 self.add_krat(krat)
-                krat.current_cell(self.cell_id) # krat.current_cell_id = self.cell_id
+                krat.current_cell = self # krat.current_cell_id = self.cell_id
         self.krat_incubation_list = []
 
     def newborn_snakes(self):
         if len(self.snake_incubation_list) > 0:
             for baby_snake in self.snake_incubation_list:
                 snake = Snake(sim = self.sim,
-                    initial_energy_counter = baby_snake["energy_counter"],
+                    initial_energy = baby_snake["energy"],
+                    energy_deviation = baby_snake["energy_deviation"],
                     move_range = baby_snake["move_range"],
-                    home_cell_id = self.cell_id,
+                    home_cell = self,
                     strike_success_probability = baby_snake["strike_success_probability"],
                     snake_max_litter_size = baby_snake["snake_max_litter_size"],
                     snake_litter_frequency = baby_snake["snake_litter_frequency"],
+                    open_preference_weight = baby_snake["open_preference_weight"],
+                    bush_preference_weight = baby_snake["bush_preference_weight"],
                     hunting_hours = baby_snake["hunting_hours"])
                 self.add_snake(snake)
-                snake.current_cell(self.cell_id)
+                snake.current_cell = self
         self.snake_incubation_list = []
 
     def krat_predation(self,snake):
@@ -152,10 +155,10 @@ class Cell(object):
             snake.expend_energy(self.snake_energy_cost)
             krat = self.select_krat()
             if self.rng.random() < snake.strike_success_probability:
-                snake.consume(krat.energy_counter)
+                snake.consume(krat.energy)
                 self.pop_krat(self.krats.index(krat))
             else:
-                krat.predation_event()
+                krat.register_predation_event()
 
     def predation_cycle_snake(self):
         self.snake_grave()
@@ -243,79 +246,63 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_krat(self,sim,initial_energy_counter,cell_id,krat_max_litter_size,krat_litter_frequency,foraging_rate,move_range):
-        krat = Krat(sim = sim,
-            initial_energy_counter = initial_energy_counter,
-            move_range = move_range,
-            home_cell_id = cell_id,
-            krat_max_litter_size = krat_max_litter_size,
-            krat_litter_frequency = krat_litter_frequency,
-            foraging_rate = foraging_rate)
-        return krat
-
-    def initialize_snake(self,sim,initial_energy_counter,cell_id,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
-        snake = Snake(sim = sim,
-         initial_energy_counter = initial_energy_counter,
-         move_range = move_range,
-         home_cell_id = cell_id,
-         snake_litter_frequency = snake_litter_frequency,
-         snake_max_litter_size = snake_max_litter_size,
-         strike_success_probability = strike_success_probability)
-        return snake
-
-    def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range):
+    def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,energy_deviation,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range,open_preference_weight, bush_preference_weight):
         isp = initial_snake_pop
         while isp > 0:
             cell = self.select_random_cell()
-            snake = self.initialize_snake(sim = self.sim,
-                                          initial_energy_counter = snake_initial_energy,
-                                          snake_litter_frequency = snake_litter_frequency,
-                                          cell_id = cell.cell_id,
-                                          snake_max_litter_size = snake_max_litter_size,
-                                          strike_success_probability= strike_success_probability,
-                                          move_range =move_range)
+            snake = Snake(sim = sim,
+                         initial_energy = snake_initial_energy,
+                         energy_deviation = energy_deviation,
+                         home_cell = cell,
+                         snake_litter_frequency = snake_litter_frequency,
+                         snake_max_litter_size = snake_max_litter_size,
+                         strike_success_probability = strike_success_probability,
+                         move_range = move_range,
+                         open_preference_weight = open_preference_weight,
+                         bush_preference_weight = bush_preference_weight)
             cell.add_snake(snake)
-            snake.current_cell(cell.cell_id)
+            snake.current_cell=cell
             isp = isp-1
 
-    def initialize_krat_pop(self,initial_krat_pop,initial_energy_counter,krat_litter_frequency,krat_max_litter_size,foraging_rate, move_range):
+    def initialize_krat_pop(self,initial_krat_pop,initial_energy,energy_deviation,krat_litter_frequency,krat_max_litter_size,foraging_rate, move_range, open_preference_weight, bush_preference_weight):
         ikp = initial_krat_pop
         while ikp > 0:
             cell = self.select_random_cell()
-            krat = self.initialize_krat(sim = self.sim,
-                                        initial_energy_counter = initial_energy_counter,
-                                        move_range = move_range,
-                                        cell_id = cell.cell_id,
-                                        krat_litter_frequency = krat_litter_frequency,
-                                        krat_max_litter_size = krat_max_litter_size,
-                                        foraging_rate = foraging_rate)
+            krat = Krat(sim = sim,
+                        initial_energy = initial_energy,
+                        energy_deviation = energy_deviation,
+                        move_range = move_range,
+                        home_cell= cell,
+                        krat_max_litter_size = krat_max_litter_size,
+                        krat_litter_frequency = krat_litter_frequency,
+                        foraging_rate = foraging_rate,
+                        open_preference_weight = open_preference_weight,
+                        bush_preference_weight = bush_preference_weight)
             cell.add_krat(krat)
-            krat.current_cell(cell.cell_id)
+            krat.current_cell=cell
             ikp = ikp-1
 
     def relocate_krats(self):
         for i, krat in enumerate(self.krat_move_pool):
-            new_cell_id = krat[0]
+            new_cell = krat[0]
             krat_object = krat[1]
-            new_cell = self.select_cell(new_cell_id)
             new_cell.add_krat(krat_object)
-            krat_object.current_cell(new_cell_id)
+            krat_object.current_cell = new_cell
         self.krat_move_pool = []
 
     def relocate_snakes(self):
         for j, snake in enumerate(self.snake_move_pool):
-            new_cell_id = snake[0]
+            new_cell = snake[0]
             snake_object = snake[1]
-            new_cell = self.select_cell(new_cell_id)
             new_cell.add_snake(snake_object)
-            snake_object.current_cell(new_cell_id)
+            snake_object.current_cell = new_cell 
         self.snake_move_pool = []
 
     def landscape_stats(self,cell):
         if self.sim.time_of_day in [0,12]: #specify in documentation
-            cell_krat_energy = sum([krat.energy_counter for krat in cell.krats])
+            cell_krat_energy = sum([krat.energy for krat in cell.krats])
             cell_krat_movement_history = sum([krat.number_of_movements for krat in cell.krats])
-            cell_snake_energy = sum([snake.energy_counter for snake in cell.snakes])
+            cell_snake_energy = sum([snake.energy for snake in cell.snakes])
             cell_snake_movement_history = sum([snake.number_of_movements for snake in cell.snakes])
             data = [sim.time,sim.time_of_day,cell.cell_id,cell.habitat_type,cell.cell_energy_pool,len(cell.krats),cell_krat_energy,cell_krat_movement_history,len(cell.snakes),cell_snake_energy,cell_snake_movement_history ]
             sim.report.append(data)
@@ -375,18 +362,24 @@ class Sim(object):
         self.landscape.initialize_snake_pop(
                 initial_snake_pop=config_d["initial_snake_pop"],
                 snake_initial_energy=config_d["snake_initial_energy"],
+                energy_deviation = config_d["snake_energy_deviation"],
                 snake_max_litter_size = config_d["snake_max_litter_size"],
                 snake_litter_frequency = config_d["snake_litter_frequency"],
                 strike_success_probability = config_d["strike_success_probability"],
-                move_range = config_d["snake_move_range"]
+                move_range = config_d["snake_move_range"],
+                open_preference_weight = config_d["snake_open_preference_weight"],
+                bush_preference_weight = config_d["snake_bush_preference_weight"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
-                initial_energy_counter=config_d["krat_initial_energy"],
+                initial_energy=config_d["krat_initial_energy"],
+                energy_deviation = config_d["krat_energy_deviation"],
                 krat_max_litter_size = config_d["krat_max_litter_size"],
                 krat_litter_frequency = config_d["krat_litter_frequency"],
                 foraging_rate = float(config_d["krat_energy_gain"]*self.time_step),
-                move_range = config_d["krat_move_range"]
+                move_range = config_d["krat_move_range"],
+                open_preference_weight = config_d["krat_open_preference_weight"],
+                bush_preference_weight = config_d["krat_bush_preference_weight"]
                 )
 
     def read_configuration_file(self):

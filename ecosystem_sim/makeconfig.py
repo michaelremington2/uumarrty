@@ -15,7 +15,9 @@ data['sim'].append({
     "initial_krat_pop": 150,
     "cell_energy_pool": 1200,
     "snake_initial_energy": 300,
+    "snake_energy_deviation":100,
     "krat_initial_energy": 40,
+    "krat_energy_deviation":10,
     "snake_energy_cost": 0.25,
     "krat_energy_cost": 0.5,
     "strike_success_probability": (7/32),
@@ -24,8 +26,14 @@ data['sim'].append({
     "snake_max_litter_size":1,
     "krat_litter_frequency":(1/365),
     "snake_litter_frequency": (1/420),
-    "krat_move_range":2,
-    "snake_move_range":1
+    "krat_move_range":1,
+    "snake_move_range":6,
+    "krat_number_of_moves_per_night":16,
+    "snake_move_range":4,
+    "krat_open_preference_weight":1,
+    "krat_bush_preference_weight":7,
+    "snake_open_preference_weight":1,
+    "snake_bush_preference_weight":8
     })
 
 with open('data.txt', 'w') as outfile:

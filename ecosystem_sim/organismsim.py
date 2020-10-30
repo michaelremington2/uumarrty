@@ -80,8 +80,8 @@ class Organism(object):
             e = 0
         return e
 
-    def calc_cell_destination_suitability(self, cell, energy_weight=1, bush_preference_weight=1, open_preference_weight=1):
-        base_destination_probability = 1/len(self.landscape.cells)*energy_weight
+    def calc_cell_destination_suitability_empiracal(self, cell, energy_weight=1, bush_preference_weight=1, open_preference_weight=1):
+        base_destination_probability = 1/len(self.landscape.cells)
         if bush_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
             destination_probability = base_destination_probability*bush_preference_weight
         elif open_preference_weight != 1 and cell.MicrohabitatType.name == '[<MicrohabitatType.OPEN: 1>]':

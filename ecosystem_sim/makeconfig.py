@@ -29,6 +29,7 @@ data['sim'].append({
     "krat_move_range":1,
     "snake_move_range":6,
     "krat_number_of_moves_per_night":16,
+    "snake_number_of_moves_per_night":4,
     "snake_move_range":4,
     "krat_open_preference_weight":1,
     "krat_bush_preference_weight":7,

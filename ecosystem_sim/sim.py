@@ -27,7 +27,7 @@ class Cell(object):
         self.snake_incubation_list = []      
         self.rng = self.sim.rng
 
-    def __hash_(self):
+    def __hash__(self):
         return id(self)
 
     def add_krat(self, krat):

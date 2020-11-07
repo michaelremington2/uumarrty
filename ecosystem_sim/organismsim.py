@@ -74,14 +74,17 @@ class Organism(object):
     def reset_predation_history(self):
         self.predation_counter = 0
 
-    def homeostasis_state(self):
-        e = math.abs(self.energy - math.exp(self.predation_counter))/self.initial_energy #
-        if e < 0:
-            e = 0
+    def homeostasis_delta_calculator(self, energy_gain, cost_to_move, predation_cost, missed_oppertunity_cost, competition_cost,basal_energy_cost):
+        #E(H) = C (net gain) + RI (risk of injury) + P(risk of predation) + I(interaction with predators) + MOC(missed_oppertunity_cost) enbar 2014
+        # H = EC + PC + MOC +ioc (interference cost) bouskila 1995
+        e = energy_gain+cost_to_move-predation_cost-missed_oppertunity_cost-competition_cost-basal_energy_cost
         return e
 
-    def calc_cell_destination_suitability_empiracal(self, cell, energy_weight=1, bush_preference_weight=1, open_preference_weight=1):
-        base_destination_probability = 1/len(self.landscape.cells)
+    def calc_cell_destination_suitability(self, cell,number_of_move_options, bush_preference_weight=1, open_preference_weight=1):
+        if number_of_move_options <= 0:
+            raise ValueError('No Move Options')
+        else:
+            base_destination_probability = 1/number_of_move_options
         if bush_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
             destination_probability = base_destination_probability*bush_preference_weight
         elif open_preference_weight != 1 and cell.MicrohabitatType.name == '[<MicrohabitatType.OPEN: 1>]':
@@ -98,8 +101,9 @@ class Organism(object):
                 destination_cell_probabilities[i] == norm_probability
         return destination_cell_probabilities
 
-    def calc_destination_cell_probabilities(self, energy_weight=1, bush_preference_weight=1, open_preference_weight=1): #calc move coordinates
+    def calc_destination_cell_probabilities(self, bush_preference_weight=1, open_preference_weight=1): #calc move coordinates
         destination_cell_probabilities = {}
+        move_options = []
         for x in range(-self.move_range,self.move_range+1):
             for y in range(-self.move_range,self.move_range+1):
                 #print('{},{}'.format(x,y))
@@ -107,9 +111,15 @@ class Organism(object):
                 column_coord = self.current_cell.cell_id[1] + x
                 if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
                     new_id = (row_coord,column_coord)
-                    destination_cell = self.sim.landscape.select_cell(new_id)
-                    p = self.calc_cell_destination_suitability(destination_cell,energy_weight=energy_weight, bush_preference_weight=bush_preference_weight, open_preference_weight=open_preference_weight)
-                    destination_cell_probabilities[destination_cell.cell_id] = p
+                    if new_id == self.current_cell.cell_id:
+                        continue
+                    else:
+                        destination_cell = self.sim.landscape.select_cell(new_id)
+                        move_options.append(destination_cell)
+        for i in move_options:
+            number_of_move_options = len(move_options)
+            p = self.calc_cell_destination_suitability(cell=i, number_of_move_options=number_of_move_options, bush_preference_weight=bush_preference_weight, open_preference_weight=open_preference_weight)
+            destination_cell_probabilities[destination_cell] = p
         if len(destination_cell_probabilities) == 0:
             print(self.current_cell.cell_id)
             print(self.row_boundary)
@@ -119,31 +129,15 @@ class Organism(object):
         return destination_cell_probabilities
 
 
-    def pick_new_cell(self, energy_weight=1, bush_preference_weight=1, open_preference_weight=1):
-        destination_cell_probabilities = self.calc_destination_cell_probabilities( energy_weight=energy_weight, bush_preference_weight=bush_preference_weight, open_preference_weight=open_preference_weight)
+    def pick_new_cell(self, bush_preference_weight=1, open_preference_weight=1):
+        destination_cell_probabilities = self.calc_destination_cell_probabilities( bush_preference_weight=bush_preference_weight, open_preference_weight=open_preference_weight)
         new_cell_id = self.rng.choices(list(destination_cell_probabilities.keys()),list(destination_cell_probabilities.values()),k=1)
         new_cell = self.sim.landscape.select_cell(new_cell_id[0])
         return new_cell
 
-    def organism_movement(self, energy_dependence=True):
+    def organism_movement(self):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
-
-        # if energy_dependence:
-        #     # do calc for energy dependence
-        #     if True: # if energy_deps results in movement:
-        #         return self.disperse_to_new_cell()
-        # elif self.rng.uniform() >= self.home_cell_relocation_probability:
-        #         return self.disperse_to_new_cell()
-        # return self.home_cell_id
-
-        #   # no dispersal
-        #   return self.home_cell_id
-        #dictionary of probabilitys to cells basede on type
-        if energy_dependence:
-            e = self.homeostasis_state()
-            new_cell = self.pick_new_cell(energy_weight=e, bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
-        else:
-            new_cell = self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
+        self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
         if new_cell != self.current_cell:
                 self.reset_predation_history()
                 self.number_of_movements += 1
@@ -292,6 +286,41 @@ class Krat(Organism):
                               "bush_preference_weight":self.bush_preference_weight,
                               "foraging_hours":self.foraging_hours}
                 cell_incubation_list.append(krat_stats)
+
+
+class Owl(Organism):
+    def __init__(self,sim, initial_energy,energy_deviation,move_range,home_cell,strike_success_probability,open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
+        super().__init__(sim,home_cell,initial_energy, energy_deviation, move_range)
+        self.sim = sim 
+        self.initial_energy= initial_energy
+        self.energy = initial_energy
+        self.strike_success_probability = strike_success_probability
+        self.home_cell = home_cell
+        self.hunting = False
+        self.hunting_hours = self.hunting_period_gen(hunting_hours)
+        self.rng = self.sim.rng
+        self.move_range = move_range
+        self.open_preference_weight = open_preference_weight
+        self.bush_preference_weight = bush_preference_weight
+
+    def hunting_period_gen(self,hunting_hours):
+        if hunting_hours == None:
+            hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
+        return hunting_hours
+
+    def hunting_period(self):
+        self.set_hungry()
+        if self.sim.time_of_day in self.hunting_hours and self.hungry == True:
+            self.hunting = True
+        else:
+            self.hunting = False
+
+    def consume(self,energy_gain):
+        if energy_gain < 0:
+            raise ValueError('gains should be positive integers')
+        else:
+            self.energy += energy_gain
+
 
 
 

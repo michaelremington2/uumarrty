@@ -70,43 +70,34 @@ class Cell(object):
             raise ValueError("snakes mating too much")
 
     def other_critter_predation(self,snake):
-        probability_of_encounter = (self.sim.time_step)/len(snake.hunting_hours)
+        probability_of_encounter = (self.sim.time_step)/len(snake.hunting_hours) #assumption
         if self.rng.random() < probability_of_encounter:
             snake.expend_energy(self.snake_energy_cost)
             if self.rng.random() < snake.strike_success_probability:
                 mouse_energy = self.rng.randrange(10,30)
                 snake.consume(mouse_energy)
-
-    def krat_move(self):
-        moving_krats = []
-        for krat in self.krats:
-            if self.sim.time_of_day == krat.foraging_hours[-1]+1:
-                new_cell = krat.return_home()
-            elif self.sim.time_of_day in krat.foraging_hours:
-                new_cell = krat.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
             else:
-                new_cell = self
-            if new_cell != self:
-                moving_krat = (new_cell,krat,self)
-                self.landscape.krat_move_pool.append(moving_krat)
-                moving_krats.append(krat)
-        self.krats = [krat for krat in self.krats if krat not in moving_krats]
+                snake.missed_opportunity_cost+=1
 
-    def snake_move(self):
+    def krat_move(self, krat,moving_krat_list,return_home=False):
+        if return_home== True:
+            new_cell = krat.return_home()
+        else:
+            new_cell = krat.organism_movement()
+        if new_cell != self:
+            moving_krat = (new_cell,krat,self)
+            self.landscape.krat_move_pool.append(moving_krat)
+            moving_krat_list.append(krat)
+
+    def snake_move(self,snake,moving_snake_list):
         # think of snake movement
-        moving_snakes = []
-        for snake in self.snakes:
-            if self.sim.time_of_day == snake.hunting_hours[-1]+1:
-                new_cell = snake.return_home()
-            elif self.sim.time_of_day in snake.hunting_hours:
-                new_cell = snake.organism_movement(energy_dependence = self.sim.energy_dependence_movement)
-            else:
-                new_cell = self
-            if new_cell != self:
-                moving_snake = (new_cell,snake,self)
-                self.landscape.snake_move_pool.append(moving_snake)
-                moving_snakes.append(snake)       
-        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
+        #if self.sim.time_of_day == snake.hunting_hours[-1]+1:
+        #    new_cell = snake.return_home()
+        new_cell = snake.organism_movement()
+        if new_cell != self:
+            moving_snake = (new_cell,snake,self)
+            self.landscape.snake_move_pool.append(moving_snake)
+            moving_snake_list.append(snake)       
 
     def krat_grave(self):
         self.krats = [ krat for krat in self.krats if krat.alive == True ]
@@ -162,32 +153,64 @@ class Cell(object):
                 self.pop_krat(self.krats.index(krat))
             else:
                 krat.register_predation_event()
+                snake.missed_opportunity_cost+=1
 
-    def predation_cycle_snake(self):
-        self.snake_grave()
-        for snake in self.snakes:
-            snake.hunting_period()
-            if self.sim.time_of_day == 6:
-                snake.reproduction(self.snake_incubation_list)
-            # added in a twice energy 
-            snake.expend_energy(self.snake_energy_cost,0.5)
-            if snake.hunting == True:
-                self.other_critter_predation(snake)
-                self.krat_predation(snake)
+    def predation_cycle_snake(self,snake):
+        snake.hunting_period()
+        # added in a twice energy 
+        snake.expend_energy(self.snake_energy_cost,0.5)
+        if snake.hunting == True:
+            self.other_critter_predation(snake)
+            self.krat_predation(snake)
 
+    def foraging_rat(self,krat):
+        krat.foraging_period()
+        krat.expend_energy(self.krat_energy_cost)
+        if krat.foraging == True and krat.alive == True:
+            krat_energy_gain = krat.energy_gain(self.cell_energy_pool)
+            if self.cell_energy_pool > 0:
+                krat.forage(krat_energy_gain)
+                self.cell_forage(krat_energy_gain)
 
-    def foraging_rat(self):
-        self.krat_grave()
+    def krat_activity_pulse_behavior(self):
+        # this is the general behavior of the krat organism for one activity pulse
+        #self.krat_grave()
+        moving_krats = []
         for krat in self.krats:
-            krat.foraging_period()
-            if self.sim.time_of_day == 6:
+            if self.sim.time_of_day in krat.foraging_hours:
                 krat.reproduction(self.krat_incubation_list)
-            krat.expend_energy(self.krat_energy_cost)
-            if krat.foraging == True and krat.alive == True:
-                krat_energy_gain = krat.energy_gain(self.cell_energy_pool)
-                if self.cell_energy_pool > 0:
-                    krat.forage(krat_energy_gain)
-                    self.cell_forage(krat_energy_gain)
+                projected_energy_gain = krat.energy_gain(self.cell_energy_pool)
+                proj_krat_energy_state = krat.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                                                                            cost_to_move=self.krat_energy_cost, 
+                                                                            predation_cost=krat.predation_counter, 
+                                                                            missed_opportunity_cost=1, #assumption
+                                                                            competition_cost=len(self.krats),
+                                                                            basal_energy_cost=self.krat_energy_cost)
+                if proj_krat_energy_state >= 0:
+                    self.foraging_rat(krat)
+                else:
+                    self.krat_move(krat,moving_krat_list = moving_krats)
+            elif self.sim.time_of_day == krat.foraging_hours[-1]+1:
+                self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)        
+        self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive == True]
+
+    def snake_activity_pulse_behavior(self):
+        #self.snake_grave()
+        moving_snakes = []
+        for snake in self.snakes:
+            snake.reproduction(self.snake_incubation_list)
+            projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
+            proj_krat_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                                                                        cost_to_move=self.snake_energy_cost*2, #assumption costs twice as much for a snake to move because big and ineffecient
+                                                                        predation_cost=snake.predation_counter, 
+                                                                        missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
+                                                                        competition_cost=len(self.snakes),
+                                                                        basal_energy_cost=self.snake_energy_cost)
+            if proj_krat_energy_state >= 0:
+                self.predation_cycle_snake(snake)
+            else:
+                self.snake_move(snake, moving_snake_list=moving_snakes)
+        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive == True]
 
     def cell_grass_reproduction(self):
         if self.sim.day_of_year in range(122,183) and self.sim.time_of_day == 6:
@@ -315,10 +338,8 @@ class Landscape(object):
             for cell in cell_width:
                 cell.cell_over_populated()
                 self.landscape_stats(cell)
-                cell.predation_cycle_snake()
-                cell.foraging_rat()
-                cell.snake_move()
-                cell.krat_move()
+                cell.krat_activity_pulse_behavior()
+                cell.snake_activity_pulse_behavior()
                 cell.newborn_krats()
                 cell.newborn_snakes()
                 cell.cell_grass_reproduction()
@@ -351,7 +372,7 @@ class Sim(object):
         self.time_step = int(config_d["time_step"])
         self.time_steps_in_a_day = int(24/self.time_step)
         self.end_time = config_d["days_of_sim"]*self.time_steps_in_a_day
-        self.energy_dependence_movement = config_d["energy_dependence_movement"]
+        #self.energy_dependence_movement = config_d["energy_dependence_movement"]
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],

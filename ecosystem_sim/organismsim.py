@@ -27,6 +27,7 @@ class Organism(object):
         self.alive = True
         self.hungry = True
         self.predation_counter = 0
+        self.missed_opportunity_cost = 0
         self.home_cell = home_cell
         self.current_cell = home_cell
         self.rng = self.sim.rng
@@ -74,10 +75,10 @@ class Organism(object):
     def reset_predation_history(self):
         self.predation_counter = 0
 
-    def homeostasis_delta_calculator(self, energy_gain, cost_to_move, predation_cost, missed_oppertunity_cost, competition_cost,basal_energy_cost):
-        #E(H) = C (net gain) + RI (risk of injury) + P(risk of predation) + I(interaction with predators) + MOC(missed_oppertunity_cost) enbar 2014
+    def homeostasis_delta_calculator(self, energy_gain, cost_to_move, predation_cost, missed_opportunity_cost, competition_cost,basal_energy_cost):
+        #E(H) = C (net gain) + RI (risk of injury) + P(risk of predation) + I(interaction with predators) + MOC(missed_opportunity_cost) enbar 2014
         # H = EC + PC + MOC +ioc (interference cost) bouskila 1995
-        e = energy_gain+cost_to_move-predation_cost-missed_oppertunity_cost-competition_cost-basal_energy_cost
+        e = energy_gain+cost_to_move-predation_cost-missed_opportunity_cost-competition_cost-basal_energy_cost
         return e
 
     def calc_cell_destination_suitability(self, cell,number_of_move_options, bush_preference_weight=1, open_preference_weight=1):
@@ -131,13 +132,12 @@ class Organism(object):
 
     def pick_new_cell(self, bush_preference_weight=1, open_preference_weight=1):
         destination_cell_probabilities = self.calc_destination_cell_probabilities( bush_preference_weight=bush_preference_weight, open_preference_weight=open_preference_weight)
-        new_cell_id = self.rng.choices(list(destination_cell_probabilities.keys()),list(destination_cell_probabilities.values()),k=1)
-        new_cell = self.sim.landscape.select_cell(new_cell_id[0])
-        return new_cell
+        new_cell = self.rng.choices(list(destination_cell_probabilities.keys()),list(destination_cell_probabilities.values()),k=1)
+        return new_cell[0]
 
     def organism_movement(self):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
-        self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
+        new_cell = self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
         if new_cell != self.current_cell:
                 self.reset_predation_history()
                 self.number_of_movements += 1
@@ -272,7 +272,7 @@ class Krat(Organism):
 
     def reproduction(self,cell_incubation_list):
         random_prob = self.rng.random()
-        if (random_prob < self.krat_litter_frequency) and self.sex == 'F' and self.energy >= self.initial_energy:
+        if (random_prob < self.krat_litter_frequency) and self.sex == 'F' and self.energy >= self.initial_energy and self.sim.time_of_day == 6:
             #print('prob {}, krat_freq {}, sex {}'.format(random_prob,self.krat_litter_frequency,self.sex))
             litter_size = self.rng.randrange(0,self.krat_max_litter_size)
             for i in range(litter_size+1):

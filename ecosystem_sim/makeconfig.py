@@ -32,9 +32,9 @@ data['sim'].append({
     "snake_number_of_moves_per_night":4,
     "snake_move_range":4,
     "krat_open_preference_weight":1,
-    "krat_bush_preference_weight":7,
+    "krat_bush_preference_weight":1,
     "snake_open_preference_weight":1,
-    "snake_bush_preference_weight":8
+    "snake_bush_preference_weight":1
     })
 
 with open('data.txt', 'w') as outfile:

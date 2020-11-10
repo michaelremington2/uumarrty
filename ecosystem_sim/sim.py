@@ -95,6 +95,7 @@ class Cell(object):
         #    new_cell = snake.return_home()
         new_cell = snake.organism_movement()
         if new_cell != self:
+            snake.missed_opportunity_cost = 0
             moving_snake = (new_cell,snake,self)
             self.landscape.snake_move_pool.append(moving_snake)
             moving_snake_list.append(snake)       

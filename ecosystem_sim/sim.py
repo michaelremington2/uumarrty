@@ -5,6 +5,7 @@ import numpy as np
 import json
 from organismsim import Krat
 from organismsim import Snake
+from organismsim import Owl
 import math
 import time
 #look up contact rates based on spatial scale and tempor
@@ -17,6 +18,7 @@ class Cell(object):
         self.sim = sim
         self.krats = []
         self.snakes = []
+        self.owls = []
         self.habitat_type = habitat_type
         self.landscape = sim.landscape
         self.krat_energy_cost = krat_energy_cost
@@ -35,8 +37,11 @@ class Cell(object):
         self.krats.append(krat)
 
     def add_snake(self, snake):
-        # Add a krat to the population of this cells snakes
+        # Add a snake to the population of this cells snakes
         self.snakes.append(snake)
+
+    def add_owl(self,owl):
+        self.owls.append(owl)
 
     def select_krat(self,krat_index = None):
         #returns a random index for the krat
@@ -74,7 +79,7 @@ class Cell(object):
         if self.rng.random() < probability_of_encounter:
             snake.expend_energy(self.snake_energy_cost)
             if self.rng.random() < snake.strike_success_probability:
-                mouse_energy = self.rng.randrange(10,30)
+                mouse_energy = self.rng.randrange(20,30)
                 snake.consume(mouse_energy)
             else:
                 snake.missed_opportunity_cost+=1
@@ -100,7 +105,17 @@ class Cell(object):
             snake.missed_opportunity_cost = 0
             moving_snake = (new_cell,snake,self)
             self.landscape.snake_move_pool.append(moving_snake)
-            moving_snake_list.append(snake)       
+            moving_snake_list.append(snake)
+
+    def owl_move(self,owl,moving_owl_list):
+        # think of snake movement
+        #if self.sim.time_of_day == snake.hunting_hours[-1]+1:
+        #    new_cell = snake.return_home()
+        new_cell = owl.organism_movement()
+        if new_cell != self:
+            moving_owl = (new_cell,owl,self)
+            self.landscape.owl_move_pool.append(moving_owl)
+            moving_owl_list.append(owl)             
 
     def krat_grave(self):
         self.krats = [ krat for krat in self.krats if krat.alive == True ]
@@ -145,7 +160,7 @@ class Cell(object):
                 snake.current_cell = self
         self.snake_incubation_list = []
 
-    def krat_predation(self,snake):
+    def krat_predation_by_snake(self,snake):
         # stand in value and move to config file V
         probability_of_krat_encounter = len(self.krats)/(len(self.krats)+1)*self.sim.time_step #1 krat has a 1/2 chance in interacting with a snake
         if self.rng.random() < probability_of_krat_encounter:
@@ -158,18 +173,33 @@ class Cell(object):
                 krat.register_predation_event()
                 snake.missed_opportunity_cost+=1
 
+    def krat_predation_by_owl(self,owl):
+        # stand in value and move to config file V
+        probability_of_krat_encounter = len(self.krats)/(len(self.krats)+1)*self.sim.time_step #1 krat has a 1/2 chance in interacting with a snake
+        if self.rng.random() < probability_of_krat_encounter:
+            krat = self.select_krat()
+            if self.rng.random() < owl.strike_success_probability:
+                self.pop_krat(self.krats.index(krat))
+            else:
+                krat.register_predation_event()
+
     def predation_cycle_snake(self,snake):
         snake.hunting_period()
         # added in a twice energy 
         snake.expend_energy(self.snake_energy_cost) 
-        if snake.hunting == True:
+        if snake.hunting:
             self.other_critter_predation(snake)
-            self.krat_predation(snake)
+            self.krat_predation_by_snake(snake)
+
+    def predation_cycle_owl(self,owl):
+        owl.hunting_period() 
+        if owl.hunting and self.habitat_type == '[<MicrohabitatType.OPEN: 1>]':
+            self.krat_predation_by_owl(owl)
 
     def foraging_rat(self,krat):
         krat.foraging_period()
         krat.expend_energy(self.krat_energy_cost)
-        if krat.foraging == True and krat.alive == True:
+        if krat.foraging and krat.alive:
             krat_energy_gain = krat.energy_gain(self.cell_energy_pool)
             if self.cell_energy_pool > 0:
                 krat.forage(krat_energy_gain)
@@ -207,7 +237,7 @@ class Cell(object):
             snake.reproduction(self.snake_incubation_list)
             projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
             proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
-                                                                        cost_to_move=self.snake_energy_cost*10, #assumption costs twice as much for a snake to move because big and ineffecient
+                                                                        cost_to_move=self.snake_energy_cost, #assumption costs twice as much for a snake to move because big and ineffecient
                                                                         predation_cost=snake.predation_counter, 
                                                                         missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
                                                                         competition_cost=len(self.snakes)-1,
@@ -219,7 +249,15 @@ class Cell(object):
                 self.snake_move(snake, moving_snake_list=moving_snakes)
                 df = [self.sim.time,proj_snake_energy_state,0,1]
             self.sim.snake_energy_calc_report.append(df)
-        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive == True]
+        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
+
+    def owl_activity_pulse_behavior(self):
+        #self.snake_grave()
+        moving_owls = []
+        for owl in self.owls:
+            self.predation_cycle_owl(owl)
+            self.owl_move(owl, moving_owl_list=moving_owls)
+        self.owls = [owl for owl in self.owls if owl not in moving_owls]
 
     def cell_grass_reproduction(self):
         if self.sim.day_of_year in range(122,183) and self.sim.time_of_day == 6:
@@ -243,6 +281,7 @@ class Landscape(object):
         self.microhabitat_open_bush_proportions = microhabitat_open_bush_proportions
         self.krat_move_pool = []
         self.snake_move_pool = []
+        self.owl_move_pool = []
         self.rng = self.sim.rng
 
 
@@ -317,6 +356,19 @@ class Landscape(object):
             krat.current_cell=cell
             ikp = ikp-1
 
+    def initialize_owl_pop(self,initial_owl_pop,move_range,strike_success_probability, open_preference_weight, bush_preference_weight):
+        iop = initial_owl_pop
+        while iop > 0:
+            cell = self.select_random_cell()
+            owl = Owl(sim = sim,
+                        move_range = move_range,
+                        strike_success_probability = strike_success_probability,
+                        open_preference_weight = open_preference_weight,
+                        bush_preference_weight = bush_preference_weight)
+            cell.add_owl(owl)
+            owl.current_cell=cell
+            iop = iop-1
+
     def relocate_krats(self):
         for i, krat in enumerate(self.krat_move_pool):
             new_cell = krat[0]
@@ -333,8 +385,16 @@ class Landscape(object):
             snake_object.current_cell = new_cell 
         self.snake_move_pool = []
 
+    def relocate_owls(self):
+        for j, snake in enumerate(self.owl_move_pool):
+            new_cell = owl[0]
+            owl_object = owl[1]
+            new_cell.add_owl(owl_object)
+            owl_object.current_cell = new_cell 
+        self.owl_move_pool = []
+
     def landscape_stats(self,cell):
-        if self.sim.time_of_day in [0,12]: #specify in documentation
+        if self.sim.time_of_day in [5,12,18]: #specify in documentation
             cell_krat_energy = sum([krat.energy for krat in cell.krats])
             cell_krat_movement_history = sum([krat.number_of_movements for krat in cell.krats])
             cell_snake_energy = sum([snake.energy for snake in cell.snakes])
@@ -349,6 +409,7 @@ class Landscape(object):
                 self.landscape_stats(cell)
                 cell.krat_activity_pulse_behavior()
                 cell.snake_activity_pulse_behavior()
+                cell.owl_activity_pulse_behavior()
                 cell.newborn_krats()
                 cell.newborn_snakes()
                 cell.cell_grass_reproduction()
@@ -416,11 +477,18 @@ class Sim(object):
                 open_preference_weight = config_d["krat_open_preference_weight"],
                 bush_preference_weight = config_d["krat_bush_preference_weight"]
                 )
+        self.landscape.initialize_owl_pop(
+                initial_owl_pop=config_d["initial_owl_pop"],
+                move_range = config_d["owl_move_range"],
+                strike_success_probability = config_d["owl_catch_success"],
+                open_preference_weight = config_d["owl_open_preference_weight"],
+                bush_preference_weight = config_d["owl_bush_preference_weight"]
+                )
 
     def read_configuration_file(self):
         with open(self.file_path) as f:
             config_d = json.load(f)
-        sim1 =config_d['sim'][0]
+        sim1 = config_d['sim'][0]
         self.configure(sim1)
 
     def hour_tick(self):

@@ -16,7 +16,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell,initial_energy,energy_deviation, move_range, open_preference_weight=1, bush_preference_weight=1):
+    def __init__(self,sim,home_cell=None,initial_energy=0,energy_deviation=0, move_range=1, open_preference_weight=1, bush_preference_weight=1):
         self.sim = sim
         self.landscape =self.sim.landscape
         self.initial_energy = initial_energy
@@ -91,7 +91,7 @@ class Organism(object):
             base_destination_probability = 1/number_of_move_options
         if bush_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
             destination_probability = base_destination_probability*bush_preference_weight
-        elif open_preference_weight != 1 and cell.MicrohabitatType.name == '[<MicrohabitatType.OPEN: 1>]':
+        elif open_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]':
             destination_probability = base_destination_probability*open_preference_weight
         else:
             destination_probability = base_destination_probability
@@ -293,13 +293,10 @@ class Krat(Organism):
 
 
 class Owl(Organism):
-    def __init__(self,sim, initial_energy,energy_deviation,move_range,home_cell,strike_success_probability,open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
+    def __init__(self,sim, move_range,strike_success_probability,home_cell =None, initial_energy=0, energy_deviation=0, open_preference_weight=1, bush_preference_weight=1, hunting_hours=None):
         super().__init__(sim,home_cell,initial_energy, energy_deviation, move_range)
         self.sim = sim 
-        self.initial_energy= initial_energy
-        self.energy = initial_energy
         self.strike_success_probability = strike_success_probability
-        self.home_cell = home_cell
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
@@ -313,17 +310,11 @@ class Owl(Organism):
         return hunting_hours
 
     def hunting_period(self):
-        self.set_hungry()
-        if self.sim.time_of_day in self.hunting_hours and self.hungry == True:
+        if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:
             self.hunting = False
 
-    def consume(self,energy_gain):
-        if energy_gain < 0:
-            raise ValueError('gains should be positive integers')
-        else:
-            self.energy += energy_gain
 
 
 

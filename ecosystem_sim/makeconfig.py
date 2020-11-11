@@ -13,7 +13,7 @@ data['sim'].append({
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 15,
     "initial_krat_pop": 150,
-    "initial_owl_pop": 150,
+    "initial_owl_pop": 2,
     "cell_energy_pool": 1200,
     "snake_initial_energy": 300,
     "snake_energy_deviation":100,
@@ -34,7 +34,9 @@ data['sim'].append({
     "krat_open_preference_weight":1,
     "krat_bush_preference_weight":1,
     "snake_open_preference_weight":1,
-    "snake_bush_preference_weight":1
+    "snake_bush_preference_weight":1,
+    "owl_open_preference_weight":2,
+    "owl_bush_preference_weight":1
     })
 
 with open('data.txt', 'w') as outfile:

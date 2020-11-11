@@ -85,6 +85,7 @@ class Cell(object):
         else:
             new_cell = krat.organism_movement()
         if new_cell != self:
+            krat.expend_energy(self.krat_energy_cost)
             moving_krat = (new_cell,krat,self)
             self.landscape.krat_move_pool.append(moving_krat)
             moving_krat_list.append(krat)
@@ -95,6 +96,7 @@ class Cell(object):
         #    new_cell = snake.return_home()
         new_cell = snake.organism_movement()
         if new_cell != self:
+            snake.expend_energy(self.snake_energy_cost)
             snake.missed_opportunity_cost = 0
             moving_snake = (new_cell,snake,self)
             self.landscape.snake_move_pool.append(moving_snake)
@@ -159,7 +161,7 @@ class Cell(object):
     def predation_cycle_snake(self,snake):
         snake.hunting_period()
         # added in a twice energy 
-        snake.expend_energy(self.snake_energy_cost,0.5)
+        snake.expend_energy(self.snake_energy_cost) 
         if snake.hunting == True:
             self.other_critter_predation(snake)
             self.krat_predation(snake)
@@ -178,21 +180,24 @@ class Cell(object):
         #self.krat_grave()
         moving_krats = []
         for krat in self.krats:
-            if self.sim.time_of_day in krat.foraging_hours:
+            if self.sim.time_of_day in krat.foraging_hours and krat.alive:
                 krat.reproduction(self.krat_incubation_list)
                 projected_energy_gain = krat.energy_gain(self.cell_energy_pool)
                 proj_krat_energy_state = krat.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
                                                                             cost_to_move=self.krat_energy_cost, 
                                                                             predation_cost=krat.predation_counter, 
                                                                             missed_opportunity_cost=1, #assumption
-                                                                            competition_cost=len(self.krats),
+                                                                            competition_cost=(len(self.krats)-1),
                                                                             basal_energy_cost=self.krat_energy_cost)
                 if proj_krat_energy_state >= 0:
                     self.foraging_rat(krat)
+                    df = [krat.krat_id, self.sim.time, proj_krat_energy_state, 1, 0]
                 else:
                     self.krat_move(krat,moving_krat_list = moving_krats)
+                    df = [krat.krat_id, self.sim.time, proj_krat_energy_state, 0, 1]
+                self.sim.krat_energy_calc_report.append(df)
             elif self.sim.time_of_day == krat.foraging_hours[-1]+1:
-                self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)        
+                self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)     
         self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive == True]
 
     def snake_activity_pulse_behavior(self):
@@ -201,16 +206,19 @@ class Cell(object):
         for snake in self.snakes:
             snake.reproduction(self.snake_incubation_list)
             projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
-            proj_krat_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
-                                                                        cost_to_move=self.snake_energy_cost*2, #assumption costs twice as much for a snake to move because big and ineffecient
+            proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                                                                        cost_to_move=self.snake_energy_cost*10, #assumption costs twice as much for a snake to move because big and ineffecient
                                                                         predation_cost=snake.predation_counter, 
                                                                         missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
-                                                                        competition_cost=len(self.snakes),
+                                                                        competition_cost=len(self.snakes)-1,
                                                                         basal_energy_cost=self.snake_energy_cost)
-            if proj_krat_energy_state >= 0:
+            if proj_snake_energy_state >= 0:
                 self.predation_cycle_snake(snake)
+                df = [snake.snake_id, self.sim.time, proj_snake_energy_state, 1, 0]
             else:
                 self.snake_move(snake, moving_snake_list=moving_snakes)
+                df = [self.sim.time,proj_snake_energy_state,0,1]
+            self.sim.snake_energy_calc_report.append(df)
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive == True]
 
     def cell_grass_reproduction(self):
@@ -354,6 +362,8 @@ class Sim(object):
     def __init__(self,file_path,rng = None):
         self.file_path = file_path
         self.report = []
+        self.krat_energy_calc_report = []
+        self.snake_energy_calc_report = []
         if rng is None:
             self.rng = random.Random()
         else:
@@ -437,6 +447,8 @@ class Sim(object):
             self.hour_tick()
             self.time += self.time_step
         self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
+        self.report_writer(array = self.krat_energy_calc_report,file_name = 'krat_energy.csv')
+        self.report_writer(array = self.snake_energy_calc_report,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
 

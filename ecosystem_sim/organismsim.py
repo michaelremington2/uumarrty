@@ -38,6 +38,9 @@ class Organism(object):
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
 
+    def __hash__(self):
+        return id(self)
+
     def natural_death(self): #check_if_natural_death
         '''If the energy counter falls below zero, this function sets the alive attribute to false signifying it is dead.'''
         if round(self.energy) <= 0:
@@ -164,7 +167,7 @@ class Snake(Organism):
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-
+        self.snake_id = id(self)
 
     @property
     def strike_success_probability(self):
@@ -202,7 +205,7 @@ class Snake(Organism):
             self.energy += energy_gain
 
     def reproduction(self,cell_incubation_list):
-        if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 6 and self.energy >= self.initial_energy:
+        if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 5 and self.energy >= self.initial_energy:
             litter_size = self.rng.randrange(0,self.snake_max_litter_size)
             for i in range(litter_size+1):
                 snake_stats = {"energy": self.initial_energy,
@@ -233,6 +236,7 @@ class Krat(Organism):
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        self.krat_id = id(self)
 
     def foraging_period_gen(self,foraging_hours):
         if foraging_hours == None:
@@ -272,7 +276,7 @@ class Krat(Organism):
 
     def reproduction(self,cell_incubation_list):
         random_prob = self.rng.random()
-        if (random_prob < self.krat_litter_frequency) and self.sex == 'F' and self.energy >= self.initial_energy and self.sim.time_of_day == 6:
+        if (random_prob < self.krat_litter_frequency) and self.sex == 'F' and self.energy >= self.initial_energy and self.sim.time_of_day == 5:
             #print('prob {}, krat_freq {}, sex {}'.format(random_prob,self.krat_litter_frequency,self.sex))
             litter_size = self.rng.randrange(0,self.krat_max_litter_size)
             for i in range(litter_size+1):

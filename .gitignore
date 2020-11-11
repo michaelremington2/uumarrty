@@ -4,3 +4,5 @@ ecosystem_sim/scratch.py
 ecosystem_sim/scratch2.py
 ecosystem_sim/.ipynb_checkpoints/*
 ecosystem_sim/Cell_stats_sim_1.csv
+ecosystem_sim/krat_energy.csv
+ecosystem_sim/snake_energy.csv

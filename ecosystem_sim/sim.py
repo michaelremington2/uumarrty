@@ -234,21 +234,22 @@ class Cell(object):
         #self.snake_grave()
         moving_snakes = []
         for snake in self.snakes:
-            snake.reproduction(self.snake_incubation_list)
-            projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
-            proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
-                                                                        cost_to_move=self.snake_energy_cost, #assumption costs twice as much for a snake to move because big and ineffecient
-                                                                        predation_cost=snake.predation_counter, 
-                                                                        missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
-                                                                        competition_cost=len(self.snakes)-1,
-                                                                        basal_energy_cost=self.snake_energy_cost)
-            if proj_snake_energy_state >= 0:
-                self.predation_cycle_snake(snake)
-                df = [snake.snake_id, self.sim.time, proj_snake_energy_state, 1, 0]
-            else:
-                self.snake_move(snake, moving_snake_list=moving_snakes)
-                df = [self.sim.time,proj_snake_energy_state,0,1]
-            self.sim.snake_energy_calc_report.append(df)
+            if self.sim.time_of_day in snake.hunting_hours and snake.alive:
+                snake.reproduction(self.snake_incubation_list)
+                projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
+                proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                                                                            cost_to_move=self.snake_energy_cost, #assumption costs twice as much for a snake to move because big and ineffecient
+                                                                            predation_cost=snake.predation_counter, 
+                                                                            missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
+                                                                            competition_cost=len(self.snakes)-1,
+                                                                            basal_energy_cost=self.snake_energy_cost)
+                if proj_snake_energy_state >= 0:
+                    self.predation_cycle_snake(snake)
+                    df = [snake.snake_id, self.sim.time, proj_snake_energy_state, 1, 0]
+                else:
+                    self.snake_move(snake, moving_snake_list=moving_snakes)
+                    df = [self.sim.time,proj_snake_energy_state,0,1]
+                self.sim.snake_energy_calc_report.append(df)
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
 
     def owl_activity_pulse_behavior(self):

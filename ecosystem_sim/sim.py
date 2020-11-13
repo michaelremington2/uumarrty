@@ -232,6 +232,7 @@ class Cell(object):
 
     def snake_activity_pulse_behavior(self):
         #self.snake_grave()
+        #make document of energy equation and assumptions
         moving_snakes = []
         for snake in self.snakes:
             if self.sim.time_of_day in snake.hunting_hours and snake.alive:

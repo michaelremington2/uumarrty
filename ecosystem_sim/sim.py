@@ -236,12 +236,12 @@ class Cell(object):
         for snake in self.snakes:
             if self.sim.time_of_day in snake.hunting_hours and snake.alive:
                 snake.reproduction(self.snake_incubation_list)
-                projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain
+                projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain assumption
                 proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
                                                                             cost_to_move=self.snake_energy_cost, #assumption costs twice as much for a snake to move because big and ineffecient
                                                                             predation_cost=snake.predation_counter, 
                                                                             missed_opportunity_cost=snake.missed_opportunity_cost, #assumption
-                                                                            competition_cost=len(self.snakes)-1,
+                                                                            competition_cost=len(self.snakes)-1, #assumption
                                                                             basal_energy_cost=self.snake_energy_cost)
                 if proj_snake_energy_state >= 0:
                     self.predation_cycle_snake(snake)

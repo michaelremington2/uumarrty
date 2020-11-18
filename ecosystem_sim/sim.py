@@ -263,7 +263,7 @@ class Cell(object):
 
     def cell_grass_reproduction(self):
         if self.sim.day_of_year in range(122,183) and self.sim.time_of_day == 6:
-            self.cell_energy_pool += self.rng.randrange(2,8)
+            self.cell_energy_pool += self.rng.randrange(2,4)
 
 
 class Landscape(object):

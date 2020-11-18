@@ -81,7 +81,7 @@ class Organism(object):
     def homeostasis_delta_calculator(self, energy_gain, cost_to_move, predation_cost, missed_opportunity_cost, competition_cost,basal_energy_cost):
         #E(H) = C (net gain) + RI (risk of injury) + P(risk of predation) + I(interaction with predators) + MOC(missed_opportunity_cost) enbar 2014
         # H = EC + PC + MOC +ioc (interference cost) bouskila 1995
-        e = energy_gain+cost_to_move-predation_cost-missed_opportunity_cost-competition_cost-basal_energy_cost
+        e = energy_gain + cost_to_move - predation_cost - missed_opportunity_cost - competition_cost - basal_energy_cost 
         return e
 
     def calc_cell_destination_suitability(self, cell,number_of_move_options, bush_preference_weight=1, open_preference_weight=1):

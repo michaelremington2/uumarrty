@@ -185,7 +185,6 @@ class Cell(object):
 
     def predation_cycle_snake(self,snake):
         snake.hunting_period()
-        # added in a twice energy 
         snake.expend_energy(self.snake_energy_cost) 
         if snake.hunting:
             self.other_critter_predation(snake)
@@ -227,8 +226,8 @@ class Cell(object):
                     df = [krat.krat_id, self.sim.time, proj_krat_energy_state, 0, 1]
                 self.sim.krat_energy_calc_report.append(df)
             elif self.sim.time_of_day == krat.foraging_hours[-1]+1:
-                self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)     
-        self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive == True]
+                self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)
+        self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
     def snake_activity_pulse_behavior(self):
         #self.snake_grave()
@@ -396,7 +395,7 @@ class Landscape(object):
         self.owl_move_pool = []
 
     def landscape_stats(self,cell):
-        if self.sim.time_of_day in [5,12,18]: #specify in documentation
+        if self.sim.time_of_day in [0,6,12]: #specify in documentation
             cell_krat_energy = sum([krat.energy for krat in cell.krats])
             cell_krat_movement_history = sum([krat.number_of_movements for krat in cell.krats])
             cell_snake_energy = sum([snake.energy for snake in cell.snakes])

@@ -205,14 +205,15 @@ class Cell(object):
                 self.cell_forage(krat_energy_gain)
 
     def krat_activity_pulse_behavior(self):
-        # this is the general behavior of the krat organism for one activity pulse
-        #self.krat_grave()
+        """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
+
         moving_krats = []
         for krat in self.krats:
             if self.sim.time_of_day in krat.foraging_hours and krat.alive:
                 krat.reproduction(self.krat_incubation_list)
                 projected_energy_gain = krat.energy_gain(self.cell_energy_pool)
-                proj_krat_energy_state = krat.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                proj_krat_energy_state = krat.homeostasis_delta_calculator(
+                                                                            energy_gain=projected_energy_gain, 
                                                                             cost_to_move=self.krat_energy_cost, 
                                                                             predation_cost=krat.predation_counter, 
                                                                             missed_opportunity_cost=1, #assumption
@@ -230,14 +231,14 @@ class Cell(object):
         self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
     def snake_activity_pulse_behavior(self):
-        #self.snake_grave()
-        #make document of energy equation and assumptions
+        """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
         moving_snakes = []
         for snake in self.snakes:
             if self.sim.time_of_day in snake.hunting_hours and snake.alive:
                 snake.reproduction(self.snake_incubation_list)
                 projected_energy_gain = 60/len(snake.hunting_hours) #expected energy gain assumption
-                proj_snake_energy_state = snake.homeostasis_delta_calculator(energy_gain=projected_energy_gain, 
+                proj_snake_energy_state = snake.homeostasis_delta_calculator(
+                                                                            energy_gain=projected_energy_gain, 
                                                                             cost_to_move=self.snake_energy_cost, #assumption costs twice as much for a snake to move because big and ineffecient
                                                                             predation_cost=snake.predation_counter, 
                                                                             missed_opportunity_cost=snake.missed_opportunity_cost, #assumption

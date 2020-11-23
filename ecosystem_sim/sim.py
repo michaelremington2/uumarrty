@@ -267,7 +267,6 @@ class Cell(object):
 
 
 
-BLEEEEEEEEEEEEEEEHHHHHH
 
 class Landscape(object):
     '''Landscape is an object that is composed of Cells are 10m x 10m that range across the x and the y of the landscape.

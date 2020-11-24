@@ -14,30 +14,34 @@ data['sim'].append({
     "initial_snake_pop": 8,
     "initial_krat_pop": 100,
     "initial_owl_pop": 2,
-    "cell_energy_pool": 1200,
-    "snake_initial_energy": 300,
-    "snake_energy_deviation":100,
-    "krat_initial_energy": 40,
-    "krat_energy_deviation":10,
-    "snake_energy_cost": 0.25,
-    "krat_energy_cost": 0.5,
-    "strike_success_probability": (7/32),
-    "krat_energy_gain": 0.00142,
-    "krat_max_litter_size": 6,
-    "snake_max_litter_size":1,
-    "krat_litter_frequency":(1/420),
-    "snake_litter_frequency": (1/420),
+    "snake_strike_success_probability_bush": 0.032,
+    "snake_strike_success_probability_open": 0.009,
+    "krat_energy_gain_bush": 12,
+    "krat_energy_gain_open": 12,
     "krat_move_range":1,
     "snake_move_range":4,
     "owl_move_range":6,
-    "owl_catch_success":(7/32),
+    "owl_catch_success":0.02,
     "krat_open_preference_weight":1,
     "krat_bush_preference_weight":1,
     "snake_open_preference_weight":1,
     "snake_bush_preference_weight":1,
-    "owl_open_preference_weight":2,
+    "owl_open_preference_weight":1,
     "owl_bush_preference_weight":1
     })
 
 with open('data.txt', 'w') as outfile:
     json.dump(data, outfile)
+
+#krat_benefit_bush
+#krat_benefit_open
+#probability_snake_bush
+#probability_snake_open
+#probability_owl_open
+#alpha cost to krat in either microhabitat
+#beta cost to snake in either microhabitat
+#percapita payoff bush krat
+#percapita payoff open krat
+#E payoff to snake if krat is caught
+#a determinse intensity of dilution effect
+#k number of rodents in the homerange of owl

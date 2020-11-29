@@ -17,9 +17,9 @@ data['sim'].append({
     "snake_strike_success_probability_open": 0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
     "krat_energy_gain_open": 12, #from bouskila
-    "snake_energy_gain": (1600/5), #krat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
-    "krat_energy_cost":,
-    "snake_energy_cost":,
+    "snake_energy_gain": (1500/5), #krat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
+    "krat_energy_cost":7, # alpha from bouskila
+    "snake_energy_cost":12,
     "krat_move_range":1,
     "snake_move_range":4,
     "owl_move_range":6,
@@ -35,13 +35,13 @@ data['sim'].append({
 with open('data.txt', 'w') as outfile:
     json.dump(data, outfile)
 
-#krat_benefit_bush
-#krat_benefit_open
-#probability_snake_bush
-#probability_snake_open
-#probability_owl_open
-#alpha cost to krat in either microhabitat
-#beta cost to snake in either microhabitat
+#krat_benefit_bush x
+#krat_benefit_open x
+#probability_snake_bush x
+#probability_snake_open x
+#probability_owl_open x
+#alpha cost to krat in either microhabitat x
+#beta cost to snake in either microhabitat x
 #percapita payoff bush krat
 #percapita payoff open krat
 #E payoff to snake if krat is caught

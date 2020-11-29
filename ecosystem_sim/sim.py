@@ -456,28 +456,22 @@ class Sim(object):
                 microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"]
                 )
         self.landscape.build(
-                cell_energy_pool = config_d["cell_energy_pool"],
                 krat_energy_cost = config_d["krat_energy_cost"]*self.time_step ,
                 snake_energy_cost = config_d["snake_energy_cost"]*self.time_step )
         self.landscape.initialize_snake_pop(
                 initial_snake_pop=config_d["initial_snake_pop"],
-                snake_initial_energy=config_d["snake_initial_energy"],
-                energy_deviation = config_d["snake_energy_deviation"],
-                snake_max_litter_size = config_d["snake_max_litter_size"],
-                snake_litter_frequency = config_d["snake_litter_frequency"],
-                strike_success_probability = config_d["strike_success_probability"],
+                strike_success_probability_bush = config_d["strike_success_probability_bush"],
+                strike_success_probability_open = config_d["strike_success_probability_open"],
+                snake_energy_gain_per_krat = config_d["snake_energy_gain"],
                 move_range = config_d["snake_move_range"],
                 open_preference_weight = config_d["snake_open_preference_weight"],
                 bush_preference_weight = config_d["snake_bush_preference_weight"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
-                initial_energy=config_d["krat_initial_energy"],
-                energy_deviation = config_d["krat_energy_deviation"],
-                krat_max_litter_size = config_d["krat_max_litter_size"],
-                krat_litter_frequency = config_d["krat_litter_frequency"],
-                foraging_rate = float(config_d["krat_energy_gain"]*self.time_step),
                 move_range = config_d["krat_move_range"],
+                energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
+                energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
                 open_preference_weight = config_d["krat_open_preference_weight"],
                 bush_preference_weight = config_d["krat_bush_preference_weight"]
                 )

@@ -16,16 +16,11 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell=None,initial_energy=0,energy_deviation=0, move_range=1, open_preference_weight=1, bush_preference_weight=1):
+    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1):
         self.sim = sim
         self.landscape =self.sim.landscape
-        self.initial_energy = initial_energy
-        self.energy = initial_energy
-        self.energy_deviation = energy_deviation
-        self.max_energy = initial_energy+self.energy_deviation #Assumption
-        self.hunger_level = initial_energy-self.energy_deviation #Assumption
+        self.energy_score = 0
         self.alive = True
-        self.hungry = True
         self.predation_counter = 0
         self.missed_opportunity_cost = 0
         self.home_cell = home_cell
@@ -40,37 +35,6 @@ class Organism(object):
 
     def __hash__(self):
         return id(self)
-
-    def natural_death(self): #check_if_natural_death
-        '''If the energy counter falls below zero, this function sets the alive attribute to false signifying it is dead.'''
-        if round(self.energy) <= 0:
-            self.alive = False
-
-    def expend_energy(self, energy_cost, energy_weight=1):
-        '''
-        Sets the object to dead if there is not enough energy in the object.If alive,
-        deducts the energy cost* the energy weight from the classes energy_counter attribute.
-
-        Args:
-            energy_cost -- base constant to deduct from energy_counter (int/ float)
-            energy_weight -- multiplier coefficent for the energy_cost factor.(optional set to 1 in no args passed.)
-
-        Raises:
-            ValueError: if energy_cost is less than zero
-        '''
-        self.natural_death()
-        if self.alive == True:
-            if energy_cost < 0:
-                raise ValueError('Costs should be positive integers')
-            self.energy -= energy_cost*energy_weight
-
-    def set_hungry(self):
-        '''Controls hunger parameter true are false based on the energy counter and max_energy.'''
-        if self.energy < self.hunger_level:
-            self.hungry =  True
-        elif self.energy > self.max_energy:
-            self.hungry = False
-
 
     def register_predation_event(self):
         self.predation_counter += 1
@@ -151,14 +115,13 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, initial_energy,energy_deviation,move_range,home_cell,strike_success_probability,snake_max_litter_size,snake_litter_frequency, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
-        super().__init__(sim,home_cell,initial_energy, energy_deviation, move_range)
+    def __init__(self,sim, move_range,home_cell,strike_success_probability_bush,strike_success_probability_open,energy_gain_from_krat,energy_cost, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
+        super().__init__(sim,home_cell, move_range)
         self.sim = sim 
-        self.initial_energy= initial_energy
-        self.energy = initial_energy
-        self._strike_success_probability = strike_success_probability
-        self.snake_max_litter_size = snake_max_litter_size
-        self.snake_litter_frequency = snake_litter_frequency*self.sim.time_step
+        self.energy_score = 0
+        self.energy_gain_from_krat = energy_gain_from_krat
+        self.strike_success_probability_bush = strike_success_probability_bush
+        self.strike_success_probability_open = strike_success_probability_open
         self.home_cell = home_cell
         self.hunting = False
         self.hunting_hours = self.hunting_period_gen(hunting_hours)
@@ -169,23 +132,6 @@ class Snake(Organism):
         self.bush_preference_weight = bush_preference_weight
         self.snake_id = id(self)
 
-    @property
-    def strike_success_probability(self):
-        return self._strike_success_probability
-    #@strike_success_probability.setter
-    # def strike_success_probability(self, camofloage_coeffiecent):
-    #     new_ss = self._strike_success_probability + camofloage_coeffiecent
-    #     if new_ss >= 1:
-    #         statment = 'Strike success probability ({}) is greater than 1. camofloage_coeffiecent should range between .01 to .05'.format(new_ss)
-    #         RaiseValueError(statment)
-    #     elif new_ss < 0:
-    #         statment = 'camofloage_coeffiecent should not be negative {}'.format(camofloage_coeffiecent)
-    #         RaiseValueError(statment)
-    #     self._strike_success_probability = new_ss
-    # @strike_success_probability.deleter
-    # def strike_success_probability(self):
-    #     self._strike_success_probability = None
-
     def hunting_period_gen(self,hunting_hours):
         if hunting_hours == None:
             hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
@@ -193,16 +139,23 @@ class Snake(Organism):
 
     def hunting_period(self):
         self.set_hungry()
-        if self.sim.time_of_day in self.hunting_hours and self.hungry == True:
+        if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:
             self.hunting = False
 
-    def consume(self,energy_gain):
+    def strike_success_probability(self):
+        if self.current_cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+            ss = self.strike_success_probability_bush
+        elif self.current_cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]'::
+            ss = self.strike_success_probability_open
+        return ss
+
+    def consume(self):
         if energy_gain < 0:
             raise ValueError('gains should be positive integers')
         else:
-            self.energy += energy_gain
+            self.energy_score += self.energy_gain_from_krat
 
     def reproduction(self,cell_incubation_list):
         if self.rng.random() < self.snake_litter_frequency and self.sex == 'F' and self.sim.time_of_day == 5 and self.energy >= self.initial_energy:
@@ -220,17 +173,15 @@ class Snake(Organism):
                 cell_incubation_list.append(snake_stats)
 
 class Krat(Organism):
-    def __init__(self,sim,initial_energy,energy_deviation,move_range,home_cell,foraging_rate,krat_max_litter_size,krat_litter_frequency, open_preference_weight=None, bush_preference_weight=None,foraging_hours = None):
-        super().__init__(sim,home_cell,initial_energy,energy_deviation,move_range)
+    def __init__(self,sim,move_range,home_cell, open_preference_weight=None, bush_preference_weight=None,foraging_hours = None):
+        super().__init__(sim,home_cell,move_range)
         self.sim = sim
-        self.initial_energy = initial_energy
-        self.energy= initial_energy
-        self.krat_max_litter_size = krat_max_litter_size
-        self.krat_litter_frequency = krat_litter_frequency
+        self.energy_score=initial_energy
         self.home_cell = home_cell
         self.foraging = False
         self.foraging_hours = self.foraging_period_gen(foraging_hours)
-        self.foraging_rate = foraging_rate
+        self.energy_gain_bush = energy_gain_bush
+        self.energy_gain_open = energy_gain_open
         self.rng = self.sim.rng
         self.sex = self.rng.choice(['F','M'])
         self.move_range = move_range
@@ -250,25 +201,12 @@ class Krat(Organism):
         else:
             self.foraging = False
 
-    def energy_calculator(self,cell_energy_pool):
-        '''Function takes partial seeds / energy left over from the foraging rate and uses this as a probability
-        to whether or not the krat gets an extra unit or not.'''
-        base_gain = math.floor(self.foraging_rate*cell_energy_pool)
-        extra_energy_probability = float((self.foraging_rate*cell_energy_pool))- base_gain
-        if extra_energy_probability > 1:
-            raise ValueError('Probability is too high.')
-        energy_probability_vector = [(1-extra_energy_probability),extra_energy_probability]
-        extra_energy = self.rng.choices([0,1],energy_probability_vector, k = 1)
-        energy_gain = extra_energy[0]+base_gain
+    def energy_gain(self):
+        if self.current_cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+            energy_gain = self.energy_gain_bush
+        elif self.current_cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]'::
+            energy_gain = self.energy_gain_open
         return energy_gain
-
-    def energy_gain(self,cell_energy_pool):
-        if self.alive:
-            if self.foraging_rate*cell_energy_pool % 1 != 0:
-                energy_gain = self.energy_calculator(cell_energy_pool)
-            else:
-                energy_gain = self.foraging_rate*cell_energy_pool
-            return energy_gain
 
     def forage(self,energy_gain):
         if self.alive:
@@ -293,7 +231,7 @@ class Krat(Organism):
 
 
 class Owl(Organism):
-    def __init__(self,sim, move_range,strike_success_probability,home_cell =None, initial_energy=0, energy_deviation=0, open_preference_weight=1, bush_preference_weight=1, hunting_hours=None):
+    def __init__(self,sim, move_range,strike_success_probability,home_cell=None, bush_preference_weight=1, hunting_hours=None):
         super().__init__(sim,home_cell,initial_energy, energy_deviation, move_range)
         self.sim = sim 
         self.strike_success_probability = strike_success_probability

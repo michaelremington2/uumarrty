@@ -19,7 +19,7 @@ data['sim'].append({
     "krat_energy_gain_open": 12, #from bouskila
     "snake_energy_gain": (1500/5), #krat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
     "krat_energy_cost":7, # alpha from bouskila
-    "snake_energy_cost":12,
+    "snake_energy_cost":14, # beta value not reported by bouskila, using 14 for now because it is twice as much as the krat. it might be worth trying to make this proportional to body size.
     "krat_move_range":1,
     "snake_move_range":4,
     "owl_move_range":6,

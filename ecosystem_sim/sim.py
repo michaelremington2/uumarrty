@@ -65,24 +65,11 @@ class Cell(object):
         # Selects a snake at random from population and removes it and return it
         return self.snakes.pop(snake_index)
 
-    def cell_forage(self,energy_consumed):
-        self.cell_energy_pool -= energy_consumed
-
     def cell_over_populated(self):
         if len(self.krats) > 50:
             raise ValueError("Krats mating too much")
         if len(self.snakes) > 20:
             raise ValueError("snakes mating too much")
-
-    def other_critter_predation(self,snake):
-        probability_of_encounter = (self.sim.time_step)/len(snake.hunting_hours) #assumption
-        if self.rng.random() < probability_of_encounter:
-            snake.expend_energy(self.snake_energy_cost)
-            if self.rng.random() < snake.strike_success_probability:
-                mouse_energy = self.rng.randrange(20,30)
-                snake.consume(mouse_energy)
-            else:
-                snake.missed_opportunity_cost+=1
 
     def krat_move(self, krat,moving_krat_list,return_home=False):
         if return_home== True:
@@ -260,12 +247,6 @@ class Cell(object):
             self.predation_cycle_owl(owl)
             self.owl_move(owl, moving_owl_list=moving_owls)
         self.owls = [owl for owl in self.owls if owl not in moving_owls]
-
-    def cell_grass_reproduction(self):
-        if self.sim.day_of_year in range(122,183) and self.sim.time_of_day == 6:
-            self.cell_energy_pool += self.rng.randrange(2,4)
-
-
 
 
 class Landscape(object):

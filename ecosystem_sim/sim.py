@@ -21,12 +21,7 @@ class Cell(object):
         self.owls = []
         self.habitat_type = habitat_type
         self.landscape = sim.landscape
-        self.krat_energy_cost = krat_energy_cost
-        self.snake_energy_cost = snake_energy_cost
-        self.cell_energy_pool = cell_energy_pool
-        self.cell_id = cell_id
-        self.krat_incubation_list = []
-        self.snake_incubation_list = []      
+        self.cell_id = cell_id     
         self.rng = self.sim.rng
 
     def __hash__(self):
@@ -104,61 +99,17 @@ class Cell(object):
             self.landscape.owl_move_pool.append(moving_owl)
             moving_owl_list.append(owl)             
 
-    def krat_grave(self):
-        self.krats = [ krat for krat in self.krats if krat.alive == True ]
-
-    def snake_grave(self):
-        self.snakes = [ snake for snake in self.snakes if snake.alive == True ]
-
-    def newborn_krats(self):
-        if len(self.krat_incubation_list) > 0:
-            #print('time{},krats{}'.format(self.sim.time_of_day,len(self.krat_incubation_list)))
-            for baby_krat in self.krat_incubation_list:
-                krat = Krat(sim = self.sim,
-                    initial_energy = baby_krat["energy"],
-                    energy_deviation = baby_krat["energy_deviation"],
-                    move_range = baby_krat["move_range"],
-                    home_cell = self,
-                    foraging_rate = baby_krat["foraging_rate"],
-                    krat_max_litter_size = baby_krat["krat_max_litter_size"],
-                    krat_litter_frequency = baby_krat["krat_litter_frequency"],
-                    open_preference_weight = baby_krat["open_preference_weight"],
-                    bush_preference_weight = baby_krat["bush_preference_weight"],
-                    foraging_hours = baby_krat["foraging_hours"])
-                self.add_krat(krat)
-                krat.current_cell = self # krat.current_cell_id = self.cell_id
-        self.krat_incubation_list = []
-
-    def newborn_snakes(self):
-        if len(self.snake_incubation_list) > 0:
-            for baby_snake in self.snake_incubation_list:
-                snake = Snake(sim = self.sim,
-                    initial_energy = baby_snake["energy"],
-                    energy_deviation = baby_snake["energy_deviation"],
-                    move_range = baby_snake["move_range"],
-                    home_cell = self,
-                    strike_success_probability = baby_snake["strike_success_probability"],
-                    snake_max_litter_size = baby_snake["snake_max_litter_size"],
-                    snake_litter_frequency = baby_snake["snake_litter_frequency"],
-                    open_preference_weight = baby_snake["open_preference_weight"],
-                    bush_preference_weight = baby_snake["bush_preference_weight"],
-                    hunting_hours = baby_snake["hunting_hours"])
-                self.add_snake(snake)
-                snake.current_cell = self
-        self.snake_incubation_list = []
-
     def krat_predation_by_snake(self,snake):
         # stand in value and move to config file V
-        probability_of_krat_encounter = len(self.krats)/(len(self.krats)+1)*self.sim.time_step #1 krat has a 1/2 chance in interacting with a snake
-        if self.rng.random() < probability_of_krat_encounter:
-            snake.expend_energy(self.snake_energy_cost)
+        ss = snake.strike_success_probability()
+        if len(self.krats) > 0 and self.rng.random() < ss:
             krat = self.select_krat()
-            if self.rng.random() < snake.strike_success_probability:
-                snake.consume(krat.energy)
-                self.pop_krat(self.krats.index(krat))
-            else:
-                krat.register_predation_event()
-                snake.missed_opportunity_cost+=1
+            krat.alive = False
+            energy_gain = snake.energy_gain_per_krat
+        else:
+            energy_gain = 0
+        snake.energy_score += energy_gain + snake.energy_cost
+
 
     def krat_predation_by_owl(self,owl):
         # stand in value and move to config file V
@@ -185,7 +136,7 @@ class Cell(object):
     def foraging_rat(self,krat):
         krat.foraging_period()
         krat.expend_energy(self.krat_energy_cost)
-        if krat.foraging and krat.alive:
+        if krat.foraging:
             krat_energy_gain = krat.energy_gain(self.cell_energy_pool)
             if self.cell_energy_pool > 0:
                 krat.forage(krat_energy_gain)
@@ -193,11 +144,9 @@ class Cell(object):
 
     def krat_activity_pulse_behavior(self):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
-
         moving_krats = []
         for krat in self.krats:
             if self.sim.time_of_day in krat.foraging_hours and krat.alive:
-                krat.reproduction(self.krat_incubation_list)
                 projected_energy_gain = krat.energy_gain(self.cell_energy_pool)
                 proj_krat_energy_state = krat.homeostasis_delta_calculator(
                                                                             energy_gain=projected_energy_gain, 
@@ -269,8 +218,7 @@ class Landscape(object):
         self.owl_move_pool = []
         self.rng = self.sim.rng
 
-
-    def build(self,cell_energy_pool,krat_energy_cost,snake_energy_cost):
+    def build(self):
         self.cells = []
         for yidx in range(self.cells_y_rows):
             temp_x = []
@@ -279,13 +227,9 @@ class Landscape(object):
                 cell = Cell(
                     sim = self.sim,
                     habitat_type = self.select_random_cell_type(),
-                    cell_energy_pool = cell_energy_pool,
-                    krat_energy_cost = krat_energy_cost,
-                    snake_energy_cost = snake_energy_cost,
                     cell_id = cell_id)
                 temp_x.append(cell)
             self.cells.append(temp_x)
-
 
     def select_random_cell_type(self):
         microclimate_type = self.rng.choices([self.MicrohabitatType.OPEN,self.MicrohabitatType.BUSH],self.microhabitat_open_bush_proportions, k = 1)
@@ -305,36 +249,32 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(self,initial_snake_pop,snake_initial_energy,energy_deviation,snake_litter_frequency,snake_max_litter_size,strike_success_probability,move_range,open_preference_weight, bush_preference_weight):
+    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,open_preference_weight, bush_preference_weight):
         isp = initial_snake_pop
         while isp > 0:
             cell = self.select_random_cell()
             snake = Snake(sim = sim,
-                         initial_energy = snake_initial_energy,
-                         energy_deviation = energy_deviation,
-                         home_cell = cell,
-                         snake_litter_frequency = snake_litter_frequency,
-                         snake_max_litter_size = snake_max_litter_size,
-                         strike_success_probability = strike_success_probability,
-                         move_range = move_range,
-                         open_preference_weight = open_preference_weight,
-                         bush_preference_weight = bush_preference_weight)
+                        strike_success_probability_bush = strike_success_probability_bush,
+                        strike_success_probability_open = strike_success_probability_open,
+                        energy_gain_per_krat = snake_energy_gain_per_krat,
+                        energy_cost = energy_cost,
+                        move_range = move_range,
+                        open_preference_weight = open_preference_weight,
+                        bush_preference_weight = bush_preference_weight)
             cell.add_snake(snake)
             snake.current_cell=cell
             isp = isp-1
 
-    def initialize_krat_pop(self,initial_krat_pop,initial_energy,energy_deviation,krat_litter_frequency,krat_max_litter_size,foraging_rate, move_range, open_preference_weight, bush_preference_weight):
+    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, move_range, open_preference_weight, bush_preference_weight):
         ikp = initial_krat_pop
         while ikp > 0:
             cell = self.select_random_cell()
             krat = Krat(sim = sim,
-                        initial_energy = initial_energy,
-                        energy_deviation = energy_deviation,
+                        energy_gain_bush = energy_gain_bush, #from bouskila
+                        energy_gain_ope = energy_gain_open, #from bouskila
+                        energy_cost = energy_cost,
                         move_range = move_range,
                         home_cell= cell,
-                        krat_max_litter_size = krat_max_litter_size,
-                        krat_litter_frequency = krat_litter_frequency,
-                        foraging_rate = foraging_rate,
                         open_preference_weight = open_preference_weight,
                         bush_preference_weight = bush_preference_weight)
             cell.add_krat(krat)
@@ -436,14 +376,13 @@ class Sim(object):
                 size_y=config_d["landscape_size_y"],
                 microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"]
                 )
-        self.landscape.build(
-                krat_energy_cost = config_d["krat_energy_cost"]*self.time_step ,
-                snake_energy_cost = config_d["snake_energy_cost"]*self.time_step )
+        self.landscape.build()
         self.landscape.initialize_snake_pop(
                 initial_snake_pop=config_d["initial_snake_pop"],
                 strike_success_probability_bush = config_d["strike_success_probability_bush"],
                 strike_success_probability_open = config_d["strike_success_probability_open"],
-                snake_energy_gain_per_krat = config_d["snake_energy_gain"],
+                energy_gain_from_krat = config_d["snake_energy_gain"],
+                energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],
                 open_preference_weight = config_d["snake_open_preference_weight"],
                 bush_preference_weight = config_d["snake_bush_preference_weight"]
@@ -453,6 +392,7 @@ class Sim(object):
                 move_range = config_d["krat_move_range"],
                 energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
                 energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
+                energy_cost=config_d["krat_energy_cost"],
                 open_preference_weight = config_d["krat_open_preference_weight"],
                 bush_preference_weight = config_d["krat_bush_preference_weight"]
                 )

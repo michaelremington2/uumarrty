@@ -47,9 +47,9 @@ class Organism(object):
             raise ValueError('No Move Options')
         else:
             base_destination_probability = 1/number_of_move_options
-        if bush_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+        if bush_preference_weight != 1 and cell.habitat_type[0].name == 'BUSH':
             destination_probability = base_destination_probability*bush_preference_weight
-        elif open_preference_weight != 1 and cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]':
+        elif open_preference_weight != 1 and cell.habitat_type[0].name == 'OPEN':
             destination_probability = base_destination_probability*open_preference_weight
         else:
             destination_probability = base_destination_probability
@@ -99,7 +99,6 @@ class Organism(object):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
         new_cell = self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
         if new_cell != self.current_cell:
-                self.reset_predation_history()
                 self.number_of_movements += 1
         return new_cell
 
@@ -108,11 +107,11 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, move_range,home_cell,strike_success_probability_bush,strike_success_probability_open,energy_gain_from_krat,energy_cost, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
+    def __init__(self,sim, move_range,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
         super().__init__(sim,home_cell, move_range)
         self.sim = sim 
         self.energy_score = 0
-        self.energy_gain_from_krat = energy_gain_from_krat
+        self.energy_gain_per_krat = energy_gain_per_krat
         self.energy_cost = energy_cost
         self.strike_success_probability_bush = strike_success_probability_bush
         self.strike_success_probability_open = strike_success_probability_open
@@ -132,21 +131,20 @@ class Snake(Organism):
         return hunting_hours
 
     def hunting_period(self):
-        self.set_hungry()
         if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:
             self.hunting = False
 
-    def strike_success_probability(self,cell):
-        if cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+    def calc_strike_success_probability(self,cell):
+        if cell.habitat_type[0].name == 'BUSH':
             ss = self.strike_success_probability_bush
-        elif cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]'::
+        elif cell.habitat_type[0].name == 'OPEN':
             ss = self.strike_success_probability_open
         return ss
 
 class Krat(Organism):
-    def __init__(self,sim,enrgy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,home_cell,open_preference_weight=None,bush_preference_weight=None,foraging_hours = None):
+    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,home_cell,open_preference_weight=None,bush_preference_weight=None,foraging_hours = None):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim
         self.home_cell = home_cell
@@ -171,23 +169,25 @@ class Krat(Organism):
         return foraging_hours
 
     def foraging_period(self):
-        self.set_hungry()
         if self.sim.time_of_day in self.foraging_hours:
             self.foraging = True
         else:
             self.foraging = False
 
-    def energy_gain(self,cell):
+    def calc_energy_gain(self,cell):
         if self.alive:
-            if cell.habitat_type == '[<MicrohabitatType.BUSH: 2>]':
+            if cell.habitat_type[0].name == 'BUSH':
                 energy_gain = self.energy_gain_bush
-            elif cell.habitat_type == '[<MicrohabitatType.OPEN: 1>]':
+            elif cell.habitat_type[0].name == 'OPEN':
                 energy_gain = self.energy_gain_open
+            else:
+                #print(isinstance(self.sim.landscape.MicrohabitatType.OPEN, cell.habitat_type))
+                raise ValueError('no habitat_type called')
         else:
             energy_gain = 0
         return energy_gain
 
-    def energy_cost(self):
+    def calc_energy_cost(self):
         if self.alive:
             cost = self.energy_cost
         else:
@@ -197,8 +197,8 @@ class Krat(Organism):
 
 
 class Owl(Organism):
-    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_prefrence_weight=1,bush_preference_weight=1,hunting_hours=None):
-        super().__init__(sim,home_cell,initial_energy, energy_deviation, move_range)
+    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=1,hunting_hours=None):
+        super().__init__(sim,home_cell,move_range)
         self.sim = sim 
         self.strike_success_probability = strike_success_probability
         self.hunting = False

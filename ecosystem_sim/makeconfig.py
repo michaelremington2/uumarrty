@@ -5,7 +5,7 @@ import json
 data = {}
 data['sim'] = []
 data['sim'].append({
-    "days_of_sim": 3650,
+    "days_of_sim": 365,
     "time_step":1,
     "landscape_size_x": 500,
     "landscape_size_y": 500,

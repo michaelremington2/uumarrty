@@ -32,6 +32,8 @@ class Organism(object):
         self.number_of_movements = 0
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        self.microhabitat_energy_log = {}
+        self.data_log = []
 
     def __hash__(self):
         return id(self)
@@ -105,6 +107,15 @@ class Organism(object):
     def return_home(self):
         return self.home_cell
 
+    def populate_microhabitat_energy_log(self,microhabitat_type,delta_energy_score):
+        label = microhabitat_type
+        self.microhabitat_energy_log[label] += delta_energy_score
+
+    def populate_data_analysis_log(self,org_id,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls):
+        data = [org_id,self.sim.time,self.sim.time_of_day,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls]
+        print(data)
+        self.data_log.append(data)
+
 
 class Snake(Organism):
     def __init__(self,sim, move_range,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
@@ -130,7 +141,7 @@ class Snake(Organism):
             hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
         return hunting_hours
 
-    def hunting_period(self):
+    def set_hunting_period(self):
         if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:
@@ -150,7 +161,7 @@ class Krat(Organism):
         self.home_cell = home_cell
         self.foraging = False
         self.alive = True
-        self.foraging_hours = self.foraging_period_gen(foraging_hours)
+        self.foraging_hours = self.gen_foraging_period(foraging_hours)
         self.energy_gain_bush = energy_gain_bush
         self.energy_gain_open = energy_gain_open
         self.energy_cost = energy_cost
@@ -163,12 +174,12 @@ class Krat(Organism):
         self.preference_vector = {}
         self.krat_id = id(self)
 
-    def foraging_period_gen(self,foraging_hours):
+    def gen_foraging_period(self,foraging_hours):
         if foraging_hours == None:
             foraging_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
         return foraging_hours
 
-    def foraging_period(self):
+    def set_foraging_period(self):
         if self.sim.time_of_day in self.foraging_hours:
             self.foraging = True
         else:
@@ -202,18 +213,18 @@ class Owl(Organism):
         self.sim = sim 
         self.strike_success_probability = strike_success_probability
         self.hunting = False
-        self.hunting_hours = self.hunting_period_gen(hunting_hours)
+        self.hunting_hours = self.gen_hunting_period(hunting_hours)
         self.rng = self.sim.rng
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
 
-    def hunting_period_gen(self,hunting_hours):
+    def gen_hunting_period(self,hunting_hours):
         if hunting_hours == None:
             hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
         return hunting_hours
 
-    def hunting_period(self):
+    def set_hunting_period(self):
         if self.sim.time_of_day in self.hunting_hours:
             self.hunting = True
         else:

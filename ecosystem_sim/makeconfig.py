@@ -5,13 +5,13 @@ import json
 data = {}
 data['sim'] = []
 data['sim'].append({
-    "days_of_sim": 365,
+    "days_of_sim": 10,
     "time_step":1,
-    "landscape_size_x": 500,
-    "landscape_size_y": 500,
+    "landscape_size_x": 20,
+    "landscape_size_y": 20,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 8,
-    "initial_krat_pop": 100,
+    "initial_snake_pop": 1,
+    "initial_krat_pop": 5,
     "initial_owl_pop": 1,
     "snake_strike_success_probability_bush": 0.032, #from bouskila
     "snake_strike_success_probability_open": 0.009, #from bouskila

@@ -98,34 +98,59 @@ class Cell(object):
 
     def krat_predation_by_snake(self,snake):
         # stand in value and move to config file V
-        ss = snake.calc_strike_success_probability(self)
-        live_krats = [krat for krat in self.krats if krat.alive] 
-        if len(live_krats) > 0 and self.rng.random() < ss and snake.hunting:
-            krat_index = self.rng.randint(0,len(live_krats)-1)
-            krat = self.select_krat(krat_index = krat_index)
-            krat.alive = False
-            energy_gain = snake.energy_gain_per_krat
+        snake.set_hunting_period()
+        if snake.hunting:
+            live_krats = [krat for krat in self.krats if krat.alive] 
+            ss = snake.calc_strike_success_probability(self)
+            energy_cost = snake.energy_cost
+            if len(live_krats) > 0 and self.rng.random() < ss:
+                krat_index = self.rng.randint(0,len(live_krats)-1)
+                krat = self.select_krat(krat_index = krat_index)
+                krat.alive = False
+                energy_gain = snake.energy_gain_per_krat                
+            else:
+                energy_gain = 0
         else:
             energy_gain = 0
-        snake.energy_score += energy_gain + snake.energy_cost
-
+            energy_cost = 0
+        energy_delta = (energy_gain - energy_cost)
+        snake.energy_score += energy_delta
+        if snake.hunting:
+            #snake.populate_microhabitat_energy_log(microhabitat_type=self.habitat_type[0].name,delta_energy_score=energy_delta)
+            snake.populate_data_analysis_log(org_id = snake.snake_id,
+                                            microhabitat_type = self.habitat_type[0].name,
+                                            delta_energy_score = energy_delta,
+                                            energy_score = snake.energy_score,
+                                            number_of_other_org = len(self.krats),
+                                            number_of_owls = len(self.owls))
 
     def krat_predation_by_owl(self,owl):
         # stand in value and move to config file V
-        owl.hunting_period() 
+        owl.set_hunting_period() 
         live_krats = [krat for krat in self.krats if krat.alive] 
-        if len(live_krats) > 0 and self.rng.random() < owl.strike_success_probability and self.habitat_type == '[<MicrohabitatType.OPEN: 1>]':
+        if len(live_krats) > 0 and self.rng.random() < owl.strike_success_probability and self.habitat_type[0].name == 'OPEN':
             krat_index = self.rng.randint(0,len(live_krats)-1)
             krat = self.select_krat(krat_index = krat_index)
             krat.alive = False
 
     def foraging_rat(self,krat):
-        krat.foraging_period()
+        krat.set_foraging_period()
         if krat.foraging:
             krat_energy_gain = krat.calc_energy_gain(self)
             krat_energy_cost = krat.calc_energy_cost()
-            krat.energy_score += (krat_energy_gain - krat_energy_cost)
-
+        else:
+            krat_energy_gain = 0
+            krat_energy_cost = 0
+        energy_delta = (krat_energy_gain - krat_energy_cost)
+        krat.energy_score += energy_delta
+        # if krat.foraging:
+        #     #krat.populate_microhabitat_energy_log(microhabitat_type=self.habitat_type[0].name,delta_energy_score=energy_delta)
+        #     krat.populate_data_analysis_log(org_id = krat.krat_id,
+        #                                     microhabitat_type = self.habitat_type[0].name,
+        #                                     delta_energy_score = energy_delta,
+        #                                     energy_score = krat.energy_score,
+        #                                     number_of_other_org = len(self.snakes),
+        #                                     number_of_owls = len(self.owls))
 
     def krat_activity_pulse_behavior(self):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""

@@ -32,7 +32,7 @@ class Organism(object):
         self.number_of_movements = 0
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-        self.microhabitat_energy_log = {}
+        self.microhabitat_energy_log = {'BUSH': [], 'OPEN':[]}
         self.data_log = []
 
     def __hash__(self):

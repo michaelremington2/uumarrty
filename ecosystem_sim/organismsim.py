@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import math
+import statistics
 #doxygen
 #sphyinxdocumentation format
 class Organism(object):
@@ -16,7 +17,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1):
+    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1,self.memory_lemgth_cycles=0):
         self.sim = sim
         self.landscape =self.sim.landscape
         self.energy_score = 0
@@ -32,7 +33,8 @@ class Organism(object):
         self.number_of_movements = 0
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-        self.microhabitat_energy_log = {'BUSH': [], 'OPEN':[]}
+        self.memory_lemgth_cycles = memory_lemgth_cycles
+        self.microhabitat_energy_log = {'BUSH': [None], 'OPEN':[None]}
         self.data_log = []
 
     def __hash__(self):

@@ -17,7 +17,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim,home_cell=None, move_range=1,move_prefrence = False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         self.sim = sim
         self.landscape =self.sim.landscape
         self.energy_score = 0
@@ -31,10 +31,14 @@ class Organism(object):
         self.column_boundary = self.sim.landscape.cells_x_columns - 1
         self.row_boundary = self.sim.landscape.cells_y_rows - 1
         self.number_of_movements = 0
+        self.move_prefrence = move_preference
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-        self.memory_length_cycles = memory_length_cycles
-        self.microhabitat_energy_log = {'BUSH': [None]*memory_length_cycles, 'OPEN':[None]*memory_length_cycles}
+        if self.move_preference:
+            self.memory_length_cycles = memory_length_cycles
+            self.microhabitat_energy_log = {'BUSH': [None]*memory_length_cycles, 'OPEN':[None]*memory_length_cycles}
+            self.bush_preferance_log_counter = 0
+            self.open_preferance_log_counter = 0
         self.data_log = []
 
     def __hash__(self):
@@ -46,15 +50,37 @@ class Organism(object):
     def reset_predation_history(self):
         self.predation_counter = 0
 
-    def calc_cell_destination_suitability(self, cell,number_of_move_options, bush_preference_weight=1, open_preference_weight=1):
+    def log_microhabitat_energy_delta_preferance(self,microhabitat_type,energy_delta):
+        if microhabitat_type == 'BUSH':
+            self.microhabitat_energy_log['BUSH'][self.bush_preferance_log_counter] = energy_delta
+            if self.self.bush_preferance_log_counter == self.memory_length_cycles-1:
+                self.self.bush_preferance_log_counter = 0
+            else:
+                self.self.bush_preferance_log_counter += 1
+        elif: microhabitat_type == 'OPEN':
+            self.microhabitat_energy_log['OPEN'][self.open_preferance_log_counter] = energy_delta
+            if self.open_preferance_log_counter == self.memory_length_cycles-1:
+                self.open_preferance_log_counter = 0
+            else:
+                self.open_preferance_log_counter += 1
+        else:
+            raise ValueError('Enter Valid Microhabitat Name')
+
+    def gen_new_microhabitat_prefrences(self):
+        if self.sim.cycle >= self.memory_length_cycles:
+            self.bush_preference_weight= stats.mean(self.microhabitat_energy_log['BUSH'])
+            self.open_preference_weight= stats.mean(self.microhabitat_energy_log['OPEN'])
+
+
+    def calc_cell_destination_suitability(self, cell,number_of_move_options):
         if number_of_move_options <= 0:
             raise ValueError('No Move Options')
         else:
             base_destination_probability = 1/number_of_move_options
         if bush_preference_weight != 1 and cell.habitat_type[0].name == 'BUSH':
-            destination_probability = base_destination_probability*bush_preference_weight
+            destination_probability = base_destination_probability*self.bush_preference_weight
         elif open_preference_weight != 1 and cell.habitat_type[0].name == 'OPEN':
-            destination_probability = base_destination_probability*open_preference_weight
+            destination_probability = base_destination_probability*self.open_preference_weight
         else:
             destination_probability = base_destination_probability
         return destination_probability

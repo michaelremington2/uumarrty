@@ -17,7 +17,7 @@ class Organism(object):
         hungry -- if true the object will forage or consume at appropriate times if false the organisms energy state is to high to eat (boolean initial set to True).
         rng -- random number generator in the sim.
     '''
-    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1,self.memory_lemgth_cycles=0):
+    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         self.sim = sim
         self.landscape =self.sim.landscape
         self.energy_score = 0
@@ -33,8 +33,8 @@ class Organism(object):
         self.number_of_movements = 0
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-        self.memory_lemgth_cycles = memory_lemgth_cycles
-        self.microhabitat_energy_log = {'BUSH': [None], 'OPEN':[None]}
+        self.memory_length_cycles = memory_length_cycles
+        self.microhabitat_energy_log = {'BUSH': [None]*memory_length_cycles, 'OPEN':[None]*memory_length_cycles}
         self.data_log = []
 
     def __hash__(self):
@@ -114,13 +114,13 @@ class Organism(object):
         self.microhabitat_energy_log[label] += delta_energy_score
 
     def populate_data_analysis_log(self,org_id,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls):
-        data = [org_id,self.sim.time,self.sim.time_of_day,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls]
+        data = [org_id,self.sim.cycle,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls]
         print(data)
         self.data_log.append(data)
 
 
 class Snake(Organism):
-    def __init__(self,sim, move_range,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None, open_preference_weight=1, bush_preference_weight=1,hunting_hours = None):
+    def __init__(self,sim, move_range,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None, open_preference_weight=1, bush_preference_weight=1):
         super().__init__(sim,home_cell, move_range)
         self.sim = sim 
         self.energy_score = 0
@@ -129,25 +129,12 @@ class Snake(Organism):
         self.strike_success_probability_bush = strike_success_probability_bush
         self.strike_success_probability_open = strike_success_probability_open
         self.home_cell = home_cell
-        self.hunting = False
-        self.hunting_hours = self.hunting_period_gen(hunting_hours)
         self.rng = self.sim.rng
         self.sex = self.rng.choice(['F','M'])
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
         self.snake_id = id(self)
-
-    def hunting_period_gen(self,hunting_hours):
-        if hunting_hours == None:
-            hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
-        return hunting_hours
-
-    def set_hunting_period(self):
-        if self.sim.time_of_day in self.hunting_hours:
-            self.hunting = True
-        else:
-            self.hunting = False
 
     def calc_strike_success_probability(self,cell):
         if cell.habitat_type[0].name == 'BUSH':
@@ -161,9 +148,7 @@ class Krat(Organism):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim
         self.home_cell = home_cell
-        self.foraging = False
         self.alive = True
-        self.foraging_hours = self.gen_foraging_period(foraging_hours)
         self.energy_gain_bush = energy_gain_bush
         self.energy_gain_open = energy_gain_open
         self.energy_cost = energy_cost
@@ -175,17 +160,6 @@ class Krat(Organism):
         self.bush_preference_weight = bush_preference_weight
         self.preference_vector = {}
         self.krat_id = id(self)
-
-    def gen_foraging_period(self,foraging_hours):
-        if foraging_hours == None:
-            foraging_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
-        return foraging_hours
-
-    def set_foraging_period(self):
-        if self.sim.time_of_day in self.foraging_hours:
-            self.foraging = True
-        else:
-            self.foraging = False
 
     def calc_energy_gain(self,cell):
         if self.alive:
@@ -210,30 +184,14 @@ class Krat(Organism):
 
 
 class Owl(Organism):
-    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=1,hunting_hours=None):
+    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=1):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim 
         self.strike_success_probability = strike_success_probability
-        self.hunting = False
-        self.hunting_hours = self.gen_hunting_period(hunting_hours)
         self.rng = self.sim.rng
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-
-    def gen_hunting_period(self,hunting_hours):
-        if hunting_hours == None:
-            hunting_hours = [18,19,20,21,22,23,0,1,2,3,4,5]
-        return hunting_hours
-
-    def set_hunting_period(self):
-        if self.sim.time_of_day in self.hunting_hours:
-            self.hunting = True
-        else:
-            self.hunting = False
-
-
-
 
 
 if __name__ ==  "__main__":

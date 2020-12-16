@@ -5,19 +5,18 @@ import json
 data = {}
 data['sim'] = []
 data['sim'].append({
-    "days_of_sim": 10,
-    "time_step":1,
+    "cycles_of_sim": 50, #3each day is one cycle
     "landscape_size_x": 20,
     "landscape_size_y": 20,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 1,
     "initial_krat_pop": 5,
     "initial_owl_pop": 1,
-    "snake_strike_success_probability_bush": 0.032, #from bouskila
+    "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
     "krat_energy_gain_open": 12, #from bouskila
-    "snake_energy_gain": (1500/5), #krat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
+    "snake_energy_gain": (1500/5), ## estimate numerical approximationkrat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
     "krat_energy_cost":7, # alpha from bouskila
     "krat_cost_of_death":1500, #bouskila value d
     "snake_energy_cost":14, # beta value not reported by bouskila, using 14 for now because it is twice as much as the krat. it might be worth trying to make this proportional to body size.

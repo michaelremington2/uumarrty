@@ -110,8 +110,10 @@ class Cell(object):
             energy_gain = 0
         energy_delta = (energy_gain - energy_cost)
         snake.energy_score += energy_delta
+        if snake.move_preference:
+            snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, energy_delta)
         snake.populate_data_analysis_log(org_id = snake.snake_id,
-                                        microhabitat_type = self.habitat_type[0].name,
+                                        microhabitat_type = snake.current_cell.habitat_type[0].name,
                                         delta_energy_score = energy_delta,
                                         energy_score = snake.energy_score,
                                         number_of_other_org = len(self.krats),
@@ -130,14 +132,8 @@ class Cell(object):
         krat_energy_cost = krat.calc_energy_cost()
         energy_delta = (krat_energy_gain - krat_energy_cost)
         krat.energy_score += energy_delta
-        # if krat.foraging:
-        #     #krat.populate_microhabitat_energy_log(microhabitat_type=self.habitat_type[0].name,delta_energy_score=energy_delta)
-        #     krat.populate_data_analysis_log(org_id = krat.krat_id,
-        #                                     microhabitat_type = self.habitat_type[0].name,
-        #                                     delta_energy_score = energy_delta,
-        #                                     energy_score = krat.energy_score,
-        #                                     number_of_other_org = len(self.snakes),
-        #                                     number_of_owls = len(self.owls))
+        if krat.move_preference:
+            krat.log_microhabitat_energy_delta_preference(self.habitat_type[0].name, energy_delta)
 
     def krat_activity_pulse_behavior(self):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
@@ -220,7 +216,7 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,open_preference_weight, bush_preference_weight):
+    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,move_preference,open_preference_weight, bush_preference_weight, memory_length_cycles):
         isp = initial_snake_pop
         while isp > 0:
             cell = self.select_random_cell()
@@ -230,13 +226,16 @@ class Landscape(object):
                         energy_gain_per_krat = energy_gain_per_krat,
                         energy_cost = energy_cost,
                         move_range = move_range,
+                        move_preference = move_preference,
                         open_preference_weight = open_preference_weight,
-                        bush_preference_weight = bush_preference_weight)
+                        bush_preference_weight = bush_preference_weight,
+                        memory_length_cycles = memory_length_cycles 
+                        )
             cell.add_snake(snake)
             snake.current_cell=cell
             isp = isp-1
 
-    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range, open_preference_weight, bush_preference_weight):
+    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range,move_preference, open_preference_weight, bush_preference_weight, memory_length_cycles):
         ikp = initial_krat_pop
         while ikp > 0:
             cell = self.select_random_cell()
@@ -247,8 +246,10 @@ class Landscape(object):
                         death_cost = death_cost,
                         move_range = move_range,
                         home_cell= cell,
+                        move_preference = move_preference,
                         open_preference_weight = open_preference_weight,
-                        bush_preference_weight = bush_preference_weight)
+                        bush_preference_weight = bush_preference_weight,
+                        memory_length_cycles = memory_length_cycles )
             cell.add_krat(krat)
             krat.current_cell=cell
             ikp = ikp-1
@@ -321,8 +322,8 @@ class Landscape(object):
 
 class Sim(object):
     #compiles landscape and designates parameters to the landscape. 
-    def __init__(self,file_path,rng = None):
-        self.file_path = file_path
+    def __init__(self,initial_conditions_file_path,rng = None):
+        self.initial_conditions_file_path = initial_conditions_file_path
         self.report = []
         self.snake_info = []
         self.krat_info = []
@@ -349,8 +350,10 @@ class Sim(object):
                 energy_gain_per_krat = config_d["snake_energy_gain"],
                 energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],
+                move_preference =config_d["move_preference_algorithm"],
                 open_preference_weight = config_d["snake_open_preference_weight"],
-                bush_preference_weight = config_d["snake_bush_preference_weight"]
+                bush_preference_weight = config_d["snake_bush_preference_weight"],
+                memory_length_cycles = config_d["memory_length_snake"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
@@ -359,8 +362,10 @@ class Sim(object):
                 energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
                 energy_cost=config_d["krat_energy_cost"],
                 death_cost=config_d["krat_cost_of_death"],
+                move_preference =config_d["move_preference_algorithm"],
                 open_preference_weight = config_d["krat_open_preference_weight"],
-                bush_preference_weight = config_d["krat_bush_preference_weight"]
+                bush_preference_weight = config_d["krat_bush_preference_weight"],
+                memory_length_cycles = config_d["memory_length_krat"]
                 )
         self.landscape.initialize_owl_pop(
                 initial_owl_pop=config_d["initial_owl_pop"],
@@ -371,7 +376,7 @@ class Sim(object):
                 )
 
     def read_configuration_file(self):
-        with open(self.file_path) as f:
+        with open(self.initial_conditions_file_path) as f:
             config_d = json.load(f)
         sim1 = config_d['sim'][0]
         self.configure(sim1)

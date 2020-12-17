@@ -76,7 +76,7 @@ class Organism(object):
             for i in energy_delta_set:
                 val = float((i-min_energy))/float((max_energy - min_energy))
                 temp_set.append(val)
-            norm_weight = stats.mean(temp_set)+1
+            norm_weight = sum(temp_set)
         return norm_weight
 
     def gen_new_microhabitat_preferences(self):
@@ -155,9 +155,14 @@ class Organism(object):
         self.microhabitat_energy_log[label] += delta_energy_score
 
     def populate_data_analysis_log(self,org_id,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls):
-        print('pbush {}, popen {}'.format(self.bush_preference_weight,self.open_preference_weight))
+        #print('pbush {}, popen {}'.format(self.bush_preference_weight,self.open_preference_weight))
         data = [org_id,self.sim.cycle,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls,self.number_of_movements]
-        print(data)
+        #print(data)
+        if self.sim.cycle % 100==0:
+            print('bush')
+            print(self.microhabitat_energy_log['BUSH'])
+            print('open')
+            print(self.microhabitat_energy_log['OPEN'])
         self.data_log.append(data)
 
 

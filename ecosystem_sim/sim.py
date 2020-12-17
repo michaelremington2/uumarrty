@@ -111,7 +111,7 @@ class Cell(object):
         energy_delta = (energy_gain - energy_cost)
         snake.energy_score += energy_delta
         if snake.move_preference:
-            snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, energy_delta)
+            snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, snake.energy_score)
         snake.populate_data_analysis_log(org_id = snake.snake_id,
                                         microhabitat_type = snake.current_cell.habitat_type[0].name,
                                         delta_energy_score = energy_delta,

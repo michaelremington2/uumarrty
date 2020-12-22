@@ -159,6 +159,7 @@ class Organism(object):
         data = [org_id,self.sim.cycle,microhabitat_type,delta_energy_score,energy_score,number_of_other_org,number_of_owls,self.number_of_movements]
         #print(data)
         if self.sim.cycle % 100==0:
+            print('Bush Preference {}, Open Preference {}'.format(self.bush_preference_weight,self.open_preference_weight))
             print('bush')
             print(self.microhabitat_energy_log['BUSH'])
             print('open')

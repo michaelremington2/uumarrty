@@ -139,7 +139,7 @@ class Cell(object):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
         moving_krats = []
         for krat in self.krats:
-            if self.sim.cycle % 8 == 0:
+            if self.sim.cycle % 8 == 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONF
                 self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)
                 self.foraging_rat(krat)
             else:
@@ -152,7 +152,7 @@ class Cell(object):
         moving_snakes = []
         for snake in self.snakes:
             self.krat_predation_by_snake(snake)
-            if self.sim.cycle % 4 == 0:
+            if self.sim.cycle % 4 == 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
                 self.snake_move(snake, moving_snake_list=moving_snakes)
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
 

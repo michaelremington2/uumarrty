@@ -5,7 +5,7 @@ import json
 data = {}
 data['sim'] = []
 data['sim'].append({
-    "cycles_of_sim": 1000, #3each day is one cycle
+    "cycles_of_sim": 10000, #3each day is one cycle
     "landscape_size_x": 50,
     "landscape_size_y": 50,
     "microhabitat_open_bush_proportions": [0.5,0.5],

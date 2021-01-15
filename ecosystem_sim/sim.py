@@ -351,7 +351,7 @@ class Sim(object):
                 energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],
                 move_preference =config_d["move_preference_algorithm"],
-                open_preference_weight = config_d["snake_open_preference_weight"],
+                open_preference_weight = config_d["snake_open_preference_weight"](),
                 bush_preference_weight = config_d["snake_bush_preference_weight"],
                 memory_length_cycles = config_d["memory_length_snake"]
                 )

@@ -6,7 +6,7 @@ data = {}
 data['sim'] = []
 data['sim'].append({
     "cycles_of_sim": 10000, #3each day is one cycle
-    "landscape_size_x": 50,
+    "landscape_size_x": 50,s
     "landscape_size_y": 50,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 1,
@@ -33,6 +33,9 @@ data['sim'].append({
     "snake_bush_preference_weight":1,
     "owl_open_preference_weight":1,
     "owl_bush_preference_weight":1
+    #"krat_bush_preference_weight_pct_inc":50,#how to assign this as a distribution?
+    #"snake_bush_preference_weight_pct_inc":50, # Number 0- 100 
+    #"owl_bush_preference_weight_pct_inc":100
     })
 
 with open('data.txt', 'w') as outfile:

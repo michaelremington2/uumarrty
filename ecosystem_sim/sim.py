@@ -104,20 +104,19 @@ class Cell(object):
             krat_index = self.rng.randint(0,len(live_krats)-1)
             krat = self.select_krat(krat_index = krat_index)
             krat.alive = False
-            energy_gain = snake.energy_gain_per_krat  
-            print('success')              
+            energy_gain = snake.energy_gain_per_krat              
         else:
             energy_gain = 0
         energy_delta = (energy_gain - energy_cost)
         snake.energy_score += energy_delta
         if snake.move_preference:
             snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, snake.energy_score)
-        snake.populate_data_analysis_log(org_id = snake.snake_id,
-                                        microhabitat_type = snake.current_cell.habitat_type[0].name,
-                                        delta_energy_score = energy_delta,
-                                        energy_score = snake.energy_score,
-                                        number_of_other_org = len(self.krats),
-                                        number_of_owls = len(self.owls))
+        # snake.populate_data_analysis_log(org_id = snake.snake_id,
+        #                                 microhabitat_type = snake.current_cell.habitat_type[0].name,
+        #                                 delta_energy_score = energy_delta,
+        #                                 energy_score = snake.energy_score,
+        #                                 number_of_other_org = len(self.krats),
+        #                                 number_of_owls = len(self.owls))
 
     def krat_predation_by_owl(self,owl):
         # stand in value and move to config file V
@@ -139,21 +138,23 @@ class Cell(object):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
         moving_krats = []
         for krat in self.krats:
+            krat.generate_krat_stats()
             if self.sim.cycle % 8 == 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONF
                 self.krat_move(krat,moving_krat_list = moving_krats,return_home=True)
                 self.foraging_rat(krat)
             else:
                 self.foraging_rat(krat)
-                self.krat_move(krat,moving_krat_list = moving_krats)
+                self.krat_move(krat,moving_krat_list = moving_krats)           
         self.krats = [krat for krat in self.krats if krat not in moving_krats]     
 
     def snake_activity_pulse_behavior(self):
         """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
         moving_snakes = []
         for snake in self.snakes:
+            snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
             if self.sim.cycle % 4 == 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
-                self.snake_move(snake, moving_snake_list=moving_snakes)
+                self.snake_move(snake, moving_snake_list=moving_snakes)            
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
 
     def owl_activity_pulse_behavior(self):
@@ -233,6 +234,7 @@ class Landscape(object):
                         )
             cell.add_snake(snake)
             snake.current_cell=cell
+            #snake.generate_snake_stats()
             isp = isp-1
 
     def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range,move_preference, open_preference_weight, bush_preference_weight, memory_length_cycles):
@@ -252,6 +254,7 @@ class Landscape(object):
                         memory_length_cycles = memory_length_cycles )
             cell.add_krat(krat)
             krat.current_cell=cell
+            #krat.generate_krat_stats()
             ikp = ikp-1
 
     def initialize_owl_pop(self,initial_owl_pop,move_range,strike_success_probability, open_preference_weight, bush_preference_weight):
@@ -291,20 +294,11 @@ class Landscape(object):
             owl_object.current_cell = new_cell 
         self.owl_move_pool = []
 
-    def landscape_stats(self,cell):
-        if self.sim.cycle % 3 == 0: #specify in documentation
-            cell_krat_energy = sum([krat.energy_score for krat in cell.krats])
-            cell_krat_movement_history = sum([krat.number_of_movements for krat in cell.krats])
-            cell_snake_energy = sum([snake.energy_score for snake in cell.snakes])
-            cell_snake_movement_history = sum([snake.number_of_movements for snake in cell.snakes])
-            data = [sim.cycle,cell.cell_id,cell.habitat_type,len(cell.krats),cell_krat_energy,cell_krat_movement_history,len(cell.snakes),cell_snake_energy,cell_snake_movement_history ]
-            sim.report.append(data)
 
     def landscape_dynamics(self):
         for cell_width in self.cells:
             for cell in cell_width:
                 cell.cell_over_populated()
-                self.landscape_stats(cell)
                 preds = len(cell.snakes) + len(cell.owls)
                 if preds > 0:
                     owl_move_first_probability = len(cell.owls)/preds
@@ -324,7 +318,6 @@ class Sim(object):
     #compiles landscape and designates parameters to the landscape. 
     def __init__(self,initial_conditions_file_path,rng = None):
         self.initial_conditions_file_path = initial_conditions_file_path
-        self.report = []
         self.snake_info = []
         self.krat_info = []
         if rng is None:
@@ -351,7 +344,8 @@ class Sim(object):
                 energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],
                 move_preference =config_d["move_preference_algorithm"],
-                open_preference_weight = config_d["snake_open_preference_weight"](),
+                #open_preference_weight = config_d["snake_open_preference_weight"](),
+                open_preference_weight = config_d["snake_open_preference_weight"],
                 bush_preference_weight = config_d["snake_bush_preference_weight"],
                 memory_length_cycles = config_d["memory_length_snake"]
                 )
@@ -387,7 +381,8 @@ class Sim(object):
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.report,file_name = 'Cell_stats_sim_1.csv')
+        self.report_writer(array = self.krat_info,file_name = 'krat_energy.csv')
+        self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
 

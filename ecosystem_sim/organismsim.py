@@ -196,6 +196,18 @@ class Snake(Organism):
             ss = self.strike_success_probability_open
         return ss
 
+    def generate_snake_stats(self):
+        row = [self.snake_id,
+                self.sim.cycle,
+                self.open_preference_weight,
+                self.bush_preference_weight,
+                self.energy_score, 
+                self.current_cell.cell_id,
+                self.current_cell.habitat_type[0].name,
+                len(self.current_cell.krats),
+                len(self.current_cell.owls)]
+        self.sim.snake_info.append(row)
+
 class Krat(Organism):
     def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0,foraging_hours = None):
         super().__init__(sim,home_cell,move_range,move_preference,memory_length_cycles)
@@ -238,6 +250,18 @@ class Krat(Organism):
             cost = self.energy_cost + self.death_cost
         self.alive = True
         return cost
+
+    def generate_krat_stats(self):
+        row = [self.krat_id,
+                self.sim.cycle,
+                self.open_preference_weight,
+                self.bush_preference_weight,
+                self.energy_score, 
+                self.current_cell.cell_id,
+                self.current_cell.habitat_type[0].name,
+                len(self.current_cell.snakes),
+                len(self.current_cell.owls)]
+        self.sim.krat_info.append(row)
 
 
 class Owl(Organism):

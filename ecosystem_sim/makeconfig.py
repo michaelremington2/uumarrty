@@ -11,13 +11,13 @@ def foo():
 
 
 data['sim'].append({
-    "cycles_of_sim": 10000, #3each day is one cycle
+    "cycles_of_sim": 1000, #3each day is one cycle
     "landscape_size_x": 50,
     "landscape_size_y": 50,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 1,
-    "initial_krat_pop": 20,
-    "initial_owl_pop": 1,
+    "initial_krat_pop": 1,
+    "initial_owl_pop": 0,
     "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
@@ -29,14 +29,18 @@ data['sim'].append({
     "krat_move_range":1,
     "snake_move_range":4,
     "owl_move_range":6,
+    "krat_movement_frequency_per_x_cycles":1, # once per cycle
+    "snake_movement_frequency_per_x_cycles":8, # once per 8 cycles
+    "owl_movement_frequency_per_x_cycles":1, # once per 8 cycles
     "owl_catch_success":0.02, #from bouskila
     "move_preference_algorithm":True,
     "memory_length_krat":20,
     "memory_length_snake":20,
     "krat_open_preference_weight":1,
     "krat_bush_preference_weight":1,
-    "snake_open_preference_weight": lambda:1,
-    "snake_bush_preference_weight": foo,
+    "snake_open_preference_weight": 1,
+    #"snake_bush_preference_weight": foo,
+    "snake_bush_preference_weight": 1,
     "owl_open_preference_weight":1,
     "owl_bush_preference_weight":1
     #"krat_bush_preference_weight_pct_inc":50,#how to assign this as a distribution?

@@ -4,10 +4,6 @@ import json
 # add in movement of organism
 data = {}
 data['sim'] = []
-def foo():
-    return 1
-
-
 
 
 data['sim'].append({
@@ -15,8 +11,8 @@ data['sim'].append({
     "landscape_size_x": 50,
     "landscape_size_y": 50,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 1,
-    "initial_krat_pop": 1,
+    "initial_snake_pop": 3,
+    "initial_krat_pop": 30,
     "initial_owl_pop": 0,
     "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
@@ -33,19 +29,15 @@ data['sim'].append({
     "snake_movement_frequency_per_x_cycles":8, # once per 8 cycles
     "owl_movement_frequency_per_x_cycles":1, # once per 8 cycles
     "owl_catch_success":0.02, #from bouskila
-    "move_preference_algorithm":True,
+    "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,
-    "krat_open_preference_weight":1,
-    "krat_bush_preference_weight":1,
-    "snake_open_preference_weight": 1,
-    #"snake_bush_preference_weight": foo,
-    "snake_bush_preference_weight": 1,
-    "owl_open_preference_weight":1,
-    "owl_bush_preference_weight":1
-    #"krat_bush_preference_weight_pct_inc":50,#how to assign this as a distribution?
-    #"snake_bush_preference_weight_pct_inc":50, # Number 0- 100 
-    #"owl_bush_preference_weight_pct_inc":100
+    "krat_pop_genotype_dist": {"open":(1/3),
+                               "bush":(1/3),
+                               "mixed":(1/3)},
+    "snake_pop_genotype_dist": {"open":(1/3),
+                               "bush":(1/3),
+                               "mixed":(1/3)},
     })
 
 with open('data.txt', 'w') as outfile:

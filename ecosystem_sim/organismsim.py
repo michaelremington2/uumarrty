@@ -23,7 +23,6 @@ class Organism(object):
         self.energy_score = 0
         self.alive = True
         self.predation_counter = 0
-        self.missed_opportunity_cost = 0
         self.home_cell = home_cell
         self.current_cell = home_cell
         self.rng = self.sim.rng
@@ -92,9 +91,9 @@ class Organism(object):
             raise ValueError('No Move Options')
         else:
             base_destination_probability = 1/number_of_move_options
-        if self.bush_preference_weight != 1 and cell.habitat_type[0].name == 'BUSH':
+        if cell.habitat_type[0].name == 'BUSH':
             destination_probability = base_destination_probability*self.bush_preference_weight
-        elif self.open_preference_weight != 1 and cell.habitat_type[0].name == 'OPEN':
+        elif cell.habitat_type[0].name == 'OPEN':
             destination_probability = base_destination_probability*self.open_preference_weight
         else:
             destination_probability = base_destination_probability
@@ -102,13 +101,15 @@ class Organism(object):
 
     def normalize_destination_cell_probabilities(self, destination_cell_probabilities):
         denom = sum(destination_cell_probabilities.values())
-        if denom != 1:
-            for i, prob in destination_cell_probabilities.items():
+        for i, prob in destination_cell_probabilities.items():
+            if denom == 0:
+                destination_cell_probabilities[i] == 0
+            else:
                 norm_probability = prob/denom
                 destination_cell_probabilities[i] == norm_probability
         return destination_cell_probabilities
 
-    def calc_destination_cell_probabilities(self, bush_preference_weight=1, open_preference_weight=1): #calc move coordinates
+    def calc_destination_cell_probabilities(self, bush_preference_weight, open_preference_weight): #calc move coordinates
         destination_cell_probabilities = {}
         move_options = []
         for x in range(-self.move_range,self.move_range+1):
@@ -123,6 +124,7 @@ class Organism(object):
                     else:
                         destination_cell = self.sim.landscape.select_cell(new_id)
                         move_options.append(destination_cell)
+        print(len(move_options))
         for i in move_options:
             number_of_move_options = len(move_options)
             p = self.calc_cell_destination_suitability(cell=i, number_of_move_options=number_of_move_options)
@@ -201,7 +203,8 @@ class Snake(Organism):
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,
-                self.energy_score, 
+                self.energy_score,
+                self.number_of_movements, 
                 self.current_cell.cell_id,
                 self.current_cell.habitat_type[0].name,
                 len(self.current_cell.krats),
@@ -256,7 +259,8 @@ class Krat(Organism):
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,
-                self.energy_score, 
+                self.energy_score,
+                self.number_of_movements, 
                 self.current_cell.cell_id,
                 self.current_cell.habitat_type[0].name,
                 len(self.current_cell.snakes),
@@ -265,7 +269,7 @@ class Krat(Organism):
 
 
 class Owl(Organism):
-    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=1):
+    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=0):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim 
         self.strike_success_probability = strike_success_probability

@@ -8,11 +8,11 @@ data['sim'] = []
 
 data['sim'].append({
     "cycles_of_sim": 1000, #3each day is one cycle
-    "landscape_size_x": 50,
-    "landscape_size_y": 50,
+    "landscape_size_x": 100,
+    "landscape_size_y": 100,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 3,
-    "initial_krat_pop": 30,
+    "initial_snake_pop": 0,
+    "initial_krat_pop": 1,
     "initial_owl_pop": 0,
     "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
@@ -23,8 +23,8 @@ data['sim'].append({
     "krat_cost_of_death":1500, #bouskila value d
     "snake_energy_cost":14, # beta value not reported by bouskila, using 14 for now because it is twice as much as the krat. it might be worth trying to make this proportional to body size.
     "krat_move_range":1,
-    "snake_move_range":4,
-    "owl_move_range":6,
+    "snake_move_range":10,
+    "owl_move_range":10,
     "krat_movement_frequency_per_x_cycles":1, # once per cycle
     "snake_movement_frequency_per_x_cycles":8, # once per 8 cycles
     "owl_movement_frequency_per_x_cycles":1, # once per 8 cycles
@@ -32,12 +32,12 @@ data['sim'].append({
     "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,
-    "krat_pop_genotype_dist": {"open":(1/3),
+    "krat_pop_genotype_freq": {"open":1,
+                               "bush":0,
+                               "mixed":0},
+    "snake_pop_genotype_freq": {"open":(1/3),
                                "bush":(1/3),
-                               "mixed":(1/3)},
-    "snake_pop_genotype_dist": {"open":(1/3),
-                               "bush":(1/3),
-                               "mixed":(1/3)},
+                               "mixed":(1/3)}
     })
 
 with open('data.txt', 'w') as outfile:

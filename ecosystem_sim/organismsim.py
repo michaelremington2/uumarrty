@@ -109,11 +109,40 @@ class Organism(object):
                 destination_cell_probabilities[i] == norm_probability
         return destination_cell_probabilities
 
+    def calibrate_move_distance_with_boundaries(self,current_coord_x,current_coord_y, move_distance,x_boundary,y_boundary):
+        if (current_coord_x + move_distance) > x_boundary:
+            move_dist_x_right = x_boundary - current_coord_x
+        else:
+            move_dist_x_right = move_distance
+
+        if (current_coord_x - move_distance) < 0:
+            move_dist_x_left = current_coord_x
+        else:
+            move_dist_x_left = move_distance
+
+        if (current_coord_y + move_distance) > y_boundary:
+            move_dist_y_down = y_boundary - current_coord_y
+        else:
+            move_dist_y_down = move_distance
+
+        if (current_coord_y - move_distance) < 0:
+            move_dist_y_up = current_coord_x
+        else:
+            move_dist_y_up = move_distance
+        return [move_dist_x_right,move_dist_x_left,move_dist_y_down,move_dist_y_up]
+
+
     def calc_destination_cell_probabilities(self, bush_preference_weight, open_preference_weight): #calc move coordinates
         destination_cell_probabilities = {}
         move_options = []
-        for x in range(-self.move_range,self.move_range+1):
-            for y in range(-self.move_range,self.move_range+1):
+        calibrated_move_dists = self.calibrate_move_distance_with_boundaries(current_coord_x=self.current_cell.cell_id[1],
+                                                                            current_coord_y=self.current_cell.cell_id[0],
+                                                                            move_distance=self.move_range,
+                                                                            x_boundary=self.column_boundary,
+                                                                            y_boundary=self.row_boundary)
+        move_options.append(self.current_cell)
+        for x in range(-calibrated_move_dists[1],calibrated_move_dists[0]+1):
+            for y in range(-calibrated_move_dists[3],calibrated_move_dists[2]+1):
                 #print('{},{}'.format(x,y))
                 row_coord = self.current_cell.cell_id[0] + y
                 column_coord = self.current_cell.cell_id[1] + x
@@ -124,17 +153,25 @@ class Organism(object):
                     else:
                         destination_cell = self.sim.landscape.select_cell(new_id)
                         move_options.append(destination_cell)
-        print(len(move_options))
+        #print('current cell id {}, move options {}'.format(self.current_cell.cell_id, len(move_options)))
         for i in move_options:
+            #print(i.cell_id)
             number_of_move_options = len(move_options)
             p = self.calc_cell_destination_suitability(cell=i, number_of_move_options=number_of_move_options)
-            destination_cell_probabilities[destination_cell] = p
+            destination_cell_probabilities[i] = p
         if len(destination_cell_probabilities) == 0:
             print(self.current_cell.cell_id)
             print(self.row_boundary)
             print(self.column_boundary)
             raise ValueError('No move options')
+        print('Bush {}, open {}'.format(self.bush_preference_weight,self.open_preference_weight))
+        print('pre norm')
+        for key, prob in destination_cell_probabilities.items():
+            print('{} : {}'.format(key.habitat_type[0].name, prob))
         destination_cell_probabilities = self.normalize_destination_cell_probabilities(destination_cell_probabilities)
+        print('post norm')
+        for key, prob in destination_cell_probabilities.items():
+            print('{} : {}'.format(key.habitat_type[0].name, prob))
         return destination_cell_probabilities
 
     def pick_new_cell(self, bush_preference_weight=1, open_preference_weight=1):

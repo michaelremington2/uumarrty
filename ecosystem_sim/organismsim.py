@@ -101,12 +101,18 @@ class Organism(object):
 
     def normalize_destination_cell_probabilities(self, destination_cell_probabilities):
         denom = sum(destination_cell_probabilities.values())
+        #print('denom {}'.format(denom))
         for i, prob in destination_cell_probabilities.items():
             if denom == 0:
-                destination_cell_probabilities[i] == 0
+                destination_cell_probabilities[i] = 0
             else:
                 norm_probability = prob/denom
-                destination_cell_probabilities[i] == norm_probability
+                #print('current prob {}, normal prob {}'.format(prob,norm_probability))
+                #print('pre')
+                #print(destination_cell_probabilities[i])
+                destination_cell_probabilities[i] = norm_probability
+               # print('post')
+                #print(destination_cell_probabilities[i])
         return destination_cell_probabilities
 
     def calibrate_move_distance_with_boundaries(self,current_coord_x,current_coord_y, move_distance,x_boundary,y_boundary):
@@ -164,14 +170,14 @@ class Organism(object):
             print(self.row_boundary)
             print(self.column_boundary)
             raise ValueError('No move options')
-        print('Bush {}, open {}'.format(self.bush_preference_weight,self.open_preference_weight))
-        print('pre norm')
-        for key, prob in destination_cell_probabilities.items():
-            print('{} : {}'.format(key.habitat_type[0].name, prob))
-        destination_cell_probabilities = self.normalize_destination_cell_probabilities(destination_cell_probabilities)
-        print('post norm')
-        for key, prob in destination_cell_probabilities.items():
-            print('{} : {}'.format(key.habitat_type[0].name, prob))
+        # print('Bush {}, open {}'.format(self.bush_preference_weight,self.open_preference_weight))
+        # print('pre norm')
+        # for key, prob in destination_cell_probabilities.items():
+        #     print('{} : {}'.format(key.habitat_type[0].name, prob))
+        norm_destination_cell_probabilities = self.normalize_destination_cell_probabilities(destination_cell_probabilities)
+        # print('post norm')
+        # for key, prob in norm_destination_cell_probabilities.items():
+        #     print('{} : {}'.format(key.habitat_type[0].name, prob))
         return destination_cell_probabilities
 
     def pick_new_cell(self, bush_preference_weight=1, open_preference_weight=1):

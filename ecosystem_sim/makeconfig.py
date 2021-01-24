@@ -7,12 +7,12 @@ data['sim'] = []
 
 
 data['sim'].append({
-    "cycles_of_sim": 5, #3each day is one cycle
+    "cycles_of_sim": 10000, #3each day is one cycle
     "landscape_size_x": 100,
     "landscape_size_y": 100,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 0,
-    "initial_krat_pop": 1,
+    "initial_snake_pop": 6,
+    "initial_krat_pop": 30,
     "initial_owl_pop": 0,
     "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
@@ -32,9 +32,9 @@ data['sim'].append({
     "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,
-    "krat_pop_genotype_freq": {"open":1,
-                               "bush":0,
-                               "mixed":0},
+    "krat_pop_genotype_freq": {"open":(1/3),
+                               "bush":(1/3),
+                               "mixed":(1/3)},
     "snake_pop_genotype_freq": {"open":(1/3),
                                "bush":(1/3),
                                "mixed":(1/3)}

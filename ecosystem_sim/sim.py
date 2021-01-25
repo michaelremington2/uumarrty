@@ -140,8 +140,9 @@ class Cell(object):
         for krat in self.krats:
             krat.generate_krat_stats()
             self.foraging_rat(krat)
-            self.krat_move(krat,moving_krat_list = moving_krats)           
-        self.krats = [krat for krat in self.krats if krat not in moving_krats]     
+            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
+                self.krat_move(krat,moving_krat_list = moving_krats)           
+        self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
     def snake_activity_pulse_behavior(self):
         """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
@@ -149,9 +150,9 @@ class Cell(object):
         for snake in self.snakes:
             snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
-            if self.sim.cycle % 4 == 0 and self.sim.cycle !=0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
+            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
                 self.snake_move(snake, moving_snake_list=moving_snakes)            
-        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes]
+        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
 
     def owl_activity_pulse_behavior(self):
         #self.snake_grave()
@@ -213,7 +214,7 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,move_preference,snake_genotype_frequencies, memory_length_cycles):
+    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,movement_frequency,move_preference,snake_genotype_frequencies, memory_length_cycles):
         isp = initial_snake_pop
         for key, freq in snake_genotype_frequencies.items():
             pop = round(isp*freq)
@@ -234,6 +235,7 @@ class Landscape(object):
                             energy_gain_per_krat = energy_gain_per_krat,
                             energy_cost = energy_cost,
                             move_range = move_range,
+                            movement_frequency = movement_frequency,
                             move_preference = move_preference,
                             open_preference_weight = open_preference_weight,
                             bush_preference_weight = bush_preference_weight,
@@ -244,7 +246,7 @@ class Landscape(object):
                 #snake.generate_snake_stats()
                 pop = pop-1
 
-    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range, move_preference, krat_genotype_frequencies, memory_length_cycles):
+    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range,movement_frequency, move_preference, krat_genotype_frequencies, memory_length_cycles):
         ikp = initial_krat_pop
         for key, freq in krat_genotype_frequencies.items():
             pop = round(ikp*freq)
@@ -266,6 +268,7 @@ class Landscape(object):
                             energy_cost = energy_cost,
                             death_cost = death_cost,
                             move_range = move_range,
+                            movement_frequency = movement_frequency,
                             home_cell= cell,
                             move_preference = move_preference,
                             open_preference_weight = open_preference_weight,
@@ -369,6 +372,7 @@ class Sim(object):
                 energy_gain_per_krat = config_d["snake_energy_gain"],
                 energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],
+                movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
                 move_preference =config_d["move_preference_algorithm"],
                 #open_preference_weight = config_d["snake_open_preference_weight"](),
                 memory_length_cycles = config_d["memory_length_snake"],
@@ -377,6 +381,7 @@ class Sim(object):
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
                 move_range = config_d["krat_move_range"],
+                movement_frequency = config_d["krat_movement_frequency_per_x_cycles"],
                 energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
                 energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
                 energy_cost=config_d["krat_energy_cost"],

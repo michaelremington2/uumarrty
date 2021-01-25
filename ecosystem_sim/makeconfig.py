@@ -37,7 +37,9 @@ data['sim'].append({
                                "mixed":(1/3)},
     "snake_pop_genotype_freq": {"open":(1/3),
                                "bush":(1/3),
-                               "mixed":(1/3)}
+                               "mixed":(1/3)},
+    "krat_reproduction_freq_per_x_cycles": 10,
+    "snake_reproduction_freq_per_x_cycles": 100
     })
 
 with open('data.txt', 'w') as outfile:

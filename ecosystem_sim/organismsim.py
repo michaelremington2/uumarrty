@@ -213,7 +213,7 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, move_range,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell, move_range,move_preference,memory_length_cycles)
         self.sim = sim 
         self.energy_score = 0
@@ -223,8 +223,8 @@ class Snake(Organism):
         self.strike_success_probability_open = strike_success_probability_open
         self.home_cell = home_cell
         self.rng = self.sim.rng
-        self.sex = self.rng.choice(['F','M'])
         self.move_range = move_range
+        self.movement_frequency = movement_frequency
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
         if self.move_preference:
@@ -255,7 +255,7 @@ class Snake(Organism):
         self.sim.snake_info.append(row)
 
 class Krat(Organism):
-    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0,foraging_hours = None):
+    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,movement_frequency,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0,foraging_hours = None):
         super().__init__(sim,home_cell,move_range,move_preference,memory_length_cycles)
         self.sim = sim
         self.home_cell = home_cell
@@ -265,8 +265,8 @@ class Krat(Organism):
         self.energy_cost = energy_cost
         self.death_cost = death_cost
         self.rng = self.sim.rng
-        self.sex = self.rng.choice(['F','M'])
         self.move_range = move_range
+        self.movement_frequency = movement_frequency
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
         if self.move_preference:
@@ -290,11 +290,7 @@ class Krat(Organism):
         return energy_gain
 
     def calc_energy_cost(self):
-        if self.alive:
-            cost = self.energy_cost
-        else:
-            cost = self.energy_cost + self.death_cost
-        self.alive = True
+        cost = self.energy_cost
         return cost
 
     def generate_krat_stats(self):

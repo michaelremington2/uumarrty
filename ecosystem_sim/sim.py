@@ -316,11 +316,17 @@ class Landscape(object):
             owl_object.current_cell = new_cell 
         self.owl_move_pool = []
 
+    def populate_krat_population_fitness_data(self,cell_krat_list):
+        for krat in cell_krat_list:
+            krat_fitness_info = [krat.krat_id,krat.current_cell.cell_id,krat.open_preference_weight,krat.bush_preference_weight, krat.energy_score]
+            self.krat_fitness_data.append(krat_fitness_info)
 
     def landscape_dynamics(self):
+        self.krat_fitness_data = []
         for cell_width in self.cells:
             for cell in cell_width:
                 cell.cell_over_populated()
+
                 preds = len(cell.snakes) + len(cell.owls)
                 if preds > 0:
                     owl_move_first_probability = len(cell.owls)/preds
@@ -330,7 +336,11 @@ class Landscape(object):
                     else:
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
+                self.populate_krat_population_fitness_data(cell.krats)
                 cell.krat_activity_pulse_behavior()
+        if self.sim.cycle == 10:
+            print(len(self.krat_fitness_data))
+            print(self.krat_fitness_data)
         self.relocate_krats()
         self.relocate_snakes()
         #print(len(self.krat_move_pool))

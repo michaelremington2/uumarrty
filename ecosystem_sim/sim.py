@@ -357,6 +357,7 @@ class Sim(object):
         else:
             self.rng = rng
         self.cycle = 0
+        self.initial_krat_pop =
 
     def genotype_freq_test(self,genotype_freq_dict):
         if sum(genotype_freq_dict.values()) != 1:

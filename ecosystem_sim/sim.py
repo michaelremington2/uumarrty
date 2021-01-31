@@ -2,6 +2,7 @@
 from enum import Enum,auto
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 import json
 from organismsim import Krat
 from organismsim import Snake
@@ -338,9 +339,6 @@ class Landscape(object):
                         cell.owl_activity_pulse_behavior()
                 self.populate_krat_population_fitness_data(cell.krats)
                 cell.krat_activity_pulse_behavior()
-        if self.sim.cycle == 10:
-            print(len(self.krat_fitness_data))
-            print(self.krat_fitness_data)
         self.relocate_krats()
         self.relocate_snakes()
         #print(len(self.krat_move_pool))
@@ -357,7 +355,7 @@ class Sim(object):
         else:
             self.rng = rng
         self.cycle = 0
-        self.initial_krat_pop =
+        
 
     def genotype_freq_test(self,genotype_freq_dict):
         if sum(genotype_freq_dict.values()) != 1:
@@ -368,6 +366,8 @@ class Sim(object):
         self.genotype_freq_test(config_d["krat_pop_genotype_freq"])
         self.genotype_freq_test(config_d["snake_pop_genotype_freq"])
         self.end_time = config_d["cycles_of_sim"]
+        self.initial_krat_pop = config_d["initial_krat_pop"]
+        self.initial_snake_pop = config_d["initial_snake_pop"]
         #self.energy_dependence_movement = config_d["energy_dependence_movement"]
         self.landscape = Landscape(
                 sim=self,
@@ -415,6 +415,33 @@ class Sim(object):
         sim1 = config_d['sim'][0]
         self.configure(sim1)
 
+    def analyze_and_plot_org_fitness(self,org_data):
+        open_pref_x = []
+        bush_pref_x = []
+        mixed_pref_x = []
+        open_pref_fit = []
+        bush_pref_fit = []
+        mixed_pref_fit = []
+        for row in org_data:
+            if row[3] == 1:
+                #bush
+                bush_pref_x.append(row[1])
+                bush_pref_fit.append(row[4])
+            elif row[3] == 0:
+                #open
+                open_pref_x.append(row[1])
+                open_pref_fit.append(row[4])
+            else:
+                mixed_pref_x.append(row[1])
+                mixed_pref_fit.append(row[4])
+        fig, ax = plt.subplots()
+        ax.scatter(bush_pref_x, bush_pref_fit, c='green',label='Bush')
+        ax.scatter(open_pref_x, open_pref_fit, c='red',label='Open')
+        ax.scatter(mixed_pref_x, mixed_pref_fit, c='blue',label='Mixed')
+        ax.legend()
+        plt.show()
+
+
     def main(self):
         start = round(time.time())
         self.read_configuration_file()
@@ -425,6 +452,7 @@ class Sim(object):
         self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
+        self.analyze_and_plot_org_fitness(org_data = self.krat_info)
 
     def test(self):
         self.read_configuration_file()

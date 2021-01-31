@@ -434,11 +434,20 @@ class Sim(object):
             else:
                 mixed_pref_x.append(row[1])
                 mixed_pref_fit.append(row[4])
-        fig, ax = plt.subplots()
-        ax.scatter(bush_pref_x, bush_pref_fit, c='green',label='Bush')
-        ax.scatter(open_pref_x, open_pref_fit, c='red',label='Open')
-        ax.scatter(mixed_pref_x, mixed_pref_fit, c='blue',label='Mixed')
-        ax.legend()
+        data = ((open_pref_x, open_pref_fit), (bush_pref_x,bush_pref_fit), (mixed_pref_x,mixed_pref_fit))
+        colors = ("red", "green", "blue")
+        groups = ("open", "bush", "mixed")
+
+        # Create plot
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        for data, color, group in zip(data, colors, groups):
+            x, y = data
+            ax.scatter(x, y, alpha=0.8, c=color, edgecolors='none', s=30, label=group)
+
+        plt.title('Matplot scatter plot')
+        plt.legend(loc=2)
         plt.show()
 
 
@@ -452,7 +461,7 @@ class Sim(object):
         self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
-        self.analyze_and_plot_org_fitness(org_data = self.krat_info)
+        self.analyze_and_plot_org_fitness(org_data = self.snake_info)
 
     def test(self):
         self.read_configuration_file()

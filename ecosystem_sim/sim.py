@@ -322,12 +322,20 @@ class Landscape(object):
             krat_fitness_info = [krat.krat_id,krat.current_cell.cell_id,krat.open_preference_weight,krat.bush_preference_weight, krat.energy_score]
             self.krat_fitness_data.append(krat_fitness_info)
 
+    def krat_reproduction(self):
+        if self.sim.cycle == self.sim.krat_reproduction_freq:
+            baby_krats = self.sim.initial_krat_pop - x
+
     def landscape_dynamics(self):
-        self.krat_fitness_data = []
+        self.total_krats = 0
+        self.total_snakes = 0
+        self.total_owls = 0
         for cell_width in self.cells:
             for cell in cell_width:
+                self.total_krats += len(cell.krats)
+                self.total_snakes += len(cell.snakes)
+                self.total_owls += len(cell.owls)
                 cell.cell_over_populated()
-
                 preds = len(cell.snakes) + len(cell.owls)
                 if preds > 0:
                     owl_move_first_probability = len(cell.owls)/preds
@@ -337,11 +345,13 @@ class Landscape(object):
                     else:
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
-                self.populate_krat_population_fitness_data(cell.krats)
                 cell.krat_activity_pulse_behavior()
         self.relocate_krats()
         self.relocate_snakes()
-        #print(len(self.krat_move_pool))
+        print(self.total_krats)
+        print(self.total_snakes)
+        print(self.total_owls)
+
 
 
 class Sim(object):
@@ -368,6 +378,7 @@ class Sim(object):
         self.end_time = config_d["cycles_of_sim"]
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]
+        self.krat_reproduction_freq = config_d["krat_reproduction_freq_per_x_cycles"]
         #self.energy_dependence_movement = config_d["energy_dependence_movement"]
         self.landscape = Landscape(
                 sim=self,
@@ -385,7 +396,6 @@ class Sim(object):
                 move_range = config_d["snake_move_range"],
                 movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
                 move_preference =config_d["move_preference_algorithm"],
-                #open_preference_weight = config_d["snake_open_preference_weight"](),
                 memory_length_cycles = config_d["memory_length_snake"],
                 snake_genotype_frequencies = config_d["snake_pop_genotype_freq"]
                 )
@@ -461,7 +471,7 @@ class Sim(object):
         self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
-        self.analyze_and_plot_org_fitness(org_data = self.snake_info)
+        #self.analyze_and_plot_org_fitness(org_data = self.snake_info)
 
     def test(self):
         self.read_configuration_file()

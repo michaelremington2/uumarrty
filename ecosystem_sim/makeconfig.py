@@ -7,7 +7,7 @@ data['sim'] = []
 
 
 data['sim'].append({
-    "cycles_of_sim": 100, #3each day is one cycle
+    "cycles_of_sim": 10, #3each day is one cycle
     "landscape_size_x": 100,
     "landscape_size_y": 100,
     "microhabitat_open_bush_proportions": [0.5,0.5],

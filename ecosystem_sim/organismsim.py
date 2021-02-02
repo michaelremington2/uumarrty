@@ -232,7 +232,7 @@ class Snake(Organism):
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
             self.bush_preference_log_counter = 0
             self.open_preference_log_counter = 0
-        self.snake_id = id(self)
+        self.org_id = id(self)
 
     def calc_strike_success_probability(self,cell):
         if cell.habitat_type[0].name == 'BUSH':
@@ -242,7 +242,7 @@ class Snake(Organism):
         return ss
 
     def generate_snake_stats(self):
-        row = [self.snake_id,
+        row = [self.org_id,
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,
@@ -274,7 +274,7 @@ class Krat(Organism):
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
             self.bush_preference_log_counter = 0
             self.open_preference_log_counter = 0
-        self.krat_id = id(self)
+        self.org_id = id(self)
 
     def calc_energy_gain(self,cell):
         if self.alive:
@@ -294,7 +294,7 @@ class Krat(Organism):
         return cost
 
     def generate_krat_stats(self):
-        row = [self.krat_id,
+        row = [self.org_id,
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,

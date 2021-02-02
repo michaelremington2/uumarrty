@@ -112,12 +112,6 @@ class Cell(object):
         snake.energy_score += energy_delta
         if snake.move_preference:
             snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, snake.energy_score)
-        # snake.populate_data_analysis_log(org_id = snake.snake_id,
-        #                                 microhabitat_type = snake.current_cell.habitat_type[0].name,
-        #                                 delta_energy_score = energy_delta,
-        #                                 energy_score = snake.energy_score,
-        #                                 number_of_other_org = len(self.krats),
-        #                                 number_of_owls = len(self.owls))
 
     def krat_predation_by_owl(self,owl):
         # stand in value and move to config file V
@@ -317,19 +311,16 @@ class Landscape(object):
             owl_object.current_cell = new_cell 
         self.owl_move_pool = []
 
-    def populate_krat_population_fitness_data(self,cell_krat_list):
-        for krat in cell_krat_list:
-            krat_fitness_info = [krat.krat_id,krat.current_cell.cell_id,krat.open_preference_weight,krat.bush_preference_weight, krat.energy_score]
-            self.krat_fitness_data.append(krat_fitness_info)
+    def populate_krat_population_fitness_data(self,fitness_list, cell_org_list):
+        for org in cell_org_list:
+            org_fitness_info = (org.org_id,org.energy_score)
+            fitness_list.append(org_fitness_info)
 
-    def krat_reproduction(self):
+    def krat_reproduction(self, current_krat_pop):
         if self.sim.cycle == self.sim.krat_reproduction_freq:
-            baby_krats = self.sim.initial_krat_pop - x
+            baby_krats = self.sim.initial_krat_pop - current_krat_pop
 
-    def landscape_dynamics(self):
-        self.total_krats = 0
-        self.total_snakes = 0
-        self.total_owls = 0
+    def iter_through_cells(self):
         for cell_width in self.cells:
             for cell in cell_width:
                 self.total_krats += len(cell.krats)
@@ -345,12 +336,30 @@ class Landscape(object):
                     else:
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
+                if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+                    self.populate_krat_population_fitness_data(fitness_list = self.krat_fitness_list,cell_org_list = cell.krats)
                 cell.krat_activity_pulse_behavior()
+
+    def landscape_dynamics(self):
+        self.total_krats = 0
+        self.total_snakes = 0
+        self.total_owls = 0
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.krat_fitness_list = []
+        self.iter_through_cells()
         self.relocate_krats()
         self.relocate_snakes()
-        print(self.total_krats)
-        print(self.total_snakes)
-        print(self.total_owls)
+        # print(self.total_krats)
+        # print(self.total_snakes)
+        # print(self.total_owls)
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+            print(self.sim.cycle)
+            #print(self.krat_fitness_list)
+            kratids,fitness = map(list,zip(*self.krat_fitness_list))
+            print('############ IDs ###########')
+            print(kratids)
+            print('############ fitness ###########')
+            print(fitness)
 
 
 

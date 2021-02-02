@@ -7,13 +7,13 @@ data['sim'] = []
 
 
 data['sim'].append({
-    "cycles_of_sim": 100, #3each day is one cycle
-    "landscape_size_x": 100,
-    "landscape_size_y": 100,
+    "cycles_of_sim": 10000, #3each day is one cycle
+    "landscape_size_x": 300,
+    "landscape_size_y": 300,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 6,
-    "initial_krat_pop": 30,
-    "initial_owl_pop": 0,
+    "initial_krat_pop": 90,
+    "initial_owl_pop": 6,
     "snake_strike_success_probability_bush": 0.032, #from bouskila 
     "snake_strike_success_probability_open": 0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
@@ -22,9 +22,9 @@ data['sim'].append({
     "krat_energy_cost":7, # alpha from bouskila
     "krat_cost_of_death":1500, #bouskila value d
     "snake_energy_cost":14, # beta value not reported by bouskila, using 14 for now because it is twice as much as the krat. it might be worth trying to make this proportional to body size.
-    "krat_move_range":1,
-    "snake_move_range":10,
-    "owl_move_range":10,
+    "krat_move_range":3,
+    "snake_move_range":20,
+    "owl_move_range":20,
     "krat_movement_frequency_per_x_cycles":1, # once per cycle
     "snake_movement_frequency_per_x_cycles":8, # once per 8 cycles
     "owl_movement_frequency_per_x_cycles":1, # once per 8 cycles
@@ -38,7 +38,7 @@ data['sim'].append({
     "snake_pop_genotype_freq": {"open":(1/3),
                                "bush":(1/3),
                                "mixed":(1/3)},
-    "krat_reproduction_freq_per_x_cycles": 10,
+    "krat_reproduction_freq_per_x_cycles": 50,
     "snake_reproduction_freq_per_x_cycles": 100
     })
 

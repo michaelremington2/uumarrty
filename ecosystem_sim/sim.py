@@ -62,9 +62,9 @@ class Cell(object):
         return self.snakes.pop(snake_index)
 
     def cell_over_populated(self):
-        if len(self.krats) > 50:
+        if len(self.krats) > self.sim.initial_krat_pop:
             raise ValueError("Krats mating too much")
-        if len(self.snakes) > 20:
+        if len(self.snakes) > self.sim.initial_snake_pop:
             raise ValueError("snakes mating too much")
 
     def krat_move(self, krat,moving_krat_list,return_home=False):
@@ -313,12 +313,30 @@ class Landscape(object):
 
     def populate_krat_population_fitness_data(self,fitness_list, cell_org_list):
         for org in cell_org_list:
-            org_fitness_info = (org.org_id,org.energy_score)
+            org_fitness_info = (org,org.energy_score)
             fitness_list.append(org_fitness_info)
 
-    def krat_reproduction(self, current_krat_pop):
-        if self.sim.cycle == self.sim.krat_reproduction_freq:
-            baby_krats = self.sim.initial_krat_pop - current_krat_pop
+    def krat_reproduction(self):
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+            num_krat_babies = self.sim.initial_krat_pop - self.total_krats
+            kratids,fitness = map(list,zip(*self.krat_fitness_list))
+            parent_list_krat = self.rng.choices(kratids,fitness,k=num_krat_babies)
+            for parent in parent_list_krat:
+                for cell_width in self.cells:
+                    for cell in cell_width:
+                        if parent in cell.krats:
+                            baby_krat = Krat(sim = self.sim,
+                                            energy_gain_bush = parent.energy_gain_bush, #from bouskila
+                                            energy_gain_open = parent.energy_gain_open, #from bouskila
+                                            energy_cost = parent.energy_cost,
+                                            death_cost = parent.death_cost,
+                                            move_range = parent.move_range,
+                                            movement_frequency = parent.movement_frequency,
+                                            home_cell= cell,
+                                            move_preference = parent.move_preference,
+                                            open_preference_weight = parent.open_preference_weight,
+                                            bush_preference_weight = parent.bush_preference_weight)
+                            cell.add_krat(baby_krat)
 
     def iter_through_cells(self):
         for cell_width in self.cells:
@@ -349,17 +367,12 @@ class Landscape(object):
         self.iter_through_cells()
         self.relocate_krats()
         self.relocate_snakes()
-        # print(self.total_krats)
-        # print(self.total_snakes)
-        # print(self.total_owls)
-        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-            print(self.sim.cycle)
-            #print(self.krat_fitness_list)
-            kratids,fitness = map(list,zip(*self.krat_fitness_list))
-            print('############ IDs ###########')
-            print(kratids)
-            print('############ fitness ###########')
-            print(fitness)
+        self.krat_reproduction()
+
+
+
+
+
 
 
 

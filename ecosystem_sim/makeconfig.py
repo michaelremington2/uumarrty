@@ -14,8 +14,8 @@ data['sim'].append({
     "initial_snake_pop": 6,
     "initial_krat_pop": 90,
     "initial_owl_pop": 6,
-    "snake_strike_success_probability_bush": 0.032, #from bouskila 
-    "snake_strike_success_probability_open": 0.009, #from bouskila
+    "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
+    "snake_strike_success_probability_open":0.21, #0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
     "krat_energy_gain_open": 12, #from bouskila
     "snake_energy_gain": 1500, ## estimate numerical approximationkrat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.

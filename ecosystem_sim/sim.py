@@ -170,6 +170,7 @@ class Landscape(object):
         self.size_x = size_x
         self.size_y = size_y
         self.cells = None
+        # cell_list
         self.cells_x_columns = int(round(self.size_x/10))
         self.cells_y_rows = int(round(self.size_y/10))
         self.microhabitat_open_bush_proportions = microhabitat_open_bush_proportions
@@ -311,32 +312,42 @@ class Landscape(object):
             owl_object.current_cell = new_cell 
         self.owl_move_pool = []
 
-    def populate_krat_population_fitness_data(self,fitness_list, cell_org_list):
+    def populate_krat_population_fitness_data(self,total_org_list, cell_org_list):
         for org in cell_org_list:
-            org_fitness_info = (org,org.energy_score)
-            fitness_list.append(org_fitness_info)
+            total_org_list.append(org)
 
     def krat_reproduction(self):
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
             num_krat_babies = self.sim.initial_krat_pop - self.total_krats
-            kratids,fitness = map(list,zip(*self.krat_fitness_list))
-            parent_list_krat = self.rng.choices(kratids,fitness,k=num_krat_babies)
-            for parent in parent_list_krat:
-                for cell_width in self.cells:
-                    for cell in cell_width:
-                        if parent in cell.krats:
-                            baby_krat = Krat(sim = self.sim,
-                                            energy_gain_bush = parent.energy_gain_bush, #from bouskila
-                                            energy_gain_open = parent.energy_gain_open, #from bouskila
-                                            energy_cost = parent.energy_cost,
-                                            death_cost = parent.death_cost,
-                                            move_range = parent.move_range,
-                                            movement_frequency = parent.movement_frequency,
-                                            home_cell= cell,
-                                            move_preference = parent.move_preference,
-                                            open_preference_weight = parent.open_preference_weight,
-                                            bush_preference_weight = parent.bush_preference_weight)
-                            cell.add_krat(baby_krat)
+            #krat,payoff = map(list,zip(*self.krat_fitness_list))
+            new_gen_genotype = {}
+            for krat in self.total_krat_list:
+                genotype = (krat.bush_preference_weight,krat.open_preference_weight)
+                new_gen_genotype[genotype] = []
+                # if genotype not in new_gen_genotype:
+                #     key = genotype
+                #     new_gen_genotype[genotype] = []
+                # else:
+                #     seq_dict[genotype] += line
+            gc_dict = {key: gc_content(value) for (key,value) in seq_dict.items()}
+ 
+            # parent_list_krat = self.rng.choices(krat,weights = fitness,k=num_krat_babies)
+            # for parent in parent_list_krat:
+            #     for cell_width in self.cells:
+            #         for cell in cell_width:
+            #             if parent in cell.krats:
+            #                 baby_krat = Krat(sim = self.sim,
+            #                                 energy_gain_bush = parent.energy_gain_bush, #from bouskila
+            #                                 energy_gain_open = parent.energy_gain_open, #from bouskila
+            #                                 energy_cost = parent.energy_cost,
+            #                                 death_cost = parent.death_cost,
+            #                                 move_range = parent.move_range,
+            #                                 movement_frequency = parent.movement_frequency,
+            #                                 home_cell= cell,
+            #                                 move_preference = parent.move_preference,
+            #                                 open_preference_weight = parent.open_preference_weight,
+            #                                 bush_preference_weight = parent.bush_preference_weight)
+            #                 cell.add_krat(baby_krat)
 
     def iter_through_cells(self):
         for cell_width in self.cells:
@@ -355,7 +366,7 @@ class Landscape(object):
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
                 if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-                    self.populate_krat_population_fitness_data(fitness_list = self.krat_fitness_list,cell_org_list = cell.krats)
+                    self.populate_krat_population_fitness_data(total_org_list = self.total_krat_list,cell_org_list = cell.krats) #payoff
                 cell.krat_activity_pulse_behavior()
 
     def landscape_dynamics(self):

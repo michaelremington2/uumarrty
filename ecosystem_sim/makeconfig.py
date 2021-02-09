@@ -32,12 +32,12 @@ data['sim'].append({
     "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,
-    "krat_pop_genotype_freq": {"open":(1/3),
-                               "bush":(1/3),
-                               "mixed":(1/3)},
-    "snake_pop_genotype_freq": {"open":(1/3),
-                               "bush":(1/3),
-                               "mixed":(1/3)},
+    "krat_pop_genotype_freq": {(1,0):(1/3),
+                               (0,1):(1/3),
+                               (0.5,0.5):(1/3)},
+    "snake_pop_genotype_freq": {(1,0):(1/3),
+                               (0,1):(1/3),
+                               (0.5,0.5):(1/3)},
     "krat_reproduction_freq_per_x_cycles": 50,
     "snake_reproduction_freq_per_x_cycles": 100
     })

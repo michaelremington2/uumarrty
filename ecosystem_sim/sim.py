@@ -216,7 +216,8 @@ class Landscape(object):
             pop = round(isp*freq)
             while pop > 0:
                 cell = self.select_random_cell()
-                open_preference_weight, bush_preference_weight = key
+                bush_preference_weight = float(key)
+                open_preference_weight = (1-float(key))
                 snake = Snake(sim = sim,
                             strike_success_probability_bush = strike_success_probability_bush,
                             strike_success_probability_open = strike_success_probability_open,
@@ -240,7 +241,8 @@ class Landscape(object):
             pop = round(ikp*freq)
             while pop > 0:
                 cell = self.select_random_cell()
-                open_preference_weight, bush_preference_weight = key
+                bush_preference_weight = float(key)
+                open_preference_weight = (1-float(key))
                 cell = self.select_random_cell()
                 krat = Krat(sim = sim,
                             energy_gain_bush = energy_gain_bush, #from bouskila
@@ -274,7 +276,7 @@ class Landscape(object):
 
     def relocate_krats(self):
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-            continue
+            pass
         else:
             for i, krat in enumerate(self.krat_move_pool):
                 new_cell = krat[0]
@@ -285,7 +287,7 @@ class Landscape(object):
 
     def relocate_snakes(self):
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-            continue
+            pass
         else:
             for j, snake in enumerate(self.snake_move_pool):
                 new_cell = snake[0]
@@ -306,37 +308,29 @@ class Landscape(object):
         for org in cell_org_list:
             total_org_list.append(org)
 
+    def genotype_sum_to_one_test(self, bush_pref, open_pref):
+        if round(sum(bush_pref,open_pref),2) != 1:
+            raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
+
     def next_gen_krat_rep_dist_prep(self, total_org_list):
         #if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
         new_gen_genotype = {}
         for org in total_org_list:
-            genotype = (org.bush_preference_weight,krat.open_preference_weight)
+            self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
+            bush_pref_key = org.bush_preference_weight
             payoff = krat.energy_score
             if key not in dict1:
-                new_gen_genotype[genotype] = []
-                new_gen_genotype[genotype].append(payoff)
+                new_gen_genotype[bush_pref_key] = []
+                new_gen_genotype[bush_pref_key].append(payoff)
             else:
-                new_gen_genotype[genotype].append(payoff)
+                new_gen_genotype[bush_pref_key].append(payoff)
         geno_dict = {key: sum(value)/sum(list(chain(*new_gen_genotype.values()))) for (key,value) in seq_dict.items()}
         return geno_dict
+
+    def krat_reproduction(self):
+        pass
+
  
-            # parent_list_krat = self.rng.choices(krat,weights = fitness,k=num_krat_babies)
-            # for parent in parent_list_krat:
-            #     for cell_width in self.cells:
-            #         for cell in cell_width:
-            #             if parent in cell.krats:
-            #                 baby_krat = Krat(sim = self.sim,
-            #                                 energy_gain_bush = parent.energy_gain_bush, #from bouskila
-            #                                 energy_gain_open = parent.energy_gain_open, #from bouskila
-            #                                 energy_cost = parent.energy_cost,
-            #                                 death_cost = parent.death_cost,
-            #                                 move_range = parent.move_range,
-            #                                 movement_frequency = parent.movement_frequency,
-            #                                 home_cell= cell,
-            #                                 move_preference = parent.move_preference,
-            #                                 open_preference_weight = parent.open_preference_weight,
-            #                                 bush_preference_weight = parent.bush_preference_weight)
-            #                 cell.add_krat(baby_krat)
 
     def iter_through_cells(self):
         for cell_width in self.cells:

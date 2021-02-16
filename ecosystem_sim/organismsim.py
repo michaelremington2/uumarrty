@@ -306,6 +306,10 @@ class Owl(Organism):
         self.move_range = move_range
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        self.org_id = id(self)
+
+    def owl_loc(self):
+        print('id {},cycle {}, current cell {}'.format(self.org_id, self.sim.cycle,self.current_cell.cell_id))
 
 
 if __name__ ==  "__main__":

@@ -13,12 +13,12 @@ snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
     "cycles_of_sim": 10000, #3each day is one cycle
-    "landscape_size_x": 300,
-    "landscape_size_y": 300,
+    "landscape_size_x": 150,
+    "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 0,
+    "initial_snake_pop": 6,
     "initial_krat_pop": 90,
-    "initial_owl_pop": 6,
+    "initial_owl_pop": 3,
     "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
     "snake_strike_success_probability_open":0.21, #0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila

@@ -153,6 +153,9 @@ class Cell(object):
     def owl_activity_pulse_behavior(self):
         moving_owls = []
         for owl in self.owls:
+            # if self.sim.cycle == 99:
+            #     owl.owl_loc()
+            #     print(self.cell_id)
             self.krat_predation_by_owl(owl)
             self.owl_move(owl, moving_owl_list=moving_owls)
         self.owls = [owl for owl in self.owls if owl not in moving_owls]
@@ -177,6 +180,9 @@ class Landscape(object):
         self.krat_move_pool = []
         self.snake_move_pool = []
         self.owl_move_pool = []
+        self.total_krat_list = [] 
+        self.total_snake_list = []
+        self.total_owl_list = []
         self.rng = self.sim.rng
 
     def build(self):
@@ -286,7 +292,7 @@ class Landscape(object):
         self.krat_move_pool = []
 
     def relocate_snakes(self):
-        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+        if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
             pass
         else:
             for j, snake in enumerate(self.snake_move_pool):
@@ -304,12 +310,12 @@ class Landscape(object):
             owl_object.current_cell = new_cell 
         self.owl_move_pool = []
 
-    def populate_krat_population_fitness_data(self,total_org_list, cell_org_list):
+    def populate_total_org_list(self,total_org_list, cell_org_list):
         for org in cell_org_list:
             total_org_list.append(org)
 
     def genotype_sum_to_one_test(self, bush_pref, open_pref):
-        if round(sum(bush_pref,open_pref),2) != 1:
+        if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
     def next_gen_krat_rep_dist_prep(self, total_org_list):
@@ -318,19 +324,68 @@ class Landscape(object):
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
             bush_pref_key = org.bush_preference_weight
-            payoff = krat.energy_score
-            if key not in dict1:
+            payoff = org.energy_score
+            if bush_pref_key not in new_gen_genotype:
                 new_gen_genotype[bush_pref_key] = []
                 new_gen_genotype[bush_pref_key].append(payoff)
             else:
                 new_gen_genotype[bush_pref_key].append(payoff)
-        geno_dict = {key: sum(value)/sum(list(chain(*new_gen_genotype.values()))) for (key,value) in seq_dict.items()}
+        geno_dict = {key: sum(value)/sum(list(chain(*new_gen_genotype.values()))) for (key,value) in new_gen_genotype.items()}
         return geno_dict
 
     def krat_reproduction(self):
-        pass
+        next_gen_dist = self.next_gen_krat_rep_dist_prep(total_org_list = self.total_krat_list)
+        move_range = self.total_krat_list[0].move_range
+        movement_frequency = self.total_krat_list[0].movement_frequency
+        energy_gain_bush = self.total_krat_list[0].energy_gain_bush
+        energy_gain_open = self.total_krat_list[0].energy_gain_open 
+        energy_cost = self.total_krat_list[0].energy_cost
+        death_cost = self.total_krat_list[0].death_cost
+        move_preference = self.total_krat_list[0].move_preference
+        if move_preference:
+            memory_length_cycles = self.total_krat_list[0].memory_length_cycles
+        else:
+            memory_length_cycles = None
+        self.total_krat_list = []
+        self.initialize_krat_pop(
+            initial_krat_pop = self.sim.initial_krat_pop,
+            move_range = move_range,
+            movement_frequency = movement_frequency,
+            energy_gain_bush = energy_gain_bush, #from bouskila
+            energy_gain_open = energy_gain_open, #from bouskila
+            energy_cost = energy_cost,
+            death_cost = death_cost,
+            move_preference = move_preference,
+            memory_length_cycles = memory_length_cycles,
+            krat_genotype_frequencies = next_gen_dist
+            )
 
- 
+    def snake_reproduction(self):
+        next_gen_dist = self.next_gen_krat_rep_dist_prep(total_org_list = self.total_snake_list)
+        move_range = self.total_snake_list[0].move_range
+        strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
+        strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
+        energy_gain_per_krat = self.total_snake_list[0].energy_gain_per_krat
+        energy_cost = self.total_snake_list[0].energy_cost
+        movement_frequency = self.total_snake_list[0].movement_frequency
+        move_preference = self.total_snake_list[0].move_preference
+        if move_preference:
+            memory_length_cycles = self.total_snake_list[0].memory_length_cycles
+        else:
+            memory_length_cycles = None
+        self.total_krat_list = []
+        self.initialize_snake_pop(
+                initial_snake_pop = self.sim.initial_snake_pop,
+                strike_success_probability_bush = strike_success_probability_bush,
+                strike_success_probability_open = strike_success_probability_open,
+                energy_gain_per_krat = energy_gain_per_krat,
+                energy_cost = energy_cost,
+                move_range = move_range,
+                movement_frequency = movement_frequency,
+                move_preference = move_preference,
+                memory_length_cycles = memory_length_cycles,
+                snake_genotype_frequencies = next_gen_dist
+                )
 
     def iter_through_cells(self):
         for cell_width in self.cells:
@@ -349,8 +404,11 @@ class Landscape(object):
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
                 if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-                    self.populate_krat_population_fitness_data(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #payoff
+                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
                     cell.clean_krat_list()
+                if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
+                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
+                    cell.clean_snake_list()
                 cell.krat_activity_pulse_behavior()
 
     def landscape_dynamics(self):
@@ -360,7 +418,11 @@ class Landscape(object):
         self.iter_through_cells()
         self.relocate_krats()
         self.relocate_snakes()
-        self.krat_reproduction()
+        self.relocate_owls()
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.krat_reproduction()
+        if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.snake_reproduction()
 
 
 class Sim(object):
@@ -388,6 +450,7 @@ class Sim(object):
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]
         self.krat_reproduction_freq = config_d["krat_reproduction_freq_per_x_cycles"]
+        self.snake_reproduction_freq = config_d["snake_reproduction_freq_per_x_cycles"]
         #self.energy_dependence_movement = config_d["energy_dependence_movement"]
         self.landscape = Landscape(
                 sim=self,

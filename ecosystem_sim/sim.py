@@ -318,12 +318,27 @@ class Landscape(object):
         if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
-    def next_gen_krat_rep_dist_prep(self, total_org_list):
+    def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_quantity):
+        new_bush_preference = bush_pref_weight
+        if self.rng.random() < mutation_probabiliy:
+            if new_bush_preference == 1:
+                new_bush_preference -= mutation_quantity
+            elif new_bush_preference == 0:
+                new_bush_preference += mutation_quantity
+            else:
+                new_bush_preference += self.rng.choice([-mutation_quantity,mutation_quantity])
+            if new_bush_preference > 1:
+                new_bush_preference = 1
+            elif new_bush_preference < 0:
+                new_bush_preference = 0
+        return round(new_bush_preference,2)
+
+    def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_quantity):
         #if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
         new_gen_genotype = {}
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
-            bush_pref_key = org.bush_preference_weight
+            bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probabiliy = mutation_probabiliy, mutation_quantity = mutation_quantity)
             payoff = org.energy_score
             if bush_pref_key not in new_gen_genotype:
                 new_gen_genotype[bush_pref_key] = []
@@ -334,7 +349,7 @@ class Landscape(object):
         return geno_dict
 
     def krat_reproduction(self):
-        next_gen_dist = self.next_gen_krat_rep_dist_prep(total_org_list = self.total_krat_list)
+        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list, mutation_probabiliy = self.sim.krat_mutation_probability, mutation_quantity = self.sim.krat_mutation_quantity)
         move_range = self.total_krat_list[0].move_range
         movement_frequency = self.total_krat_list[0].movement_frequency
         energy_gain_bush = self.total_krat_list[0].energy_gain_bush
@@ -361,7 +376,7 @@ class Landscape(object):
             )
 
     def snake_reproduction(self):
-        next_gen_dist = self.next_gen_krat_rep_dist_prep(total_org_list = self.total_snake_list)
+        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list, mutation_probabiliy = self.sim.snake_mutation_probability, mutation_quantity = self.sim.snake_mutation_quantity)
         move_range = self.total_snake_list[0].move_range
         strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
         strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
@@ -442,8 +457,7 @@ class Sim(object):
         if sum(genotype_freq_dict.values()) != 1:
             raise Exception("Genotype frequencies do not sum to 1.")
 
-
-    def configure(self, config_d):
+    def config_sim_species_attributes(self,config_d):
         self.genotype_freq_test(config_d["krat_pop_genotype_freq"])
         self.genotype_freq_test(config_d["snake_pop_genotype_freq"])
         self.end_time = config_d["cycles_of_sim"]
@@ -451,7 +465,13 @@ class Sim(object):
         self.initial_snake_pop = config_d["initial_snake_pop"]
         self.krat_reproduction_freq = config_d["krat_reproduction_freq_per_x_cycles"]
         self.snake_reproduction_freq = config_d["snake_reproduction_freq_per_x_cycles"]
-        #self.energy_dependence_movement = config_d["energy_dependence_movement"]
+        self.krat_mutation_quantity = config_d["krat_mutation_quantity"]
+        self.snake_mutation_quantity = config_d["snake_mutation_quantity"]
+        self.krat_mutation_probability = config_d["krat_mutation_probability"]
+        self.snake_mutation_probability = config_d["snake_mutation_probability"]
+
+    def configure(self, config_d):
+        self.config_sim_species_attributes(config_d = config_d)
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],

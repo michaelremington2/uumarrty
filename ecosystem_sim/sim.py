@@ -147,7 +147,8 @@ class Cell(object):
             snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
             if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
-                self.snake_move(snake, moving_snake_list=moving_snakes)            
+                self.snake_move(snake, moving_snake_list=moving_snakes)      
+            snake.snake_death()      
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
 
     def owl_activity_pulse_behavior(self):
@@ -216,7 +217,7 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(self,initial_snake_pop,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,movement_frequency,move_preference,snake_genotype_frequencies, memory_length_cycles):
+    def initialize_snake_pop(self,initial_snake_pop,death_probability, strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,movement_frequency,move_preference,snake_genotype_frequencies, memory_length_cycles):
         isp = self.sim.initial_snake_pop
         for key, freq in snake_genotype_frequencies.items():
             pop = round(isp*freq)
@@ -227,6 +228,7 @@ class Landscape(object):
                 snake = Snake(sim = sim,
                             strike_success_probability_bush = strike_success_probability_bush,
                             strike_success_probability_open = strike_success_probability_open,
+                            death_probability = death_probability,
                             energy_gain_per_krat = energy_gain_per_krat,
                             energy_cost = energy_cost,
                             move_range = move_range,
@@ -380,6 +382,7 @@ class Landscape(object):
         move_range = self.total_snake_list[0].move_range
         strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
         strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
+        death_probability = self.total_snake_list[0].death_probability
         energy_gain_per_krat = self.total_snake_list[0].energy_gain_per_krat
         energy_cost = self.total_snake_list[0].energy_cost
         movement_frequency = self.total_snake_list[0].movement_frequency
@@ -393,6 +396,7 @@ class Landscape(object):
                 initial_snake_pop = self.sim.initial_snake_pop,
                 strike_success_probability_bush = strike_success_probability_bush,
                 strike_success_probability_open = strike_success_probability_open,
+                death_probability = death_probability,
                 energy_gain_per_krat = energy_gain_per_krat,
                 energy_cost = energy_cost,
                 move_range = move_range,
@@ -483,6 +487,7 @@ class Sim(object):
                 initial_snake_pop=config_d["initial_snake_pop"],
                 strike_success_probability_bush = config_d["snake_strike_success_probability_bush"],
                 strike_success_probability_open = config_d["snake_strike_success_probability_open"],
+                death_probability = config_d["snake_death_probability"],
                 energy_gain_per_krat = config_d["snake_energy_gain"],
                 energy_cost = config_d["snake_energy_cost"],
                 move_range = config_d["snake_move_range"],

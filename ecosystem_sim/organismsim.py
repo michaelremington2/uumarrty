@@ -203,11 +203,12 @@ class Organism(object):
 
 
 class Snake(Organism):
-    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,death_probability,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell, move_range,move_preference,memory_length_cycles)
         self.sim = sim 
         self.energy_score = 0
         self.energy_gain_per_krat = energy_gain_per_krat
+        self.death_probability = death_probability
         self.energy_cost = energy_cost
         self.strike_success_probability_bush = strike_success_probability_bush
         self.strike_success_probability_open = strike_success_probability_open
@@ -243,6 +244,10 @@ class Snake(Organism):
                 len(self.current_cell.krats),
                 len(self.current_cell.owls)]
         self.sim.snake_info.append(row)
+
+    def snake_death(self):
+        if self.rng.random() < self.death_probability:
+            self.alive = False
 
 class Krat(Organism):
     def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,movement_frequency,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0,foraging_hours = None):

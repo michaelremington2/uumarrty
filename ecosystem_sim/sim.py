@@ -522,42 +522,6 @@ class Sim(object):
         sim1 = config_d['sim'][0]
         self.configure(sim1)
 
-    def analyze_and_plot_org_fitness(self,org_data):
-        open_pref_x = []
-        bush_pref_x = []
-        mixed_pref_x = []
-        open_pref_fit = []
-        bush_pref_fit = []
-        mixed_pref_fit = []
-        for row in org_data:
-            if row[3] == 1:
-                #bush
-                bush_pref_x.append(row[1])
-                bush_pref_fit.append(row[4])
-            elif row[3] == 0:
-                #open
-                open_pref_x.append(row[1])
-                open_pref_fit.append(row[4])
-            else:
-                mixed_pref_x.append(row[1])
-                mixed_pref_fit.append(row[4])
-        data = ((open_pref_x, open_pref_fit), (bush_pref_x,bush_pref_fit), (mixed_pref_x,mixed_pref_fit))
-        colors = ("red", "green", "blue")
-        groups = ("open", "bush", "mixed")
-
-        # Create plot
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-
-        for data, color, group in zip(data, colors, groups):
-            x, y = data
-            ax.scatter(x, y, alpha=0.8, c=color, edgecolors='none', s=30, label=group)
-
-        plt.title('Matplot scatter plot')
-        plt.legend(loc=2)
-        plt.show()
-
-
     def main(self):
         start = round(time.time())
         self.read_configuration_file()

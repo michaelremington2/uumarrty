@@ -24,7 +24,7 @@ class Organism(object):
         row_boundary -- this is the boundary of the landscape in the y direction. (int)
         number_of_movements -- a rolling count of the number of movements an organism makes when it moves outside of its current cell. (int)
         rng -- random number generator in the sim. (random object)
-        microhabitat_energy_log -- 
+        microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
     '''
     def __init__(self,sim,home_cell=None, move_range=1,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         self.sim = sim
@@ -211,6 +211,36 @@ class Organism(object):
 
 
 class Snake(Organism):
+    '''
+    The for a general predator that represents a snake. The snake can hunt in any habitat.
+
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
+        move_range -- the distance the organism can move from it's current cell. Orgs can move (N,E,W,S,NW,NE,SE,SW). 
+        move_frequency -- the number of cycles that pass before the organism moves.
+        strike_success_probability_bush -- the probability a snake object will catch a prey item if they are in the same cell with a bush microhabitat.
+        strike_success_probability_open -- the probability a snake object will catch a prey item if they are in the same cell with a open microhabitat.
+        energy_gain_per_krat -- the amount of payoff the snake object gets from capturing a krat object.
+        energy_cost -- the amount of energy lost per cycle.
+        death_probability -- a probability that the snake will die of either random causes or old age.
+        home_cell -- cell the organism is born in or has a nest. (tuple of x,y, default is none)
+        move_preference -- an algorithm for weighting cells that previously provided the organism with increased payoff. This currently isn't working so set to false.
+        open_preference_weight -- a weight that either increases or decreases prference to the open habitat. (default 1)
+        bush_preference_weight -- a weight that either increases or decreases prference to the bush habitat. (default 1)
+        memory_length_cycles -- this is the number of cycles the organism will have memory of its payoff values for. This goes into the move preference algorithm that isn't currently working. (bool)
+
+    Attributes:
+        alive -- if true the object is alive, if false the object is dead (bool).
+        landscape -- the landscape object the organism opperates on. (class object)
+        energy_score -- a rolling sum of the payoffs the organism is accruing throughout its life cycle. (int)
+        column_boundary -- this is the boundary of the landscape in the x direction. (int)
+        row_boundary -- this is the boundary of the landscape in the y direction. (int)
+        number_of_movements -- a rolling count of the number of movements an organism makes when it moves outside of its current cell. (int)
+        rng -- random number generator in the sim. (random object)
+        microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
+        org_id -- the id in memory space of the object.
+    '''
+
     def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,death_probability,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell, move_range,move_preference,memory_length_cycles)
         self.sim = sim 
@@ -234,6 +264,7 @@ class Snake(Organism):
         self.org_id = id(self)
 
     def calc_strike_success_probability(self,cell):
+        '''Returns the appropriate strike success probabilty based on the current microhabitat'''
         if cell.habitat_type[0].name == 'BUSH':
             ss = self.strike_success_probability_bush
         elif cell.habitat_type[0].name == 'OPEN':
@@ -241,6 +272,7 @@ class Snake(Organism):
         return ss
 
     def generate_snake_stats(self):
+        '''compiles a row of stats per cycle to be added to the simulations overall snake stats array.'''
         row = [self.org_id,
                 self.sim.cycle,
                 self.open_preference_weight,
@@ -254,11 +286,40 @@ class Snake(Organism):
         self.sim.snake_info.append(row)
 
     def snake_death(self):
+        '''Kills snake if the probability condition is met.'''
         if self.rng.random() < self.death_probability:
             self.alive = False
 
 class Krat(Organism):
-    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,death_cost,move_range,movement_frequency,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0,foraging_hours = None):
+    '''
+    The for a general prey item the kangaroo rat. In this simulation it is just known as the krat
+
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
+        move_range -- the distance the organism can move from it's current cell. Orgs can move (N,E,W,S,NW,NE,SE,SW). 
+        move_frequency -- the number of cycles that pass before the organism moves.
+        energy_gain_bush -- the payoff for foraging in a bush habitat
+        energy_gain_open -- the payoff for foraging in a open habitat
+        energy_cost -- the amount of energy lost per cycle.
+        death_probability -- a probability that the snake will die of either random causes or old age.
+        home_cell -- cell the organism is born in or has a nest. (tuple of x,y)
+        move_preference -- an algorithm for weighting cells that previously provided the organism with increased payoff. This currently isn't working so set to false.
+        open_preference_weight -- a weight that either increases or decreases prference to the open habitat. (default 1)
+        bush_preference_weight -- a weight that either increases or decreases prference to the bush habitat. (default 1)
+        memory_length_cycles -- this is the number of cycles the organism will have memory of its payoff values for. This goes into the move preference algorithm that isn't currently working. (bool)
+
+    Attributes:
+        alive -- if true the object is alive, if false the object is dead (bool).
+        landscape -- the landscape object the organism opperates on. (class object)
+        energy_score -- a rolling sum of the payoffs the organism is accruing throughout its life cycle. (int)
+        column_boundary -- this is the boundary of the landscape in the x direction. (int)
+        row_boundary -- this is the boundary of the landscape in the y direction. (int)
+        number_of_movements -- a rolling count of the number of movements an organism makes when it moves outside of its current cell. (int)
+        rng -- random number generator in the sim. (random object)
+        microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
+        org_id -- the id in memory space of the object.
+    '''
+    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,move_range,movement_frequency,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell,move_range,move_preference,memory_length_cycles)
         self.sim = sim
         self.home_cell = home_cell
@@ -266,7 +327,6 @@ class Krat(Organism):
         self.energy_gain_bush = energy_gain_bush
         self.energy_gain_open = energy_gain_open
         self.energy_cost = energy_cost
-        self.death_cost = death_cost
         self.rng = self.sim.rng
         self.move_range = move_range
         self.movement_frequency = movement_frequency
@@ -280,6 +340,7 @@ class Krat(Organism):
         self.org_id = id(self)
 
     def calc_energy_gain(self,cell):
+        '''returns the appropriate energy pay off based on the current microhabitat.'''
         if self.alive:
             if cell.habitat_type[0].name == 'BUSH':
                 energy_gain = self.energy_gain_bush
@@ -293,10 +354,12 @@ class Krat(Organism):
         return energy_gain
 
     def calc_energy_cost(self):
+        '''returns the appropriate energy pay cost. Future iterations of this function may be more dynamic.'''
         cost = self.energy_cost
         return cost
 
     def generate_krat_stats(self):
+        '''generates 1 row of stats on the krat object per cycle to be appended to the simulations overall krat info array.'''
         row = [self.org_id,
                 self.sim.cycle,
                 self.open_preference_weight,
@@ -311,6 +374,29 @@ class Krat(Organism):
 
 
 class Owl(Organism):
+    '''
+    This object represents a specialized predator item representing an owl. In this simulation it is just known as the kratThe owl can only hunt in open habitats.
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
+        move_range -- the distance the organism can move from it's current cell. Orgs can move (N,E,W,S,NW,NE,SE,SW). 
+        strike_success_probability -- the probabilty an owl object captures its prey. (float >= 1)
+        home_cell -- cell the organism is born in or has a nest. (tuple of x,y)
+        move_preference -- an algorithm for weighting cells that previously provided the organism with increased payoff. This currently isn't working so set to false.
+        open_preference_weight -- a weight that either increases or decreases prference to the open habitat. (default 1)
+        bush_preference_weight -- a weight that either increases or decreases prference to the bush habitat. (default 0)
+        memory_length_cycles -- this is the number of cycles the organism will have memory of its payoff values for. This goes into the move preference algorithm that isn't currently working. (bool)
+
+    Attributes:
+        alive -- if true the object is alive, if false the object is dead (bool).
+        landscape -- the landscape object the organism opperates on. (class object)
+        energy_score -- a rolling sum of the payoffs the organism is accruing throughout its life cycle. (int)
+        column_boundary -- this is the boundary of the landscape in the x direction. (int)
+        row_boundary -- this is the boundary of the landscape in the y direction. (int)
+        number_of_movements -- a rolling count of the number of movements an organism makes when it moves outside of its current cell. (int)
+        rng -- random number generator in the sim. (random object)
+        microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
+        org_id -- the id in memory space of the object.
+    '''
     def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=0):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim 
@@ -322,6 +408,7 @@ class Owl(Organism):
         self.org_id = id(self)
 
     def owl_loc(self):
+        '''This is just a helpful function to see where the owl object is as the sim runs.'''
         print('id {},cycle {}, current cell {}'.format(self.org_id, self.sim.cycle,self.current_cell.cell_id))
 
 

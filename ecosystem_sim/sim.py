@@ -243,7 +243,7 @@ class Landscape(object):
                 #snake.generate_snake_stats()
                 pop = pop-1
 
-    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, death_cost, move_range,movement_frequency, move_preference, krat_genotype_frequencies, memory_length_cycles):
+    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, move_range,movement_frequency, move_preference, krat_genotype_frequencies, memory_length_cycles):
         ikp = self.sim.initial_krat_pop
         for key, freq in krat_genotype_frequencies.items():
             pop = round(ikp*freq)
@@ -256,7 +256,6 @@ class Landscape(object):
                             energy_gain_bush = energy_gain_bush, #from bouskila
                             energy_gain_open = energy_gain_open, #from bouskila
                             energy_cost = energy_cost,
-                            death_cost = death_cost,
                             move_range = move_range,
                             movement_frequency = movement_frequency,
                             home_cell= cell,
@@ -357,7 +356,6 @@ class Landscape(object):
         energy_gain_bush = self.total_krat_list[0].energy_gain_bush
         energy_gain_open = self.total_krat_list[0].energy_gain_open 
         energy_cost = self.total_krat_list[0].energy_cost
-        death_cost = self.total_krat_list[0].death_cost
         move_preference = self.total_krat_list[0].move_preference
         if move_preference:
             memory_length_cycles = self.total_krat_list[0].memory_length_cycles
@@ -371,7 +369,6 @@ class Landscape(object):
             energy_gain_bush = energy_gain_bush, #from bouskila
             energy_gain_open = energy_gain_open, #from bouskila
             energy_cost = energy_cost,
-            death_cost = death_cost,
             move_preference = move_preference,
             memory_length_cycles = memory_length_cycles,
             krat_genotype_frequencies = next_gen_dist
@@ -503,7 +500,6 @@ class Sim(object):
                 energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
                 energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
                 energy_cost=config_d["krat_energy_cost"],
-                death_cost=config_d["krat_cost_of_death"],
                 move_preference =config_d["move_preference_algorithm"],
                 memory_length_cycles = config_d["memory_length_krat"],
                 krat_genotype_frequencies = config_d["krat_pop_genotype_freq"]

@@ -14,9 +14,20 @@ import time
 #brownian motion 
 
 class Cell(object):
+    '''
+    This object represents a sub space of the landscape object that is a container for organisms to interact in.
+    The user will have to keep in mind the abstract size of these interaction landscapes when setting up simulation variables.
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
+        habitat_type -- this is a label from an enumerated habitat object. (enum object)
+        cell_id -- a tuple of the postion of the cell on the landscape in the y direction (rows) and the landscape in the x direction (columns). (tuple with 2 elements)
+    Attributes:
+        krats -- a list that holds krat objects. (list)
+        snakes -- a list that holds sake objects. (list)
+        landscape -- the landscape object the cell operates in.
+        rng -- a random number operator object.
+    '''
     def __init__(self, sim, habitat_type,cell_id):
-        #cell represents the microhabitat and governs shorter geospatial interactions
-        # Order: open, bush
         self.sim = sim
         self.krats = []
         self.snakes = []
@@ -30,51 +41,57 @@ class Cell(object):
         return id(self)
 
     def add_krat(self, krat):
-        # Add a krat to the population of this cells krats
+        '''Add a krat to the population of this cells krats'''
         self.krats.append(krat)
 
     def add_snake(self, snake):
-        # Add a snake to the population of this cells snakes
+        '''Add a snake to the population of this cells snakes'''
         self.snakes.append(snake)
 
     def add_owl(self,owl):
+        '''adds an owl object to the landscape.'''
         self.owls.append(owl)
 
     def select_krat(self,krat_index = None):
-        #returns a random index for the krat
+        '''returns a random krat object if no specific index is provided.'''
         if krat_index == None:
             krat_index = self.rng.randint(0,len(self.krats)-1)
         krat = self.krats[krat_index]
         return krat
 
     def select_snake(self,snake_index = None):
-        #returns a snake object from this cells population of snakes
+        '''returns a random snake object if no specific index is provided.'''
         if snake_index == None:
             snake_index = self.rng.randint(0,len(self.snake)-1)
         snake = self.snakes[snake_index]
         return snake
 
     def pop_krat(self,krat_index):
-        # Selects a krat at random from population and removes it and return it
+        '''Selects a krat at random from population and removes it and returns the object '''
         return self.krats.pop(krat_index)
 
     def pop_snake(self,snake_index):
-        # Selects a snake at random from population and removes it and return it
+        '''Selects a snake at random from population and removes it and returns the object '''
         return self.snakes.pop(snake_index)
 
     def clean_krat_list(self):
+        '''creates a fresh list for the attribute krats'''
         self.krats = []
 
     def clean_snake_list(self):
+        '''creates a fresh list for the attribute snakes'''
         self.snakes = []
 
     def cell_over_populated(self):
+        '''test that makes sure cells don't become overpopulated and break sim'''
         if len(self.krats) > self.sim.initial_krat_pop:
             raise ValueError("Krats mating too much")
         if len(self.snakes) > self.sim.initial_snake_pop:
             raise ValueError("snakes mating too much")
 
     def krat_move(self, krat,moving_krat_list,return_home=False):
+        '''runs the krat movement algorithm and moves the krat from the cell to a temp list in the landscape. 
+        Optional can designate the krat to return to designated nest cell tied to the krat object.'''
         if return_home== True:
             new_cell = krat.return_home()
         else:
@@ -85,6 +102,7 @@ class Cell(object):
             moving_krat_list.append(krat)
 
     def snake_move(self,snake,moving_snake_list):
+        '''runs the snake movement algorithm and moves the krat from the cell to a temp list in the landscape. '''
         new_cell = snake.organism_movement()
         if new_cell != self:
             moving_snake = (new_cell,snake,self)
@@ -92,6 +110,7 @@ class Cell(object):
             moving_snake_list.append(snake)
 
     def owl_move(self,owl,moving_owl_list):
+        '''runs the owl movement algorithm and moves the krat from the cell to a temp list in the landscape. '''
         new_cell = owl.organism_movement()
         if new_cell != self:
             moving_owl = (new_cell,owl,self)
@@ -99,6 +118,7 @@ class Cell(object):
             moving_owl_list.append(owl)             
 
     def krat_predation_by_snake(self,snake):
+        '''determines whether or not the snake that was passed into the function successfully kills and obtains payoff of a krat that shares the cell with it.'''
         live_krats = [krat for krat in self.krats if krat.alive] 
         ss = snake.calc_strike_success_probability(self)
         energy_cost = snake.energy_cost
@@ -115,7 +135,7 @@ class Cell(object):
             snake.log_microhabitat_energy_delta_preference(snake.current_cell.habitat_type[0].name, snake.energy_score)
 
     def krat_predation_by_owl(self,owl):
-        # stand in value and move to config file V
+        '''determines whether or not the owl that was passed into the function successfully kills and obtains payoff of a krat that shares the cell with it.'''
         live_krats = [krat for krat in self.krats if krat.alive] 
         if len(live_krats) > 0 and self.rng.random() < owl.strike_success_probability and self.habitat_type[0].name == 'OPEN':
             krat_index = self.rng.randint(0,len(live_krats)-1)
@@ -123,6 +143,7 @@ class Cell(object):
             krat.alive = False
 
     def foraging_rat(self,krat):
+        '''Provides krat with appropriate pay off for foraging in the cell.'''
         krat_energy_gain = krat.calc_energy_gain(self)
         krat_energy_cost = krat.calc_energy_cost()
         energy_delta = (krat_energy_gain - krat_energy_cost)
@@ -154,9 +175,6 @@ class Cell(object):
     def owl_activity_pulse_behavior(self):
         moving_owls = []
         for owl in self.owls:
-            # if self.sim.cycle == 99:
-            #     owl.owl_loc()
-            #     print(self.cell_id)
             self.krat_predation_by_owl(owl)
             self.owl_move(owl, moving_owl_list=moving_owls)
         self.owls = [owl for owl in self.owls if owl not in moving_owls]
@@ -164,7 +182,23 @@ class Cell(object):
 
 class Landscape(object):
     '''Landscape is an object that is composed of Cells are 10m x 10m that range across the x and the y of the landscape.
-    landscapes is responsible for generating cells'''
+    landscapes is responsible for generating cells.
+    Args:
+        sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
+        size_x -- number of columns the cell array will have to represent space in the x direction.
+        size_y -- number of rows the cell array will have to represent space in the y direction.
+        microhabitat_open_bush_proportions -- this is the ratio of cells that will be populated with one type of  microhabitat vs another.
+    Attributes:
+        cells -- a list of cell objects that populate the landscape.
+        cells_x_columns -- the length of the cells array in the x direction (columns). (int)
+        cells_y_rows -- the length of the cells array in the y direction (rows). (int)
+        krat_move_pool -- a temporary list that holds krats that need to be relocated to different cells in the landscape.
+        snake_move_pool -- a temporary list that holds snakes that need to be relocated to different cells in the landscape.
+        owl_move_pool = -- a temporary list that holds owls that need to be relocated to different cells in the landscape.
+        total_krat_list -- a list of the krat objects used for analysis and reproduction.
+        total_snake_list -- a list of the snake objects used for analysis and reproduction.
+        total_owl_list -- a list of the owl objects used for analysis and reproduction.
+        '''
     class MicrohabitatType(Enum):
         OPEN = auto()
         BUSH = auto()
@@ -187,6 +221,7 @@ class Landscape(object):
         self.rng = self.sim.rng
 
     def build(self):
+        '''Populates the attribute cells with an x by y array'''
         self.cells = []
         for yidx in range(self.cells_y_rows):
             temp_x = []
@@ -217,7 +252,13 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(self,initial_snake_pop,death_probability, strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,move_range,movement_frequency,move_preference,snake_genotype_frequencies, memory_length_cycles):
+    def initialize_snake_pop(
+            self, initial_snake_pop,
+            death_probability, strike_success_probability_bush,
+            strike_success_probability_open, energy_gain_per_krat,
+            energy_cost, move_range,
+            movement_frequency, move_preference,
+            snake_genotype_frequencies, memory_length_cycles):
         isp = self.sim.initial_snake_pop
         for key, freq in snake_genotype_frequencies.items():
             pop = round(isp*freq)
@@ -243,7 +284,12 @@ class Landscape(object):
                 #snake.generate_snake_stats()
                 pop = pop-1
 
-    def initialize_krat_pop(self,initial_krat_pop,energy_gain_bush,energy_gain_open,energy_cost, move_range,movement_frequency, move_preference, krat_genotype_frequencies, memory_length_cycles):
+    def initialize_krat_pop(
+            self, initial_krat_pop,
+            energy_gain_bush, energy_gain_open,
+            energy_cost, move_range,
+            movement_frequency, move_preference,
+            krat_genotype_frequencies, memory_length_cycles):
         ikp = self.sim.initial_krat_pop
         for key, freq in krat_genotype_frequencies.items():
             pop = round(ikp*freq)
@@ -268,7 +314,10 @@ class Landscape(object):
                 #krat.generate_krat_stats()
                 pop = pop-1
 
-    def initialize_owl_pop(self,initial_owl_pop,move_range,strike_success_probability, open_preference_weight, bush_preference_weight):
+    def initialize_owl_pop(
+            self, initial_owl_pop,
+            move_range, strike_success_probability,
+            open_preference_weight, bush_preference_weight):
         iop = initial_owl_pop
         while iop > 0:
             cell = self.select_random_cell()
@@ -316,10 +365,12 @@ class Landscape(object):
             total_org_list.append(org)
 
     def genotype_sum_to_one_test(self, bush_pref, open_pref):
+        '''Test to make sure the organisms preferences sum to 1 because they should represent probabilities.'''
         if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
     def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_quantity):
+        '''Checks if the mutation probability is met and if it is, randomly increases or decreases the bush preference value to be used for the next generation.''' 
         new_bush_preference = bush_pref_weight
         if self.rng.random() < mutation_probabiliy:
             if new_bush_preference == 1:
@@ -335,7 +386,9 @@ class Landscape(object):
         return round(new_bush_preference,2)
 
     def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_quantity):
-        #if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+        '''returns a dictionary that has the bush preferences as the key and the relative weighted payoff as the values. 
+        This relative weighted pay off is the sum of payoff associated with the bush preference of interest, divided by
+        the total populations payoff accumulated over the generation. Works for any organism.'''
         new_gen_genotype = {}
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
@@ -350,7 +403,11 @@ class Landscape(object):
         return geno_dict
 
     def krat_reproduction(self):
-        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list, mutation_probabiliy = self.sim.krat_mutation_probability, mutation_quantity = self.sim.krat_mutation_quantity)
+        '''Generates the new generaton of krats from information from the old generation and a calculation of how well agents in the previous generation
+        associated with certain habitat preference genotypes preformed.'''
+        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
+                                                    mutation_probabiliy = self.sim.krat_mutation_probability,
+                                                    mutation_quantity = self.sim.krat_mutation_quantity)
         move_range = self.total_krat_list[0].move_range
         movement_frequency = self.total_krat_list[0].movement_frequency
         energy_gain_bush = self.total_krat_list[0].energy_gain_bush
@@ -375,7 +432,11 @@ class Landscape(object):
             )
 
     def snake_reproduction(self):
-        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list, mutation_probabiliy = self.sim.snake_mutation_probability, mutation_quantity = self.sim.snake_mutation_quantity)
+        '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
+        associated with certain habitat preference genotypes preformed.'''
+        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
+                                                    mutation_probabiliy = self.sim.snake_mutation_probability,
+                                                    mutation_quantity = self.sim.snake_mutation_quantity)
         move_range = self.total_snake_list[0].move_range
         strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
         strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
@@ -404,6 +465,8 @@ class Landscape(object):
                 )
 
     def iter_through_cells(self):
+        '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
+        depends on the proportion of the species to other predators in the cell and is used as a probability check. .'''
         for cell_width in self.cells:
             for cell in cell_width:
                 self.total_krats += len(cell.krats)
@@ -428,6 +491,8 @@ class Landscape(object):
                 cell.krat_activity_pulse_behavior()
 
     def landscape_dynamics(self):
+        '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
+        for all organisms.'''
         self.total_krats = 0
         self.total_snakes = 0
         self.total_owls = 0
@@ -442,7 +507,27 @@ class Landscape(object):
 
 
 class Sim(object):
-    #compiles landscape and designates parameters to the landscape. 
+    '''
+    loads the initial conditions, initializes the landscape and organism populations, and runs the sim for the appropraite amount of cycles.
+    Once the sim concludes two csvs are generated with krat and snake information.
+    Args:
+        initial_conditions_file_path -- file path for a json file with all the appropriate initial conditions of interest for the simulation.
+        rng -- random number generator object. (default is none)
+    Attributes:
+        snake_info -- an array with info on every snake object per cycle.
+        krat_info -- an array with info on every krat object per cycle.
+        cycle -- a genral time unit. Starts at zero and the simulation runs until the cycle reaches end time. (int)
+        end_time -- the length of the simulation in cycles. (int)
+        initial_krat_pop -- the number of krats in the population. This is a constant interager. (int)
+        initial_snake_pop -- the number of snake in the population. This is a constant interager. (int)
+        krat_reproduction_freq -- the length in cycles until the new generation of krats is formed.
+        snake_reproduction_freq -- the length in cycles until the new generation of snakes is formed.
+        krat_mutation_quantity -- the quantity the bush preference is changed by if the mutation probabilty is successfully met for krats. (int)
+        snake_mutation_quantity -- the quantity the bush preference is changed by if the mutation probabilty is successfully met for snakes. (int)
+        krat_mutation_probability -- a probabilty less than one that the bush preference of an individual krat offspring accrues a mutation to it's bush preference.
+        snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
+
+    '''
     def __init__(self,initial_conditions_file_path,rng = None):
         self.initial_conditions_file_path = initial_conditions_file_path
         self.snake_info = []

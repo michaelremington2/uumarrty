@@ -12,7 +12,7 @@ krat_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
-    "cycles_of_sim": 100000, #3each day is one cycle
+    "cycles_of_sim": 500000, #3each day is one cycle
     "landscape_size_x": 150,
     "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],
@@ -42,9 +42,9 @@ data['sim'].append({
     "krat_mutation_quantity":0.10,
     "snake_mutation_quantity":0.10,
     "krat_mutation_probability":0.005,
-    "snake_mutation_probability":0.001,
+    "snake_mutation_probability":0.005,
     "krat_reproduction_freq_per_x_cycles": 50,
-    "snake_reproduction_freq_per_x_cycles": 100
+    "snake_reproduction_freq_per_x_cycles": 50
     })
 
 with open('data.txt', 'w') as outfile:

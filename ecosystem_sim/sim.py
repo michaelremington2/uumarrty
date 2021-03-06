@@ -609,8 +609,8 @@ class Sim(object):
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = 'krat_energy_uneaqual.csv')
-        self.report_writer(array = self.snake_info,file_name = 'snake_energy_unequal.csv')
+        self.report_writer(array = self.krat_info,file_name = 'krat_energy_equal.csv')
+        self.report_writer(array = self.snake_info,file_name = 'snake_energy_equal.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
         #self.analyze_and_plot_org_fitness(org_data = self.snake_info)

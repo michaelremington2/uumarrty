@@ -155,7 +155,8 @@ class Cell(object):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
         moving_krats = []
         for krat in self.krats:
-            krat.generate_krat_stats()
+            if (self.sim.cycle % self.sim.krat_data_sample_frequency) == 0:
+                krat.generate_krat_stats()
             self.foraging_rat(krat)
             if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
                 self.krat_move(krat,moving_krat_list = moving_krats)           
@@ -165,7 +166,8 @@ class Cell(object):
         """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
         moving_snakes = []
         for snake in self.snakes:
-            snake.generate_snake_stats()
+            if (self.sim.cycle % self.sim.snake_data_sample_frequency) == 0:
+                snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
             if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
                 self.snake_move(snake, moving_snake_list=moving_snakes)      
@@ -331,25 +333,19 @@ class Landscape(object):
             iop = iop-1
 
     def relocate_krats(self):
-        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-            pass
-        else:
-            for i, krat in enumerate(self.krat_move_pool):
-                new_cell = krat[0]
-                krat_object = krat[1]
-                new_cell.add_krat(krat_object)
-                krat_object.current_cell = new_cell
+        for i, krat in enumerate(self.krat_move_pool):
+            new_cell = krat[0]
+            krat_object = krat[1]
+            new_cell.add_krat(krat_object)
+            krat_object.current_cell = new_cell
         self.krat_move_pool = []
 
     def relocate_snakes(self):
-        if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
-            pass
-        else:
-            for j, snake in enumerate(self.snake_move_pool):
-                new_cell = snake[0]
-                snake_object = snake[1]
-                new_cell.add_snake(snake_object)
-                snake_object.current_cell = new_cell 
+        for j, snake in enumerate(self.snake_move_pool):
+            new_cell = snake[0]
+            snake_object = snake[1]
+            new_cell.add_snake(snake_object)
+            snake_object.current_cell = new_cell 
         self.snake_move_pool = []
 
     def relocate_owls(self):
@@ -482,13 +478,14 @@ class Landscape(object):
                     else:
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
+                cell.krat_activity_pulse_behavior()
                 if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
                     self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
                     cell.clean_krat_list()
                 if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
                     self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
                     cell.clean_snake_list()
-                cell.krat_activity_pulse_behavior()
+
 
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
@@ -504,6 +501,7 @@ class Landscape(object):
             self.krat_reproduction()
         if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.snake_reproduction()
+
 
 
 class Sim(object):
@@ -555,6 +553,8 @@ class Sim(object):
         self.snake_mutation_quantity = config_d["snake_mutation_quantity"]
         self.krat_mutation_probability = config_d["krat_mutation_probability"]
         self.snake_mutation_probability = config_d["snake_mutation_probability"]
+        self.krat_data_sample_frequency = config_d["krat_data_sample_freq"]
+        self.snake_data_sample_frequency = config_d["snake_data_sample_freq"]
 
     def configure(self, config_d):
         self.config_sim_species_attributes(config_d = config_d)

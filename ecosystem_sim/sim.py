@@ -158,7 +158,7 @@ class Cell(object):
             if (self.sim.cycle % self.sim.krat_data_sample_frequency) == 0:
                 krat.generate_krat_stats()
             self.foraging_rat(krat)
-            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
+            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0:
                 self.krat_move(krat,moving_krat_list = moving_krats)           
         self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
@@ -169,7 +169,7 @@ class Cell(object):
             if (self.sim.cycle % self.sim.snake_data_sample_frequency) == 0:
                 snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
-            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: #BUILT IN ASSUMPTION NEED TO CODE INTO CONFIG
+            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0: 
                 self.snake_move(snake, moving_snake_list=moving_snakes)      
             snake.snake_death()      
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
@@ -365,30 +365,26 @@ class Landscape(object):
         if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
-    def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_quantity):
+    def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_std):
         '''Checks if the mutation probability is met and if it is, randomly increases or decreases the bush preference value to be used for the next generation.''' 
         new_bush_preference = bush_pref_weight
         if self.rng.random() < mutation_probabiliy:
-            if new_bush_preference == 1:
-                new_bush_preference -= mutation_quantity
-            elif new_bush_preference == 0:
-                new_bush_preference += mutation_quantity
-            else:
-                new_bush_preference += self.rng.choice([-mutation_quantity,mutation_quantity])
+            mutation_quantity = self.rng.gauss(new_bush_preference, mutation_std)
+            new_bush_preference += mutation_quantity
             if new_bush_preference > 1:
                 new_bush_preference = 1
             elif new_bush_preference < 0:
                 new_bush_preference = 0
         return round(new_bush_preference,2)
 
-    def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_quantity):
+    def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_std):
         '''returns a dictionary that has the bush preferences as the key and the relative weighted payoff as the values. 
         This relative weighted pay off is the sum of payoff associated with the bush preference of interest, divided by
         the total populations payoff accumulated over the generation. Works for any organism.'''
         new_gen_genotype = {}
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
-            bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probabiliy = mutation_probabiliy, mutation_quantity = mutation_quantity)
+            bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probabiliy = mutation_probabiliy, mutation_std = mutation_std)
             payoff = org.energy_score
             if bush_pref_key not in new_gen_genotype:
                 new_gen_genotype[bush_pref_key] = []
@@ -403,7 +399,7 @@ class Landscape(object):
         associated with certain habitat preference genotypes preformed.'''
         next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
                                                     mutation_probabiliy = self.sim.krat_mutation_probability,
-                                                    mutation_quantity = self.sim.krat_mutation_quantity)
+                                                    mutation_std = self.sim.krat_mutation_std)
         move_range = self.total_krat_list[0].move_range
         movement_frequency = self.total_krat_list[0].movement_frequency
         energy_gain_bush = self.total_krat_list[0].energy_gain_bush
@@ -432,7 +428,7 @@ class Landscape(object):
         associated with certain habitat preference genotypes preformed.'''
         next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
                                                     mutation_probabiliy = self.sim.snake_mutation_probability,
-                                                    mutation_quantity = self.sim.snake_mutation_quantity)
+                                                    mutation_std = self.sim.snake_mutation_std)
         move_range = self.total_snake_list[0].move_range
         strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
         strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
@@ -445,7 +441,7 @@ class Landscape(object):
             memory_length_cycles = self.total_snake_list[0].memory_length_cycles
         else:
             memory_length_cycles = None
-        self.total_krat_list = []
+        self.total_snake_list = []
         self.initialize_snake_pop(
                 initial_snake_pop = self.sim.initial_snake_pop,
                 strike_success_probability_bush = strike_success_probability_bush,
@@ -487,6 +483,7 @@ class Landscape(object):
                     cell.clean_snake_list()
 
 
+
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
         for all organisms.'''
@@ -520,8 +517,8 @@ class Sim(object):
         initial_snake_pop -- the number of snake in the population. This is a constant interager. (int)
         krat_reproduction_freq -- the length in cycles until the new generation of krats is formed.
         snake_reproduction_freq -- the length in cycles until the new generation of snakes is formed.
-        krat_mutation_quantity -- the quantity the bush preference is changed by if the mutation probabilty is successfully met for krats. (int)
-        snake_mutation_quantity -- the quantity the bush preference is changed by if the mutation probabilty is successfully met for snakes. (int)
+        krat_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for krats. (int)
+        snake_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for snakes. (int)
         krat_mutation_probability -- a probabilty less than one that the bush preference of an individual krat offspring accrues a mutation to it's bush preference.
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
@@ -549,8 +546,8 @@ class Sim(object):
         self.initial_snake_pop = config_d["initial_snake_pop"]
         self.krat_reproduction_freq = config_d["krat_reproduction_freq_per_x_cycles"]
         self.snake_reproduction_freq = config_d["snake_reproduction_freq_per_x_cycles"]
-        self.krat_mutation_quantity = config_d["krat_mutation_quantity"]
-        self.snake_mutation_quantity = config_d["snake_mutation_quantity"]
+        self.krat_mutation_std = config_d["krat_mutation_std"]
+        self.snake_mutation_std = config_d["snake_mutation_std"]
         self.krat_mutation_probability = config_d["krat_mutation_probability"]
         self.snake_mutation_probability = config_d["snake_mutation_probability"]
         self.krat_data_sample_frequency = config_d["krat_data_sample_freq"]
@@ -609,8 +606,8 @@ class Sim(object):
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = 'krat_energy_equal.csv')
-        self.report_writer(array = self.snake_info,file_name = 'snake_energy_equal.csv')
+        self.report_writer(array = self.krat_info,file_name = 'krat_energy.csv')
+        self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
         #self.analyze_and_plot_org_fitness(org_data = self.snake_info)

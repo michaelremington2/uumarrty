@@ -12,9 +12,9 @@ krat_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
-    "cycles_of_sim": 5000, 
-    "krat_data_sample_freq": 1,
-    "snake_data_sample_freq": 1, 
+    "cycles_of_sim": 500000, 
+    "krat_data_sample_freq": 50,
+    "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
     "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],

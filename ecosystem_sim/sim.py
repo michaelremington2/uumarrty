@@ -158,7 +158,7 @@ class Cell(object):
             if (self.sim.cycle % self.sim.krat_data_sample_frequency) == 0:
                 krat.generate_krat_stats()
             self.foraging_rat(krat)
-            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0:
+            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
                 self.krat_move(krat,moving_krat_list = moving_krats)           
         self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
@@ -169,7 +169,7 @@ class Cell(object):
             if (self.sim.cycle % self.sim.snake_data_sample_frequency) == 0:
                 snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
-            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0: 
+            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: 
                 self.snake_move(snake, moving_snake_list=moving_snakes)      
             snake.snake_death()      
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
@@ -394,6 +394,29 @@ class Landscape(object):
         geno_dict = {key: sum(value)/sum(list(chain(*new_gen_genotype.values()))) for (key,value) in new_gen_genotype.items()}
         return geno_dict
 
+
+    def iter_through_cells_reproduction(self):
+        #Snakes and Krats
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) == 0:
+            for cell_width in self.cells:
+                for cell in cell_width:
+                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
+                    cell.clean_krat_list()
+                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
+                    cell.clean_snake_list()
+        #Just Krats
+        elif (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0:
+            for cell_width in self.cells:
+                for cell in cell_width:
+                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
+                    cell.clean_krat_list()
+        #just Snakes
+        elif (self.sim.cycle % self.sim.krat_reproduction_freq) != 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) == 0:
+            for cell_width in self.cells:
+                for cell in cell_width:
+                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
+                    cell.clean_snake_list()
+
     def krat_reproduction(self):
         '''Generates the new generaton of krats from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
@@ -456,7 +479,7 @@ class Landscape(object):
                 snake_genotype_frequencies = next_gen_dist
                 )
 
-    def iter_through_cells(self):
+    def iter_through_cells_activity(self):
         '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
         depends on the proportion of the species to other predators in the cell and is used as a probability check. .'''
         for cell_width in self.cells:
@@ -475,12 +498,6 @@ class Landscape(object):
                         cell.snake_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
                 cell.krat_activity_pulse_behavior()
-                if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
-                    cell.clean_krat_list()
-                if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
-                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
-                    cell.clean_snake_list()
 
 
 
@@ -490,10 +507,11 @@ class Landscape(object):
         self.total_krats = 0
         self.total_snakes = 0
         self.total_owls = 0
-        self.iter_through_cells()
+        self.iter_through_cells_activity()
         self.relocate_krats()
         self.relocate_snakes()
         self.relocate_owls()
+        self.iter_through_cells_reproduction()
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.krat_reproduction()
         if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:

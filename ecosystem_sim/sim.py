@@ -368,7 +368,13 @@ class Landscape(object):
     def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_std):
         '''Checks if the mutation probability is met and if it is, randomly increases or decreases the bush preference value to be used for the next generation.''' 
         new_bush_preference = bush_pref_weight
-        if self.rng.random() < mutation_probabiliy:
+        #if mixed_individuals:
+            #if self.rng.random() < mutation_probabiliy:
+                #if abs(1.0 - bush_pref_weight) < 1e-6:
+                    #new_bush_preference = 0
+                #else:
+                    #new_bush_preference = 1
+        
             mutation_quantity = self.rng.gauss(new_bush_preference, mutation_std)
             new_bush_preference += mutation_quantity
             if new_bush_preference > 1:

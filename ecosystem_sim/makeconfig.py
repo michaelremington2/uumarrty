@@ -12,7 +12,7 @@ krat_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
-    "cycles_of_sim": 50000, 
+    "cycles_of_sim": 500000, 
     "krat_data_sample_freq": 50,
     "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
@@ -20,7 +20,7 @@ data['sim'].append({
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 12,
     "initial_krat_pop": 180,
-    "initial_owl_pop": 15,
+    "initial_owl_pop": 9,
     "snake_death_probability":0.001,
     "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
     "snake_strike_success_probability_open":0.21, #0.009, #from bouskila
@@ -35,7 +35,7 @@ data['sim'].append({
     "krat_movement_frequency_per_x_cycles":1, # once per cycle
     "snake_movement_frequency_per_x_cycles":8, # once per 8 cycles
     "owl_movement_frequency_per_x_cycles":1, # once per 8 cycles
-    "owl_catch_success":0.02, #from bouskila
+    "owl_catch_success":0.21, #from bouskila
     "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,

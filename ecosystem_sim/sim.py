@@ -375,7 +375,7 @@ class Landscape(object):
                 new_bush_preference = 1
             elif new_bush_preference < 0:
                 new_bush_preference = 0
-        return round(new_bush_preference,2)
+        return self.sim.round_down(new_bush_preference,0.05)
 
     def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_std):
         '''returns a dictionary that has the bush preferences as the key and the relative weighted payoff as the values. 
@@ -612,6 +612,9 @@ class Sim(object):
                 bush_preference_weight = 0
                 )
 
+    def round_down(self,x, a):
+        return round(math.floor(x / a) * a,2)
+
     def read_configuration_file(self):
         with open(self.initial_conditions_file_path) as f:
             config_d = json.load(f)
@@ -624,8 +627,8 @@ class Sim(object):
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = 'krat_energy_equal.csv')
-        self.report_writer(array = self.snake_info,file_name = 'snake_energy_equal.csv')
+        self.report_writer(array = self.krat_info,file_name = 'krat_energy.csv')
+        self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
         #self.analyze_and_plot_org_fitness(org_data = self.snake_info)

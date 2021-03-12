@@ -12,16 +12,16 @@ krat_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
-    "cycles_of_sim": 500000, 
+    "cycles_of_sim": 50000, 
     "krat_data_sample_freq": 50,
     "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
     "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],
     "initial_snake_pop": 12,
-    "initial_krat_pop": 150,
-    "initial_owl_pop": 3,
-    "snake_death_probability":0.005,
+    "initial_krat_pop": 180,
+    "initial_owl_pop": 15,
+    "snake_death_probability":0.001,
     "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
     "snake_strike_success_probability_open":0.21, #0.009, #from bouskila
     "krat_energy_gain_bush": 12, #from bouskila
@@ -29,7 +29,7 @@ data['sim'].append({
     "snake_energy_gain": 1500, ## estimate numerical approximationkrat total reproduction death cost divided by 5 because thats about how many kids a krat has on average in its life. This number prolly needs some work.
     "krat_energy_cost":7, # alpha from bouskila
     "snake_energy_cost":14, # beta value not reported by bouskila, using 14 for now because it is twice as much as the krat. it might be worth trying to make this proportional to body size.
-    "krat_move_range":3,
+    "krat_move_range":20,
     "snake_move_range":20,
     "owl_move_range":20,
     "krat_movement_frequency_per_x_cycles":1, # once per cycle

@@ -289,6 +289,9 @@ class Snake(Organism):
         '''Kills snake if the probability condition is met.'''
         if self.rng.random() < self.death_probability:
             self.alive = False
+        if self.energy_score < 0:
+            self.alive = False
+
 
 class Krat(Organism):
     '''

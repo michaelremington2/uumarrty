@@ -46,8 +46,8 @@ data['sim'].append({
     "krat_mutation_probability":0.01,
     "snake_mutation_probability":0.01,
     "krat_reproduction_freq_per_x_cycles": 50,
-    "snake_reproduction_freq_per_x_cycles": 50
-    #is allowed mixed individuals = True
+    "snake_reproduction_freq_per_x_cycles": 50,
+    "mixed_preference_individuals": True
     # 1000 reproduction events
     })
 

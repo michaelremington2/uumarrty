@@ -365,23 +365,35 @@ class Landscape(object):
         if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
+    def no_mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_probabiliy):
+        if self.rng.random() < mutation_probabiliy:
+            if bush_pref_weight > 1:
+                bush_pref_weight = 1.0
+            elif bush_pref_weight < 0:
+                bush_pref_weight = 0.0
+            if abs(1.0 - bush_pref_weight) < 1e-6:
+                new_bush_preference = 0
+            else:
+                new_bush_preference = 1
+        return new_bush_preference
+
+    def mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_std):
+        mutation_quantity = self.rng.gauss(bush_pref_weight, mutation_std)
+        new_bush_preference = mutation_quantity + bush_pref_weight
+        if new_bush_preference > 1:
+            new_bush_preference = 1
+        elif new_bush_preference < 0:
+            new_bush_preference = 0
+        return new_bush_preference
+
+
     def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_std):
         '''Checks if the mutation probability is met and if it is, randomly increases or decreases the bush preference value to be used for the next generation.''' 
-        new_bush_preference = bush_pref_weight
-        #if mixed_individuals:
-            #if self.rng.random() < mutation_probabiliy:
-                #if abs(1.0 - bush_pref_weight) < 1e-6:
-                    #new_bush_preference = 0
-                #else:
-                    #new_bush_preference = 1
-        
-            mutation_quantity = self.rng.gauss(new_bush_preference, mutation_std)
-            new_bush_preference += mutation_quantity
-            if new_bush_preference > 1:
-                new_bush_preference = 1
-            elif new_bush_preference < 0:
-                new_bush_preference = 0
-        return self.sim.round_down(new_bush_preference,0.05)
+        if self.sim.mixed_individuals:
+            new_bush_preference = self.mixed_habitat_preference_mutation_calc(bush_pref_weight = bush_pref_weight, mutation_std = mutation_std)
+        else:
+            new_bush_preference = self.no_mixed_habitat_preference_mutation_calc(bush_pref_weight = bush_pref_weight,mutation_probabiliy = mutation_probabiliy)
+        return new_bush_preference
 
     def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_std):
         '''returns a dictionary that has the bush preferences as the key and the relative weighted payoff as the values. 
@@ -597,7 +609,7 @@ class Sim(object):
                 movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
                 move_preference =config_d["move_preference_algorithm"],
                 memory_length_cycles = config_d["memory_length_snake"],
-                snake_genotype_frequencies = config_d["snake_pop_genotype_freq"]
+                mixed_individuals = config_d["mixed_individuals"]
                 )
         self.landscape.initialize_krat_pop(
                 initial_krat_pop=config_d["initial_krat_pop"],
@@ -608,7 +620,7 @@ class Sim(object):
                 energy_cost=config_d["krat_energy_cost"],
                 move_preference =config_d["move_preference_algorithm"],
                 memory_length_cycles = config_d["memory_length_krat"],
-                krat_genotype_frequencies = config_d["krat_pop_genotype_freq"]
+                mixed_individuals = config_d["mixed_individuals"]
                 )
         self.landscape.initialize_owl_pop(
                 initial_owl_pop=config_d["initial_owl_pop"],

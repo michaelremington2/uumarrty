@@ -254,8 +254,8 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop(
-            self, initial_snake_pop,
+    def initialize_snake_pop_discrete_preference(
+            self, 
             death_probability, strike_success_probability_bush,
             strike_success_probability_open, energy_gain_per_krat,
             energy_cost, move_range,
@@ -286,8 +286,37 @@ class Landscape(object):
                 #snake.generate_snake_stats()
                 pop = pop-1
 
-    def initialize_krat_pop(
-            self, initial_krat_pop,
+    def initialize_snake_pop_continuous_preference(
+            self, death_probability,
+            strike_success_probability_bush, strike_success_probability_open,
+            energy_gain_per_krat,energy_cost, move_range,
+            movement_frequency, move_preference,
+            memory_length_cycles):
+        isp = self.sim.initial_snake_pop
+        while isp > 0:
+            cell = self.select_random_cell()
+            bush_preference_weight = self.rng.uniform(0, 1)
+            open_preference_weight = (1-float(bush_preference_weight))
+            snake = Snake(sim = sim,
+                        strike_success_probability_bush = strike_success_probability_bush,
+                        strike_success_probability_open = strike_success_probability_open,
+                        death_probability = death_probability,
+                        energy_gain_per_krat = energy_gain_per_krat,
+                        energy_cost = energy_cost,
+                        move_range = move_range,
+                        movement_frequency = movement_frequency,
+                        move_preference = move_preference,
+                        open_preference_weight = open_preference_weight,
+                        bush_preference_weight = bush_preference_weight,
+                        memory_length_cycles = memory_length_cycles 
+                        )
+            cell.add_snake(snake)
+            snake.current_cell=cell
+            #snake.generate_snake_stats()
+            isp = isp-1
+
+    def initialize_krat_pop_discrete_preference(
+            self, 
             energy_gain_bush, energy_gain_open,
             energy_cost, move_range,
             movement_frequency, move_preference,
@@ -315,6 +344,34 @@ class Landscape(object):
                 krat.current_cell=cell
                 #krat.generate_krat_stats()
                 pop = pop-1
+
+    def initialize_krat_pop_continuous_preference(
+        self, 
+        energy_gain_bush, energy_gain_open,
+        energy_cost, move_range,
+        movement_frequency, move_preference,
+        memory_length_cycles):
+        ikp = self.sim.initial_krat_pop
+        while ikp > 0:
+            cell = self.select_random_cell()
+            bush_preference_weight = self.rng.uniform(0, 1)
+            open_preference_weight = (1-float(bush_preference_weight))
+            cell = self.select_random_cell()
+            krat = Krat(sim = sim,
+                        energy_gain_bush = energy_gain_bush, #from bouskila
+                        energy_gain_open = energy_gain_open, #from bouskila
+                        energy_cost = energy_cost,
+                        move_range = move_range,
+                        movement_frequency = movement_frequency,
+                        home_cell= cell,
+                        move_preference = move_preference,
+                        open_preference_weight = open_preference_weight,
+                        bush_preference_weight = bush_preference_weight,
+                        memory_length_cycles = memory_length_cycles )
+            cell.add_krat(krat)
+            krat.current_cell=cell
+                #krat.generate_krat_stats()
+            ikp = ikp-1
 
     def initialize_owl_pop(
             self, initial_owl_pop,
@@ -366,11 +423,12 @@ class Landscape(object):
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
     def no_mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_probabiliy):
+        if bush_pref_weight > 1:
+            bush_pref_weight = 1.0
+        elif bush_pref_weight < 0:
+            bush_pref_weight = 0.0
+        new_bush_preference = bush_pref_weight
         if self.rng.random() < mutation_probabiliy:
-            if bush_pref_weight > 1:
-                bush_pref_weight = 1.0
-            elif bush_pref_weight < 0:
-                bush_pref_weight = 0.0
             if abs(1.0 - bush_pref_weight) < 1e-6:
                 new_bush_preference = 0
             else:
@@ -378,8 +436,7 @@ class Landscape(object):
         return new_bush_preference
 
     def mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_std):
-        mutation_quantity = self.rng.gauss(bush_pref_weight, mutation_std)
-        new_bush_preference = mutation_quantity + bush_pref_weight
+        new_bush_preference = self.rng.gauss(bush_pref_weight, mutation_std)
         if new_bush_preference > 1:
             new_bush_preference = 1
         elif new_bush_preference < 0:
@@ -403,7 +460,10 @@ class Landscape(object):
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
             bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probabiliy = mutation_probabiliy, mutation_std = mutation_std)
-            payoff = org.energy_score
+            if org.energy_score < 0:
+                payoff = 0
+            else:
+                payoff = org.energy_score
             if bush_pref_key not in new_gen_genotype:
                 new_gen_genotype[bush_pref_key] = []
                 new_gen_genotype[bush_pref_key].append(payoff)
@@ -452,8 +512,7 @@ class Landscape(object):
         else:
             memory_length_cycles = None
         self.total_krat_list = []
-        self.initialize_krat_pop(
-            initial_krat_pop = self.sim.initial_krat_pop,
+        self.initialize_krat_pop_discrete_preference(
             move_range = move_range,
             movement_frequency = movement_frequency,
             energy_gain_bush = energy_gain_bush, #from bouskila
@@ -483,8 +542,7 @@ class Landscape(object):
         else:
             memory_length_cycles = None
         self.total_snake_list = []
-        self.initialize_snake_pop(
-                initial_snake_pop = self.sim.initial_snake_pop,
+        self.initialize_snake_pop_discrete_preference(
                 strike_success_probability_bush = strike_success_probability_bush,
                 strike_success_probability_open = strike_success_probability_open,
                 death_probability = death_probability,
@@ -575,8 +633,7 @@ class Sim(object):
             raise Exception("Genotype frequencies do not sum to 1.")
 
     def config_sim_species_attributes(self,config_d):
-        self.genotype_freq_test(config_d["krat_pop_genotype_freq"])
-        self.genotype_freq_test(config_d["snake_pop_genotype_freq"])
+        self.mixed_individuals = config_d["mixed_preference_individuals"]
         self.end_time = config_d["cycles_of_sim"]
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]
@@ -589,17 +646,9 @@ class Sim(object):
         self.krat_data_sample_frequency = config_d["krat_data_sample_freq"]
         self.snake_data_sample_frequency = config_d["snake_data_sample_freq"]
 
-    def configure(self, config_d):
-        self.config_sim_species_attributes(config_d = config_d)
-        self.landscape = Landscape(
-                sim=self,
-                size_x=config_d["landscape_size_x"],
-                size_y=config_d["landscape_size_y"],
-                microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"]
-                )
-        self.landscape.build()
-        self.landscape.initialize_snake_pop(
-                initial_snake_pop=config_d["initial_snake_pop"],
+    def initialize_snake_pop(self,config_d):
+        if self.mixed_individuals:
+            self.landscape.initialize_snake_pop_continuous_preference(
                 strike_success_probability_bush = config_d["snake_strike_success_probability_bush"],
                 strike_success_probability_open = config_d["snake_strike_success_probability_open"],
                 death_probability = config_d["snake_death_probability"],
@@ -609,10 +658,25 @@ class Sim(object):
                 movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
                 move_preference =config_d["move_preference_algorithm"],
                 memory_length_cycles = config_d["memory_length_snake"],
-                mixed_individuals = config_d["mixed_individuals"]
-                )
-        self.landscape.initialize_krat_pop(
-                initial_krat_pop=config_d["initial_krat_pop"],
+            )
+        else:
+            snake_genotype_frequencies = {1:(1/2), 0:(1/2)}
+            self.landscape.initialize_snake_pop_discrete_preference(
+                strike_success_probability_bush = config_d["snake_strike_success_probability_bush"],
+                strike_success_probability_open = config_d["snake_strike_success_probability_open"],
+                death_probability = config_d["snake_death_probability"],
+                energy_gain_per_krat = config_d["snake_energy_gain"],
+                energy_cost = config_d["snake_energy_cost"],
+                move_range = config_d["snake_move_range"],
+                movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
+                move_preference =config_d["move_preference_algorithm"],
+                memory_length_cycles = config_d["memory_length_snake"],
+                snake_genotype_frequencies = snake_genotype_frequencies
+            )
+
+    def initialize_krat_pop(self,config_d):
+        if self.mixed_individuals:
+                self.landscape.initialize_krat_pop_continuous_preference(
                 move_range = config_d["krat_move_range"],
                 movement_frequency = config_d["krat_movement_frequency_per_x_cycles"],
                 energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
@@ -620,8 +684,34 @@ class Sim(object):
                 energy_cost=config_d["krat_energy_cost"],
                 move_preference =config_d["move_preference_algorithm"],
                 memory_length_cycles = config_d["memory_length_krat"],
-                mixed_individuals = config_d["mixed_individuals"]
                 )
+        else:
+            krat_genotype_frequencies = {1:(1/2), 0:(1/2)}
+            self.landscape.initialize_krat_pop_discrete_preference(
+                move_range = config_d["krat_move_range"],
+                movement_frequency = config_d["krat_movement_frequency_per_x_cycles"],
+                energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
+                energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
+                energy_cost=config_d["krat_energy_cost"],
+                move_preference =config_d["move_preference_algorithm"],
+                memory_length_cycles = config_d["memory_length_krat"],
+                krat_genotype_frequencies = krat_genotype_frequencies
+                )
+
+
+
+
+    def configure(self, config_d):
+        self.config_sim_species_attributes(config_d = config_d)
+        self.landscape = Landscape(
+                sim=self,
+                size_x=config_d["landscape_size_x"],
+                size_y=config_d["landscape_size_y"],
+                microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"]
+                )
+        self.landscape.build()
+        self.initialize_snake_pop(config_d = config_d)
+        self.initialize_krat_pop(config_d = config_d)
         self.landscape.initialize_owl_pop(
                 initial_owl_pop=config_d["initial_owl_pop"],
                 move_range = config_d["owl_move_range"],

@@ -5,22 +5,17 @@ import json
 data = {}
 data['sim'] = []
 
-def gen_pop_dist_freq_dictionary(population_freq_dictionary):
-    return population_freq_dictionary
-# keys represent bush preference
-krat_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
-snake_init_dict = {1:(1/3), 0:(1/3), 0.5:(1/3)}
 
 data['sim'].append({
-    "cycles_of_sim": 500000, 
-    "krat_data_sample_freq": 1000,
-    "snake_data_sample_freq": 1000, 
+    "cycles_of_sim": 100000, 
+    "krat_data_sample_freq": 50,
+    "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
     "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 12,
+    "initial_snake_pop": 21,
     "initial_krat_pop": 180,
-    "initial_owl_pop": 9,
+    "initial_owl_pop": 6,
     "snake_death_probability":0.001,
     "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
     "snake_strike_success_probability_open":0.21, #0.009, #from bouskila
@@ -39,15 +34,13 @@ data['sim'].append({
     "move_preference_algorithm":False,
     "memory_length_krat":20,
     "memory_length_snake":20,
-    "krat_pop_genotype_freq": gen_pop_dist_freq_dictionary(population_freq_dictionary = krat_init_dict),
-    "snake_pop_genotype_freq": gen_pop_dist_freq_dictionary(population_freq_dictionary = snake_init_dict),
-    "krat_mutation_std":0.25,
-    "snake_mutation_std":0.25,
+    "krat_mutation_std":0.15,
+    "snake_mutation_std":0.15,
     "krat_mutation_probability":0.01,
     "snake_mutation_probability":0.01,
     "krat_reproduction_freq_per_x_cycles": 50,
     "snake_reproduction_freq_per_x_cycles": 50,
-    "mixed_preference_individuals": True
+    "mixed_preference_individuals": False
     # 1000 reproduction events
     })
 

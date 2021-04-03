@@ -469,7 +469,11 @@ class Landscape(object):
                 new_gen_genotype[bush_pref_key].append(payoff)
             else:
                 new_gen_genotype[bush_pref_key].append(payoff)
-        geno_dict = {key: sum(value)/sum(list(chain(*new_gen_genotype.values()))) for (key,value) in new_gen_genotype.items()}
+        population_payoff_sum = sum(list(chain(*new_gen_genotype.values())))
+        if population_payoff_sum > 0:
+            geno_dict = {key: sum(value)/population_payoff_sum for (key,value) in new_gen_genotype.items()}
+        else:
+            geno_dict = {}
         return geno_dict
 
 

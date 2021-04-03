@@ -7,15 +7,15 @@ data['sim'] = []
 
 
 data['sim'].append({
-    "cycles_of_sim": 100000, 
+    "cycles_of_sim": 30000, 
     "krat_data_sample_freq": 50,
     "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
     "landscape_size_y": 150,
     "microhabitat_open_bush_proportions": [0.5,0.5],
-    "initial_snake_pop": 21,
-    "initial_krat_pop": 180,
-    "initial_owl_pop": 6,
+    "initial_snake_pop": 40,
+    "initial_krat_pop": 250,
+    "initial_owl_pop": 0,
     "snake_death_probability":0.001,
     "snake_strike_success_probability_bush":0.21, #0.032, #from bouskila 
     "snake_strike_success_probability_open":0.21, #0.009, #from bouskila

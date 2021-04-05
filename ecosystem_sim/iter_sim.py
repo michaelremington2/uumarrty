@@ -2,7 +2,7 @@
 
 import csv
 import json
-import sim
+from sim import Sim
 # add in interaction rate
 # add in movement of organism
 experiment_iterations = 2
@@ -160,51 +160,52 @@ experimental_group_3 = {
     }
 
 experimental_groups = {
-	"control" : control_group,
-	"experiment_1": experimental_group_1,
-	"experiment_2": experimental_group_2,
-	"experiment_3": experimental_group_3,
+    "control" : control_group,
+    "experiment_1": experimental_group_1,
+    "experiment_2": experimental_group_2,
+    "experiment_3": experimental_group_3,
 }
 
 
 class run_experiments(object):
-	def __init__(self,experimental_groups_dictionary, experiment_iterations, output_file_folder = None, rng = None):
-		self.experimental_groups = experimental_groups_dictionary
-		self.experimental__iterations = experimental_iterations
-		self.format_output_folder_fp(output_file_folder = output_file_folder)
-		self.rng = rng
+    def __init__(self,experimental_groups_dictionary, experiment_iterations, output_file_folder = None, rng = None):
+        self.experimental_groups = experimental_groups_dictionary
+        self.experiment_iterations = experiment_iterations
+        self.format_output_folder_fp(output_file_folder = output_file_folder)
+        self.rng = rng
 
-	def format_output_folder_fp(self,output_file_folder):
-		if output_file_folder is None:
-			self.output_file_folder = ''
-		else:
-			temp_fp_list = list(output_file_folder)
-			if temp_fp_list[-1] != '/':
-				self.output_file_folder = '/'.join(output_file_folder)
-			else:
-				self.output_file_folder = output_file_folder
+    def format_output_folder_fp(self,output_file_folder):
+        if output_file_folder is None:
+            self.output_file_folder = ''
+        else:
+            temp_fp_list = list(output_file_folder)
+            if temp_fp_list[-1] != '/':
+                self.output_file_folder = '/'.join(output_file_folder)
+            else:
+                self.output_file_folder = output_file_folder
 
-	def run_single_experiment(self, experiment_dictionary, experiment_label):
-		ex_label = experiment_dictionary.keys()
-		data = experiment_dictionary
-		with open('ex_data.txt', 'w') as outfile:
-    		json.dump(data, outfile)
-		for i in range(self.experiment_iterations):
-			krat_data_output_label = self.output_file_folder.join(ex_label + 'sim_{}_krat_info.tsv'.format(i))
-			snake_data_output_label = self.output_file_folder.join(ex_label + 'sim_{}_snake_info.tsv'.format(i))
-			if self.rng is None:
-				sim = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label)
-			else:
-				sim = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label, rng = self.rng)
-    		sim.main()
+    def run_single_experiment(self, experiment_dictionary, experiment_label):
+        ex_label = experiment_label
+        print(ex_label)
+        data = experiment_dictionary
+        with open('ex_data.txt', 'w') as outfile:
+            json.dump(data, outfile)
+        for i in range(self.experiment_iterations):
+            krat_data_output_label = self.output_file_folder.join(ex_label + '_sim_{}_krat_info.tsv'.format(i))
+            snake_data_output_label = self.output_file_folder.join(ex_label + '_sim_{}_snake_info.tsv'.format(i))
+            if self.rng is None:
+                sim_object = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label)
+            else:
+                sim_object = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label, rng = self.rng)
+            sim_object.main()
 
     def main(self):
-    	for key, ex_group in self.experimental_groups.items():
-    		self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key)
+        for key, ex_group in self.experimental_groups.items():
+            self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key)
 
 if __name__ ==  "__main__":
-	differeing_owls = run_experiments(experimental_groups_dictionary = experimental_groups, experiment_iterations = experiment_iterations)
-	differeing_owls.main()
+    differeing_owls = run_experiments(experimental_groups_dictionary = experimental_groups, experiment_iterations = experiment_iterations)
+    differeing_owls.main()
 
 
 

@@ -2,12 +2,8 @@
 import json
 # add in interaction rate
 # add in movement of organism
-data = {}
-data['sim'] = []
-
-
-data['sim'].append({
-    "cycles_of_sim": 5000, 
+data = {
+    "cycles_of_sim": 1000, 
     "krat_data_sample_freq": 50,
     "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,
@@ -42,7 +38,7 @@ data['sim'].append({
     "snake_reproduction_freq_per_x_cycles": 50,
     "mixed_preference_individuals": False
     # 1000 reproduction events
-    })
+    }
 
 with open('data.txt', 'w') as outfile:
     json.dump(data, outfile)

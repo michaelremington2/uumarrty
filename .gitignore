@@ -11,4 +11,5 @@ ecosystem_sim/data.txt
 /.ipynb_checkpoints/*
 /*.tsv/
 ecosystem_sim/*.tsv
+ecosystem_sim/ex_data.txt
 

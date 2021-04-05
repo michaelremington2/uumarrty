@@ -7,7 +7,7 @@ data['sim'] = []
 
 
 data['sim'].append({
-    "cycles_of_sim": 30000, 
+    "cycles_of_sim": 5000, 
     "krat_data_sample_freq": 50,
     "snake_data_sample_freq": 50, 
     "landscape_size_x": 150,

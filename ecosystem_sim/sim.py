@@ -10,6 +10,7 @@ from organismsim import Owl
 from itertools import chain
 import math
 import time
+import csv
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -621,7 +622,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path,rng = None):
+    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path, rng = None):
         self.initial_conditions_file_path = initial_conditions_file_path
         self.snake_info = []
         self.krat_info = []
@@ -629,6 +630,8 @@ class Sim(object):
             self.rng = random.Random()
         else:
             self.rng = rng
+        self.krat_file_path = krat_tsv_output_file_path
+        self.snake_file_path = snake_tsv_output_file_path
         self.cycle = 0
         
 
@@ -739,8 +742,8 @@ class Sim(object):
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = 'krat_energy.csv')
-        self.report_writer(array = self.snake_info,file_name = 'snake_energy.csv')
+        self.report_writer(array = self.krat_info,file_name = self.krat_file_path )
+        self.report_writer(array = self.snake_info,file_name = self.snake_file_path )
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
         #self.analyze_and_plot_org_fitness(org_data = self.snake_info)
@@ -757,21 +760,13 @@ class Sim(object):
     def report_writer(self,array,file_name):
         import csv
         with open(file_name, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(array)
-
-
-
+            tsv_output = csv.writer(file, delimiter='\t')
+            tsv_output.writerow(array)
 
 
 if __name__ ==  "__main__":
-    sim = Sim('data.txt')
+    sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
     sim.main()
-    #sim.read_configuration_file()
-    #move = Movement(sim)
-    #cell = (5,6)
-    #new_cell = move.new_cell(cell,weight = 1.5)
-    #print(new_cell)
 
 
 

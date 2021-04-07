@@ -42,6 +42,7 @@ class Organism(object):
         self.move_preference = move_preference
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        #self.phenotype = [bush_preference_weight]
         if self.move_preference:
             self.memory_length_cycles = memory_length_cycles
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
@@ -50,6 +51,11 @@ class Organism(object):
 
     def __hash__(self):
         return id(self)
+
+    def _get_bush_preference(self):
+        #make preference a setter and getter 
+        #make phenotype a class
+        return self.pheontype[0]
 
     def register_predation_event(self):
         '''Adds one predation event to the rolling count if the predation event is unsuccessful.'''
@@ -208,6 +214,7 @@ class Organism(object):
         '''Used in preference algorithm. Populates the dictionary of the microhabitat preference log.'''
         label = microhabitat_type
         self.microhabitat_energy_log[label] += delta_energy_score
+
 
 
 class Snake(Organism):
@@ -411,6 +418,9 @@ class Owl(Organism):
     def owl_loc(self):
         '''This is just a helpful function to see where the owl object is as the sim runs.'''
         print('id {},cycle {}, current cell {}'.format(self.org_id, self.sim.cycle,self.current_cell.cell_id))
+
+class Phenotype:
+    pass 
 
 
 if __name__ ==  "__main__":

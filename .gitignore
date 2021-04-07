@@ -7,3 +7,9 @@ ecosystem_sim/Cell_stats_sim_1.csv
 ecosystem_sim/krat_energy.csv
 ecosystem_sim/snake_energy.csv
 ecosystem_sim/*.csv
+ecosystem_sim/data.txt
+/.ipynb_checkpoints/*
+/*.tsv/
+ecosystem_sim/*.tsv
+ecosystem_sim/ex_data.txt
+

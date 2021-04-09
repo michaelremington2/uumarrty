@@ -1,8 +1,6 @@
 #!/usr/bin/python
 from enum import Enum,auto
 import random
-import numpy as np
-import matplotlib.pyplot as plt
 import json
 from organismsim import Krat
 from organismsim import Snake

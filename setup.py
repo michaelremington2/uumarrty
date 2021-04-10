@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 from setuptools import setup, find_packages
 
 setup(
@@ -17,10 +18,14 @@ setup(
     "Programming Language :: Python :: 3.4",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6",
-    'Programming Language :: Python 3.8.5'
+    'Programming Language :: Python :: 3.8.5'
     ],
+    scripts=[
+        "ecosystem_sim/sim.py",
+        "ecosystem_sim/organismsim.py",
+        ],
     url='https://github.com/michaelremington2/Krattle',
     author='Michael Remington and Jeet Sukumaran',
-    author_email='micahelremington2@gmail.com jsukumaran@sdsu.edu',
+    author_email='micahelremington2@gmail.com and jsukumaran@sdsu.edu',
     long_description=open('README.txt').read(),
 )

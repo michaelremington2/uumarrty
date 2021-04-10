@@ -1,6 +1,4 @@
 #!/usr/bin/python
-import math
-import statistics as stats
 #doxygen
 #sphyinxdocumentation format
 class Organism(object):

@@ -731,8 +731,7 @@ class Sim(object):
     def read_configuration_file(self):
         with open(self.initial_conditions_file_path) as f:
             config_d = json.load(f)
-        sim1 = config_d
-        self.configure(sim1)
+        self.configure(config_d)
 
     def main(self):
         start = round(time.time())

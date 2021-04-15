@@ -6,8 +6,8 @@ import os
 from krattle import sim
 
 class run_experiments(object):
-    def __init__(self,experimental_groups_json, experiment_iterations, output_file_folder = None, rng = None):
-        self.experimental_groups_file_path = experimental_groups_json
+    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):
+        self.experimental_groups= experimental_groups_dict
         self.experiment_iterations = experiment_iterations
         self.format_output_folder_fp(output_file_folder = output_file_folder)
         self.rng = rng
@@ -24,7 +24,6 @@ class run_experiments(object):
 
     def run_single_experiment(self, experiment_dictionary, experiment_label):
         ex_label = experiment_label
-        print(ex_label)
         data = experiment_dictionary
         with open('ex_data.txt', 'w') as outfile:
             json.dump(data, outfile)
@@ -45,15 +44,19 @@ class run_experiments(object):
 
 
 def run(args):
-    filename = args.input # these match the "dest": dest="input"
+    init_file_path= args.input # these match the "dest": dest="input"
+    iterations = args.iterations
     output_file_path = args.output # from dest="output"
-
-    # Do stuff
+    with open(input_file_path) as f:
+        config_exp = json.load(f)
+    run_simulations = run_experiments(experimental_groups_dictionary = config_exp, experiment_iterations = experiment_iterations, output_file_folder = )
+    run_simulations.main()
 
 
 def main():
     parser=argparse.ArgumentParser(description="Run experiments through krattle game theory model.")
     parser.add_argument("-in",help="json or txt file full of 1 to several experimental groups." ,dest="input", type=str, required=True)
+    parser.add_argument("-iter",help="Number of times you want the experiment to be repeated." ,dest="iterations", type=int, required=True)
     parser.add_argument("-out",help="output file path" ,dest="output", type=str, required=True)
     parser.set_defaults(func=run)
     args=parser.parse_args()
@@ -61,10 +64,7 @@ def main():
 
 if __name__=="__main__":
     main()
-
-if __name__ ==  "__main__":
-    differeing_owls = run_experiments(experimental_groups_dictionary = experimental_groups, experiment_iterations = experiment_iterations)
-    differeing_owls.main()
+    
 
 
 

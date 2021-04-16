@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 from setuptools import setup, find_packages
 
-with open("README.txt", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+# with open("README.txt", "r", encoding="utf-8") as fh:
+#     long_description = fh.read()
 
 setup(
     name='Krattle',
@@ -27,5 +27,5 @@ setup(
     url='https://github.com/michaelremington2/Krattle',
     author='Michael Remington and Jeet Sukumaran',
     author_email='micahelremington2@gmail.com and jsukumaran@sdsu.edu',
-    long_description=long_description,
+    #long_description=long_description,
 )

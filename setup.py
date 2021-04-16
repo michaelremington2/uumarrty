@@ -1,17 +1,19 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
-# with open("README.txt", "r", encoding="utf-8") as fh:
-#     long_description = fh.read()
+
+
+with open("README.txt", "r") as fh:
+    long_description = fh.read()
 
 setup(
     name='Krattle',
-    version='0.1',
-    package_dir={"src": "krattle",
-                "": "bin"},
-    packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.6",
-    license='bsd',
+    version='0.0.1',
+    url='https://github.com/michaelremington2/Krattle',
+    author='Michael Remington and Jeet Sukumaran',
+    author_email='micahelremington2@gmail.com and jsukumaran@sdsu.edu',
+    license="LICENSE.txt",
     classifiers=[
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
@@ -20,12 +22,12 @@ setup(
     "Programming Language :: Python :: 3",
     ],
     scripts=[
-        "src/krattle/sim.py",
-        "src/krattle/organismsim.py",
         "bin/run_krattle.py",
         ],
-    url='https://github.com/michaelremington2/Krattle',
-    author='Michael Remington and Jeet Sukumaran',
-    author_email='micahelremington2@gmail.com and jsukumaran@sdsu.edu',
-    #long_description=long_description,
+    test_suite = "tests",
+    package_dir={"": "src"},
+    description="Agent based simulation of predator prey dynamics.",
+    long_description=long_description,
+    packages= find_packages(where="src"),
+    python_requires=">=3.6",   
 )

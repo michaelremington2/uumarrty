@@ -12,7 +12,7 @@ setup(
     version='0.0.1',
     url='https://github.com/michaelremington2/Krattle',
     author='Michael Remington and Jeet Sukumaran',
-    author_email='micahelremington2@gmail.com',
+    author_email='michaelremington2@gmail.com',
     license="LICENSE.txt",
     classifiers=[
     "Intended Audience :: Science/Research",

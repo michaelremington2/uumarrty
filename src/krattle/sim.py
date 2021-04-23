@@ -26,14 +26,15 @@ class Cell(object):
         landscape -- the landscape object the cell operates in.
         rng -- a random number operator object.
     '''
-    def __init__(self, sim, habitat_type,cell_id):
+    def __init__(self, sim, habitat_type,cell_id,prey_competition=False):
         self.sim = sim
         self.krats = []
         self.snakes = []
         self.owls = []
         self.habitat_type = habitat_type
         self.landscape = sim.landscape
-        self.cell_id = cell_id     
+        self.cell_id = cell_id
+        self.prey_competition = prey_competition     
         self.rng = self.sim.rng
 
     def __hash__(self):
@@ -143,7 +144,10 @@ class Cell(object):
 
     def foraging_rat(self,krat):
         '''Provides krat with appropriate pay off for foraging in the cell.'''
-        krat_energy_gain = krat.calc_energy_gain(self)
+        if self.prey_competition:
+            krat_energy_gain = krat.calc_energy_gain(self)/len(self.krats)
+        else:
+            krat_energy_gain = krat.calc_energy_gain(self)
         krat_energy_cost = krat.calc_energy_cost()
         energy_delta = (krat_energy_gain - krat_energy_cost)
         krat.energy_score += energy_delta
@@ -210,8 +214,8 @@ class Landscape(object):
         self.size_y = size_y
         self.cells = None
         # cell_list
-        self.cells_x_columns = int(round(self.size_x/10))
-        self.cells_y_rows = int(round(self.size_y/10))
+        self.cells_x_columns = int(round(self.size_x))
+        self.cells_y_rows = int(round(self.size_y))
         self.microhabitat_open_bush_proportions = microhabitat_open_bush_proportions
         self.krat_move_pool = []
         self.snake_move_pool = []
@@ -231,7 +235,8 @@ class Landscape(object):
                 cell = Cell(
                     sim = self.sim,
                     habitat_type = self.select_random_cell_type(),
-                    cell_id = cell_id)
+                    cell_id = cell_id,
+                    prey_competition = self.sim.prey_competition)
                 temp_x.append(cell)
             self.cells.append(temp_x)
 
@@ -501,62 +506,64 @@ class Landscape(object):
     def krat_reproduction(self):
         '''Generates the new generaton of krats from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
-        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
-                                                    mutation_probabiliy = self.sim.krat_mutation_probability,
-                                                    mutation_std = self.sim.krat_mutation_std)
-        move_range = self.total_krat_list[0].move_range
-        movement_frequency = self.total_krat_list[0].movement_frequency
-        energy_gain_bush = self.total_krat_list[0].energy_gain_bush
-        energy_gain_open = self.total_krat_list[0].energy_gain_open 
-        energy_cost = self.total_krat_list[0].energy_cost
-        move_preference = self.total_krat_list[0].move_preference
-        if move_preference:
-            memory_length_cycles = self.total_krat_list[0].memory_length_cycles
-        else:
-            memory_length_cycles = None
-        self.total_krat_list = []
-        self.initialize_krat_pop_discrete_preference(
-            move_range = move_range,
-            movement_frequency = movement_frequency,
-            energy_gain_bush = energy_gain_bush, #from bouskila
-            energy_gain_open = energy_gain_open, #from bouskila
-            energy_cost = energy_cost,
-            move_preference = move_preference,
-            memory_length_cycles = memory_length_cycles,
-            krat_genotype_frequencies = next_gen_dist
-            )
+        if len(self.total_krat_list) > 0:
+            next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
+                                                        mutation_probabiliy = self.sim.krat_mutation_probability,
+                                                        mutation_std = self.sim.krat_mutation_std)
+            move_range = self.total_krat_list[0].move_range
+            movement_frequency = self.total_krat_list[0].movement_frequency
+            energy_gain_bush = self.total_krat_list[0].energy_gain_bush
+            energy_gain_open = self.total_krat_list[0].energy_gain_open 
+            energy_cost = self.total_krat_list[0].energy_cost
+            move_preference = self.total_krat_list[0].move_preference
+            if move_preference:
+                memory_length_cycles = self.total_krat_list[0].memory_length_cycles
+            else:
+                memory_length_cycles = None
+            self.total_krat_list = []
+            self.initialize_krat_pop_discrete_preference(
+                move_range = move_range,
+                movement_frequency = movement_frequency,
+                energy_gain_bush = energy_gain_bush, #from bouskila
+                energy_gain_open = energy_gain_open, #from bouskila
+                energy_cost = energy_cost,
+                move_preference = move_preference,
+                memory_length_cycles = memory_length_cycles,
+                krat_genotype_frequencies = next_gen_dist
+                )
 
     def snake_reproduction(self):
         '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
-        next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
-                                                    mutation_probabiliy = self.sim.snake_mutation_probability,
-                                                    mutation_std = self.sim.snake_mutation_std)
-        move_range = self.total_snake_list[0].move_range
-        strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
-        strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
-        death_probability = self.total_snake_list[0].death_probability
-        energy_gain_per_krat = self.total_snake_list[0].energy_gain_per_krat
-        energy_cost = self.total_snake_list[0].energy_cost
-        movement_frequency = self.total_snake_list[0].movement_frequency
-        move_preference = self.total_snake_list[0].move_preference
-        if move_preference:
-            memory_length_cycles = self.total_snake_list[0].memory_length_cycles
-        else:
-            memory_length_cycles = None
-        self.total_snake_list = []
-        self.initialize_snake_pop_discrete_preference(
-                strike_success_probability_bush = strike_success_probability_bush,
-                strike_success_probability_open = strike_success_probability_open,
-                death_probability = death_probability,
-                energy_gain_per_krat = energy_gain_per_krat,
-                energy_cost = energy_cost,
-                move_range = move_range,
-                movement_frequency = movement_frequency,
-                move_preference = move_preference,
-                memory_length_cycles = memory_length_cycles,
-                snake_genotype_frequencies = next_gen_dist
-                )
+        if len(self.total_snake_list) > 0:
+            next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
+                                                        mutation_probabiliy = self.sim.snake_mutation_probability,
+                                                        mutation_std = self.sim.snake_mutation_std)
+            move_range = self.total_snake_list[0].move_range
+            strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
+            strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
+            death_probability = self.total_snake_list[0].death_probability
+            energy_gain_per_krat = self.total_snake_list[0].energy_gain_per_krat
+            energy_cost = self.total_snake_list[0].energy_cost
+            movement_frequency = self.total_snake_list[0].movement_frequency
+            move_preference = self.total_snake_list[0].move_preference
+            if move_preference:
+                memory_length_cycles = self.total_snake_list[0].memory_length_cycles
+            else:
+                memory_length_cycles = None
+            self.total_snake_list = []
+            self.initialize_snake_pop_discrete_preference(
+                    strike_success_probability_bush = strike_success_probability_bush,
+                    strike_success_probability_open = strike_success_probability_open,
+                    death_probability = death_probability,
+                    energy_gain_per_krat = energy_gain_per_krat,
+                    energy_cost = energy_cost,
+                    move_range = move_range,
+                    movement_frequency = movement_frequency,
+                    move_preference = move_preference,
+                    memory_length_cycles = memory_length_cycles,
+                    snake_genotype_frequencies = next_gen_dist
+                    )
 
     def iter_through_cells_activity(self):
         '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
@@ -620,7 +627,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path, rng = None):
+    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path,rng=None):
         self.initial_conditions_file_path = initial_conditions_file_path
         self.snake_info = []
         self.krat_info = []
@@ -639,6 +646,7 @@ class Sim(object):
 
     def config_sim_species_attributes(self,config_d):
         self.mixed_individuals = config_d["mixed_preference_individuals"]
+        self.prey_competition = config_d["prey_competition"]
         self.end_time = config_d["cycles_of_sim"]
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]

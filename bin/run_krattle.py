@@ -5,7 +5,7 @@ import json
 import os
 import sys
 #import krattle
-#from krattle import sim
+from krattle import sim
 
 class run_experiments(object):
     def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):
@@ -18,11 +18,7 @@ class run_experiments(object):
         if output_file_folder is None:
             self.output_file_folder = ''
         else:
-            temp_fp_list = list(output_file_folder)
-            if temp_fp_list[-1] != '/':
-                self.output_file_folder = '/'.join(output_file_folder)
-            else:
-                self.output_file_folder = output_file_folder
+            self.output_file_folder = output_file_folder 
 
     def run_single_experiment(self, experiment_dictionary, experiment_label):
         ex_label = experiment_label
@@ -30,12 +26,14 @@ class run_experiments(object):
         with open('ex_data.txt', 'w') as outfile:
             json.dump(data, outfile)
         for i in range(self.experiment_iterations):
-            krat_data_output_file_label = self.output_file_folder.join(ex_label + '_sim_{}_krat_info.tsv'.format(i))
-            snake_data_output_file_label = self.output_file_folder.join(ex_label + '_sim_{}_snake_info.tsv'.format(i))
+            krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.tsv'.format(i)
+            snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.tsv'.format(i)
+            print(krat_data_output_file_label)
+            print(snake_data_output_file_label)
             if self.rng is None:
-                sim_object = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label)
+                sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_file_label, snake_tsv_output_file_path = snake_data_output_file_label)
             else:
-                sim_object = Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_label, snake_tsv_output_file_path = snake_data_output_label, rng = self.rng)
+                sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_file_label, snake_tsv_output_file_path = snake_data_output_file_label, rng = self.rng)
             sim_object.main()
         if os.path.exists('ex_data.txt'):
             os.remove('ex_data.txt')
@@ -43,6 +41,7 @@ class run_experiments(object):
     def main(self):
         for key, ex_group in self.experimental_groups.items():
             self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key)
+
 
 
 def run(args):

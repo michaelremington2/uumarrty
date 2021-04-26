@@ -8,9 +8,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='krattle',
+    name='peon',
     version='0.0.1',
-    url='https://github.com/michaelremington2/Krattle',
+    url='https://github.com/michaelremington2/peon',
     author='Michael Remington and Jeet Sukumaran',
     author_email='michaelremington2@gmail.com',
     license="LICENSE.txt",
@@ -22,7 +22,7 @@ setup(
     "Programming Language :: Python :: 3",
     ],
     scripts=[
-        "bin/run_krattle.py",
+        "bin/run_peon.py",
         ],
     test_suite = "tests",
     package_dir={"": "src"},

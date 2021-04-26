@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='peon',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/michaelremington2/peon',
     author='Michael Remington and Jeet Sukumaran',
     author_email='michaelremington2@gmail.com',

@@ -2,9 +2,7 @@
 from enum import Enum,auto
 import random
 import json
-from organismsim import Krat
-from organismsim import Snake
-from organismsim import Owl
+from peon import organismsim as org
 from itertools import chain
 import math
 import time
@@ -272,7 +270,7 @@ class Landscape(object):
                 cell = self.select_random_cell()
                 bush_preference_weight = float(key)
                 open_preference_weight = (1-float(key))
-                snake = Snake(sim = self.sim,
+                snake = org.Snake(sim = self.sim,
                             strike_success_probability_bush = strike_success_probability_bush,
                             strike_success_probability_open = strike_success_probability_open,
                             death_probability = death_probability,
@@ -301,7 +299,7 @@ class Landscape(object):
             cell = self.select_random_cell()
             bush_preference_weight = self.rng.uniform(0, 1)
             open_preference_weight = (1-float(bush_preference_weight))
-            snake = Snake(sim = self.sim,
+            snake = org.Snake(sim = self.sim,
                         strike_success_probability_bush = strike_success_probability_bush,
                         strike_success_probability_open = strike_success_probability_open,
                         death_probability = death_probability,
@@ -333,7 +331,7 @@ class Landscape(object):
                 bush_preference_weight = float(key)
                 open_preference_weight = (1-float(key))
                 cell = self.select_random_cell()
-                krat = Krat(sim = self.sim,
+                krat = org.Krat(sim = self.sim,
                             energy_gain_bush = energy_gain_bush, #from bouskila
                             energy_gain_open = energy_gain_open, #from bouskila
                             energy_cost = energy_cost,
@@ -361,7 +359,7 @@ class Landscape(object):
             bush_preference_weight = self.rng.uniform(0, 1)
             open_preference_weight = (1-float(bush_preference_weight))
             cell = self.select_random_cell()
-            krat = Krat(sim = self.sim,
+            krat = org.Krat(sim = self.sim,
                         energy_gain_bush = energy_gain_bush, #from bouskila
                         energy_gain_open = energy_gain_open, #from bouskila
                         energy_cost = energy_cost,
@@ -384,7 +382,7 @@ class Landscape(object):
         iop = initial_owl_pop
         while iop > 0:
             cell = self.select_random_cell()
-            owl = Owl(sim = self.sim,
+            owl = org.Owl(sim = self.sim,
                         move_range = move_range,
                         strike_success_probability = strike_success_probability,
                         open_preference_weight = open_preference_weight,
@@ -770,8 +768,9 @@ class Sim(object):
 
 
 if __name__ ==  "__main__":
-    sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
-    sim.main()
+    #sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
+    #sim.main()
+    print('test')
 
 
 

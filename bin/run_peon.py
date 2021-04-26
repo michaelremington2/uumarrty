@@ -4,8 +4,9 @@ import csv
 import json
 import os
 import sys
-#import krattle
-from krattle import sim
+import argparse
+from peon import sim
+from peon import organismsim
 
 class run_experiments(object):
     def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):
@@ -48,9 +49,9 @@ def run(args):
     init_file_path= args.input # these match the "dest": dest="input"
     iterations = args.iterations
     output_file_path = args.output # from dest="output"
-    with open(input_file_path) as f:
+    with open(init_file_path) as f:
         config_exp = json.load(f)
-    run_simulations = run_experiments(experimental_groups_dict=config_exp, experiment_iterations=experiment_iterations, output_file_folder=output_file_path)
+    run_simulations = run_experiments(experimental_groups_dict=config_exp, experiment_iterations=iterations, output_file_folder=output_file_path)
     run_simulations.main()
 
 

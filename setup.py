@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='Krattle',
+    name='krattle',
     version='0.0.1',
     url='https://github.com/michaelremington2/Krattle',
     author='Michael Remington and Jeet Sukumaran',
@@ -28,6 +28,7 @@ setup(
     package_dir={"": "src"},
     description="Agent based simulation of predator prey dynamics.",
     long_description=long_description,
-    packages= find_packages(where="src"),
+    long_description_content_type="text/markdown",
+    packages=find_packages(where="src"),
     python_requires=">=3.6",   
 )

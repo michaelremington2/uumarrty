@@ -22,7 +22,7 @@ setup(
     "Programming Language :: Python :: 3",
     ],
     scripts=[
-        "bin/run_xomar.py",
+        "bin/simulate-xomar.py",
         ],
     test_suite = "tests",
     package_dir={"": "src"},

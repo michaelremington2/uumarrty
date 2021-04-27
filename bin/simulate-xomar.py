@@ -5,8 +5,8 @@ import json
 import os
 import sys
 import argparse
-from peon import sim
-from peon import organismsim
+from xomar import sim
+from xomar import organismsim
 
 class run_experiments(object):
     def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):

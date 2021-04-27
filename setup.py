@@ -8,8 +8,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='peon',
-    version='0.0.2',
+    name='xomar',
+    version='0.0.1',
     url='https://github.com/michaelremington2/peon',
     author='Michael Remington and Jeet Sukumaran',
     author_email='michaelremington2@gmail.com',
@@ -22,7 +22,7 @@ setup(
     "Programming Language :: Python :: 3",
     ],
     scripts=[
-        "bin/run_peon.py",
+        "bin/run_xomar.py",
         ],
     test_suite = "tests",
     package_dir={"": "src"},

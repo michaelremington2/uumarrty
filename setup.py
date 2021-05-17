@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 setup(
     name='xomar',
     version='0.0.1',
-    url='https://github.com/michaelremington2/peon',
+    url='https://github.com/michaelremington2/xomar',
     author='Michael Remington and Jeet Sukumaran',
     author_email='michaelremington2@gmail.com',
     license="LICENSE.txt",

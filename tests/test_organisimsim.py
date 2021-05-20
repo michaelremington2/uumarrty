@@ -7,6 +7,7 @@ from xomar import sim
 class TestOrganismsimScript(unittest.TestCase):
 	
 	def setUp(self):
+		self.null_sim = sim.Sim(initial_conditions_file_path = 'Data/null_exp.txt', krat_tsv_output_file_path = 'Data/null_exp_krat_energy.tsv', snake_tsv_output_file_path = 'Data/null_exp_snake_energy.tsv',rng=None)
 		self.org_bush = org.Organsim
 		self.org_open = None
 

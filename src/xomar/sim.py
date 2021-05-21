@@ -643,8 +643,17 @@ class Sim(object):
             raise Exception("Genotype frequencies do not sum to 1.")
 
     def config_sim_species_attributes(self,config_d):
-        self.mixed_individuals = config_d["mixed_preference_individuals"]
-        self.prey_competition = config_d["prey_competition"]
+        #Mixed preference check
+        if not type(config_d["mixed_preference_individuals"]) is bool:
+            raise TypeError("mixed_preference_individual check should be a boolean (True or False).")
+        else:
+            self.mixed_individuals = config_d["mixed_preference_individuals"]
+        # prey competition
+        if not type(config_d["prey_competition"]) is bool:
+            raise TypeError("prey_competition check should be a boolean (True or False).")
+        else:
+            self.prey_competition = config_d["prey_competition"]
+        
         self.end_time = config_d["cycles_of_sim"]
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]

@@ -642,18 +642,23 @@ class Sim(object):
         if sum(genotype_freq_dict.values()) != 1:
             raise Exception("Genotype frequencies do not sum to 1.")
 
+    def exception_bool_values(self, mixed_preference, prey_competition):
+        test_vals = {'mixed_preference': mixed_preference,
+                    'prey_competition' : prey_competition}
+        for key, val in test_vals.items():
+            if not type(val) is bool:
+                raise TypeError("{} check should be a boolean (True or False).".format(key))
+
+    def exception_int_values(self, mixed_preference, prey_competition):
+        test_vals = {'mixed_preference': mixed_preference,
+                    'prey_competition' : prey_competition}
+        for key, val in test_vals.items():
+            if not type(val) is bool:
+                raise TypeError("{} check should be a boolean (True or False).".format(key))
+
     def config_sim_species_attributes(self,config_d):
-        #Mixed preference check
-        if not type(config_d["mixed_preference_individuals"]) is bool:
-            raise TypeError("mixed_preference_individual check should be a boolean (True or False).")
-        else:
-            self.mixed_individuals = config_d["mixed_preference_individuals"]
-        # prey competition
-        if not type(config_d["prey_competition"]) is bool:
-            raise TypeError("prey_competition check should be a boolean (True or False).")
-        else:
-            self.prey_competition = config_d["prey_competition"]
-        
+        self.mixed_individuals = config_d["mixed_preference_individuals"]
+        self.prey_competition = config_d["prey_competition"]
         self.end_time = config_d["cycles_of_sim"]
         self.initial_krat_pop = config_d["initial_krat_pop"]
         self.initial_snake_pop = config_d["initial_snake_pop"]

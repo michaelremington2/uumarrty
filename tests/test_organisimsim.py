@@ -1,8 +1,11 @@
 #!/usr/bin/python
 import unittest
 from unittest.mock import patch
+import json
 from xomar import organismsim as org
-from xomar import sim
+from xomar.sim import Sim, Landscape, Cell
+
+
 
 class TestOrganismsimScript(unittest.TestCase):
 	

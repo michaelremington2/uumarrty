@@ -794,14 +794,14 @@ class Sim(object):
     def report_writer(self,array,file_name):
         import csv
         with open(file_name, 'w', newline='') as file:
-            tsv_output = csv.writer(file, delimiter='\t')
-            tsv_output.writerow(array)
+            writer = csv.writer(file)
+            writer.writerows(array)
 
 
 if __name__ ==  "__main__":
     #sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
     #sim.main()
-    print('test')
+    #print('test')
 
 
 

@@ -5,8 +5,8 @@ import json
 import os
 import sys
 import argparse
-from xomar import sim
-from xomar import organismsim
+from uumarrty import sim
+from uumarrty import organismsim
 
 class run_experiments(object):
     def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):
@@ -46,7 +46,7 @@ class run_experiments(object):
 
 
 def run(args):
-    init_file_path= args.input # these match the "dest": dest="input"
+    init_file_path = args.input # these match the "dest": dest="input"
     iterations = args.iterations
     output_file_path = args.output # from dest="output"
     with open(init_file_path) as f:

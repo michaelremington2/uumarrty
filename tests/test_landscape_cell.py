@@ -2,8 +2,8 @@
 import unittest
 from unittest.mock import patch
 import json
-from xomar import organismsim as org
-from xomar.sim import Sim, Landscape, Cell
+from uumarrty import organismsim as org
+from uumarrty.sim import Sim, Landscape, Cell
 
 
 class TestCell_and_Landscape(unittest.TestCase):

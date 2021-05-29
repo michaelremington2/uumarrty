@@ -2,7 +2,7 @@
 from enum import Enum,auto
 import random
 import json
-from xomar import organismsim as org
+from uumarrty import organismsim as org
 from itertools import chain
 import math
 import time

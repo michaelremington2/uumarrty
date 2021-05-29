@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 import json
-from xomar import organismsim as org
-from xomar.sim import Sim
+from uumarrty import organismsim as org
+from uumarrty.sim import Sim
 
 class TestSimConfig(unittest.TestCase):
     

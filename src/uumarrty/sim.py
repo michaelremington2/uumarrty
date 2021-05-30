@@ -664,7 +664,7 @@ class Sim(object):
         for key, val in test_vals.items():
             if type(val) not in [int,float]:
                 raise TypeError("{} value should be a number".format(key))
-            if 0 <= val <= 1:
+            if 0 > val > 1:
                 raise Exception("{} value should be between 0 and 1".format(key))
 
     def run_config_checks(self,config_d):
@@ -793,12 +793,13 @@ class Sim(object):
 
     def report_writer(self,array,file_name):
         import csv
-        with open(file_name, 'w', newline='') as file:
+        with open(file_name, 'w', newline='\n') as file:
             writer = csv.writer(file)
             writer.writerows(array)
 
 
 if __name__ ==  "__main__":
+    pass
     #sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
     #sim.main()
     #print('test')

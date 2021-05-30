@@ -27,8 +27,8 @@ class run_experiments(object):
         with open('ex_data.txt', 'w') as outfile:
             json.dump(data, outfile)
         for i in range(self.experiment_iterations):
-            krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.tsv'.format(i)
-            snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.tsv'.format(i)
+            krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.csv'.format(i)
+            snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.csv'.format(i)
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
             if self.rng is None:

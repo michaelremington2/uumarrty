@@ -22,7 +22,7 @@ setup(
     "Programming Language :: Python :: 3",
     ],
     scripts=[
-        "bin/simulate-uumarrty.py",
+        "bin/simulate_uumarrty.py",
         ],
     test_suite = "tests",
     package_dir={"": "src"},

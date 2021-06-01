@@ -5,6 +5,12 @@ import json
 from uumarrty import organismsim as org
 from uumarrty.sim import Sim, Landscape, Cell
 
+#fixed number seed
+#hand check results
+# Test movement of a rat
+#Test for a uniform distribution with error
+# Fix microhabitat preference at a given run
+# Set up artificial conditions
 
 class TestCell_and_Landscape(unittest.TestCase):
     @classmethod

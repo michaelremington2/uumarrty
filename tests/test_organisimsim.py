@@ -24,7 +24,7 @@ class TestOrganismsimScript(unittest.TestCase):
 		self.org_bush.main()
 		kratdata=pd.read_csv('Data/one_krat_movement.csv',header=None)
 		kratdata.columns = ['krat_id', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','snakes_in_cell','owls_in_cell']
-		print(len(kratdata))
+		print(kratdata['cell_id'].head(10))
 
 
 

@@ -158,28 +158,80 @@ class Organism(object):
             move_dist_y_up = move_distance
         return [move_dist_x_right,move_dist_x_left,move_dist_y_down,move_dist_y_up]
 
+    def generate_move_options_list(self,current_coord_x,current_coord_y, move_distance,x_boundary,y_boundary):
+        '''Function to generate a list of all the possible move options of the organism'''
+        x_coords_list = []
+        y_coords_list = []
+        x_coord_right = current_coord_x
+        x_coord_left = current_coord_x
+        y_coord_up = current_coord_y
+        y_coord_down = current_coord_x
+        for i in range(move_distance):
+            #left
+            if x_coord_left < 0:
+                x_coord_left = x_boundary
+            if x_coord_left not in x_coords_list:
+                x_coords_list.append(x_coord_left)
+            x_coord_left = x_coord_left - 1
+
+            #right
+            if x_coord_right > x_boundary:
+                x_coord_right = 0
+            if x_coord_right not in x_coords_list:
+                x_coords_list.append(x_coord_right)
+            x_coord_right = x_coord_right + 1
+
+            #uo
+            if y_coord_up < 0:
+                y_coord_up = y_boundary
+            if y_coord_up not in y_coords_list:
+                y_coords_list.append(y_coord_up)
+            y_coord_up = y_coord_up - 1
+
+            #down
+            if y_coord_down > y_boundary:
+                y_coord_down  = 0
+            if y_coord_down not in y_coords_list:
+                y_coords_list.append(y_coord_down)
+            y_coord_down  = y_coord_down  + 1
+
+        move_options = []
+        # x_coords_list.sort()
+        # y_coords_list.sort()
+        for i in x_coords_list:
+            for j in y_coords_list:
+                cell_id = (j,i)
+                cell = self.sim.landscape.select_cell(cell_id)
+                move_options.append(cell)
+        return move_options
+
 
     def calc_destination_cell_probabilities(self, bush_preference_weight, open_preference_weight): #calc move coordinates
         '''This is the main function in the movement algorithm that generates a noralimized destination cell probability vector.'''
         destination_cell_probabilities = {}
-        move_options = []
-        calibrated_move_dists = self.calibrate_move_distance_with_boundaries(current_coord_x=self.current_cell.cell_id[1],
-                                                                            current_coord_y=self.current_cell.cell_id[0],
-                                                                            move_distance=self.move_range,
-                                                                            x_boundary=self.column_boundary,
-                                                                            y_boundary=self.row_boundary)
-        move_options.append(self.current_cell)
-        for x in range(-calibrated_move_dists[1],calibrated_move_dists[0]+1):
-            for y in range(-calibrated_move_dists[3],calibrated_move_dists[2]+1):
-                row_coord = self.current_cell.cell_id[0] + y
-                column_coord = self.current_cell.cell_id[1] + x
-                if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
-                    new_id = (row_coord,column_coord)
-                    if new_id == self.current_cell.cell_id:
-                        continue
-                    else:
-                        destination_cell = self.sim.landscape.select_cell(new_id)
-                        move_options.append(destination_cell)
+        move_options = self.generate_move_options_list(current_coord_x = self.current_cell.cell_id[1],
+                                                       current_coord_y = self.current_cell.cell_id[0],
+                                                       move_distance = self.move_range,
+                                                       x_boundary = self.column_boundary,
+                                                       y_boundary = self.row_boundary)
+        # move_options = []
+        # move_options = self.calibrate_move_distance_with_boundaries(current_coord_x=self.current_cell.cell_id[1],
+        #                                                                     current_coord_y=self.current_cell.cell_id[0],
+        #                                                                     move_distance=self.move_range,
+        #                                                                     x_boundary=self.column_boundary,
+        #                                                                     y_boundary=self.row_boundary)
+        # move_options.append(self.current_cell)
+        # for x in range(-calibrated_move_dists[1],calibrated_move_dists[0]+1):
+        #     for y in range(-calibrated_move_dists[3],calibrated_move_dists[2]+1):
+        #         row_coord = self.current_cell.cell_id[0] + y
+        #         column_coord = self.current_cell.cell_id[1] + x
+        #         if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
+        #             new_id = (row_coord,column_coord)
+        #             if new_id == self.current_cell.cell_id:
+        #                 continue
+        #             else:
+        #                 destination_cell = self.sim.landscape.select_cell(new_id)
+        #                 move_options.append(destination_cell)
         for i in move_options:
             number_of_move_options = len(move_options)
             p = self.calc_cell_destination_suitability(cell=i, number_of_move_options=number_of_move_options)

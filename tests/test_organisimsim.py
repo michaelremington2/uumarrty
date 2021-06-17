@@ -11,12 +11,14 @@ from uumarrty.sim import Sim, Landscape, Cell
 
 class TestOrganismsimScript(unittest.TestCase):
 	
+	@classmethod
 	def setUp(self):
 		self.rng = random.Random()
 		self.rng.seed(555)
 		self.null_sim = Sim(initial_conditions_file_path = 'Data/null_exp.txt', krat_tsv_output_file_path = 'Data/null_exp_krat_energy.csv', snake_tsv_output_file_path = 'Data/null_exp_snake_energy.csv',rng=self.rng)
 		self.org_bush = Sim(initial_conditions_file_path = 'Data/movement_test.txt', krat_tsv_output_file_path = 'Data/one_krat_movement.csv', snake_tsv_output_file_path = 'Data/no_snake.csv',rng=self.rng)
 
+	@classmethod	
 	def tearDown(self):
 		pass
 

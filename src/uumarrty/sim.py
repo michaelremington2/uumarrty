@@ -202,7 +202,7 @@ class Landscape(object):
         OPEN = auto()
         BUSH = auto()
 
-    def __init__(self,sim,size_x,size_y,microhabitat_open_bush_proportions):
+    def __init__(self,sim,size_x,size_y,microhabitat_open_bush_proportions,_output_landscape=False,_output_landscape_file_path=None):
         self.sim = sim
         self.size_x = size_x
         self.size_y = size_y
@@ -218,6 +218,13 @@ class Landscape(object):
         self.total_snake_list = []
         self.total_owl_list = []
         self.rng = self.sim.rng
+        if _output_landscape:
+            self._output_landscape = _output_landscape
+            self._output_landscape_file_path = _output_landscape_file_path
+            with open(self._output_landscape_file_path, "w") as my_empty_csv:
+                pass
+
+
 
     def build(self):
         '''Populates the attribute cells with an x by y array'''
@@ -231,8 +238,20 @@ class Landscape(object):
                     habitat_type = self.select_random_cell_type(),
                     cell_id = cell_id,
                     prey_competition = self.sim.prey_competition)
+                if self._output_landscape:
+                    self._output_landscape_row_append(cell)
                 temp_x.append(cell)
             self.cells.append(temp_x)
+
+    def _output_landscape_row_append(self,cell):
+        '''This function generates a csv that has the information on every cell that generates the lanscape.'''
+        import csv
+        cell_id = cell.cell_id 
+        cell_microhabitat_type = cell.habitat_type[0].name  
+        fields=[cell_id, cell_microhabitat_type]
+        with open(self._output_landscape_file_path, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(fields)
 
     def select_random_cell_type(self):
         microclimate_type = self.rng.choices([self.MicrohabitatType.OPEN,self.MicrohabitatType.BUSH],self.microhabitat_open_bush_proportions, k = 1)
@@ -595,7 +614,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path,rng=None):
+    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path,rng=None, _output_landscape=False,_output_landscape_file_path=None):
         self.initial_conditions_file_path = initial_conditions_file_path
         self.snake_info = []
         self.krat_info = []
@@ -606,6 +625,8 @@ class Sim(object):
         self.krat_file_path = krat_tsv_output_file_path
         self.snake_file_path = snake_tsv_output_file_path
         self.cycle = 0
+        self._output_landscape = _output_landscape
+        self._output_landscape_file_path = _output_landscape_file_path
         
 
     def genotype_freq_test(self,genotype_freq_dict):
@@ -748,7 +769,9 @@ class Sim(object):
                 sim=self,
                 size_x=config_d["landscape_size_x"],
                 size_y=config_d["landscape_size_y"],
-                microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"]
+                microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"],
+                _output_landscape = self._output_landscape,
+                _output_landscape_file_path = self._output_landscape_file_path
                 )
         self.landscape.build()
         self.initialize_snake_pop(config_d = config_d)

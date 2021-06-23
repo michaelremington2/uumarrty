@@ -427,13 +427,13 @@ class Landscape(object):
         if round((bush_pref+open_pref),2) != 1:
             raise ValueError('Genotype of bush {}, open {} does not sum to 1'.format(bush_pref,open_pref))
 
-    def no_mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_probabiliy):
+    def no_mixed_habitat_preference_mutation_calc(self,bush_pref_weight,mutation_probability):
         if bush_pref_weight > 1:
             bush_pref_weight = 1.0
         elif bush_pref_weight < 0:
             bush_pref_weight = 0.0
         new_bush_preference = bush_pref_weight
-        if self.rng.random() < mutation_probabiliy:
+        if self.rng.random() < mutation_probability:
             if abs(1.0 - bush_pref_weight) < 1e-6:
                 new_bush_preference = 0
             else:
@@ -449,22 +449,22 @@ class Landscape(object):
         return new_bush_preference
 
 
-    def preference_mutation_calc(self,bush_pref_weight, mutation_probabiliy, mutation_std):
+    def preference_mutation_calc(self,bush_pref_weight, mutation_probability, mutation_std):
         '''Checks if the mutation probability is met and if it is, randomly increases or decreases the bush preference value to be used for the next generation.''' 
         if self.sim.mixed_individuals:
             new_bush_preference = self.mixed_habitat_preference_mutation_calc(bush_pref_weight = bush_pref_weight, mutation_std = mutation_std)
         else:
-            new_bush_preference = self.no_mixed_habitat_preference_mutation_calc(bush_pref_weight = bush_pref_weight,mutation_probabiliy = mutation_probabiliy)
+            new_bush_preference = self.no_mixed_habitat_preference_mutation_calc(bush_pref_weight = bush_pref_weight,mutation_probability = mutation_probability)
         return new_bush_preference
 
-    def next_gen_rep_dist_prep(self, total_org_list, mutation_probabiliy, mutation_std):
+    def next_gen_rep_dist_prep(self, total_org_list, mutation_probability, mutation_std): # Spelling error
         '''returns a dictionary that has the bush preferences as the key and the relative weighted payoff as the values. 
         This relative weighted pay off is the sum of payoff associated with the bush preference of interest, divided by
         the total populations payoff accumulated over the generation. Works for any organism.'''
         new_gen_genotype = {}
         for org in total_org_list:
             self.genotype_sum_to_one_test(bush_pref = org.bush_preference_weight, open_pref = org.open_preference_weight)
-            bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probabiliy = mutation_probabiliy, mutation_std = mutation_std)
+            bush_pref_key = self.preference_mutation_calc(bush_pref_weight = org.bush_preference_weight, mutation_probability= mutation_probability, mutation_std = mutation_std)
             if org.energy_score < 0:
                 payoff = 0
             else:
@@ -480,6 +480,14 @@ class Landscape(object):
         else:
             geno_dict = {}
         return geno_dict
+
+
+    # 200
+    # 150
+    # bush 1000 payoff
+    # open 300
+    # (1000/1300)*200 bush
+    # (300/1300)*200 open
 
 
     def iter_through_cells_reproduction(self):
@@ -509,7 +517,7 @@ class Landscape(object):
         associated with certain habitat preference genotypes preformed.'''
         if len(self.total_krat_list) > 0:
             next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
-                                                        mutation_probabiliy = self.sim.krat_mutation_probability,
+                                                        mutation_probability= self.sim.krat_mutation_probability,
                                                         mutation_std = self.sim.krat_mutation_std)
             move_range = self.total_krat_list[0].move_range
             movement_frequency = self.total_krat_list[0].movement_frequency
@@ -531,7 +539,7 @@ class Landscape(object):
         associated with certain habitat preference genotypes preformed.'''
         if len(self.total_snake_list) > 0:
             next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
-                                                        mutation_probabiliy = self.sim.snake_mutation_probability,
+                                                        mutation_probability = self.sim.snake_mutation_probability,
                                                         mutation_std = self.sim.snake_mutation_std)
             move_range = self.total_snake_list[0].move_range
             strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush

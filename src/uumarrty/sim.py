@@ -218,8 +218,8 @@ class Landscape(object):
         self.total_snake_list = []
         self.total_owl_list = []
         self.rng = self.sim.rng
+        self._output_landscape = _output_landscape
         if _output_landscape:
-            self._output_landscape = _output_landscape
             self._output_landscape_file_path = _output_landscape_file_path
             with open(self._output_landscape_file_path, "w") as my_empty_csv:
                 pass
@@ -277,6 +277,8 @@ class Landscape(object):
             strike_success_probability_open, energy_gain_per_krat,
             energy_cost, move_range,
             movement_frequency, snake_genotype_frequencies):
+        '''Just used to first initalize populations of kangaroo rats.
+            This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
         isp = self.sim.initial_snake_pop
         for key, freq in snake_genotype_frequencies.items():
             pop = round(isp*freq)
@@ -305,6 +307,8 @@ class Landscape(object):
             strike_success_probability_bush, strike_success_probability_open,
             energy_gain_per_krat,energy_cost, move_range,
             movement_frequency):
+        '''Just used to first initalize populations of kangaroo rats.
+            This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
         isp = self.sim.initial_snake_pop
         while isp > 0:
             cell = self.select_random_cell()
@@ -331,6 +335,8 @@ class Landscape(object):
             energy_gain_bush, energy_gain_open,
             energy_cost, move_range,
             movement_frequency, krat_genotype_frequencies):
+        '''Just used to first initalize populations of kangaroo rats.
+            This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
         ikp = self.sim.initial_krat_pop
         for key, freq in krat_genotype_frequencies.items():
             pop = round(ikp*freq)
@@ -358,6 +364,8 @@ class Landscape(object):
         energy_gain_bush, energy_gain_open,
         energy_cost, move_range,
         movement_frequency):
+        '''Just used to first initalize populations of kangaroo rats.
+            This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
         ikp = self.sim.initial_krat_pop
         while ikp > 0:
             cell = self.select_random_cell()
@@ -516,49 +524,61 @@ class Landscape(object):
         '''Generates the new generaton of krats from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
         if len(self.total_krat_list) > 0:
-            next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_krat_list,
-                                                        mutation_probability= self.sim.krat_mutation_probability,
-                                                        mutation_std = self.sim.krat_mutation_std)
-            move_range = self.total_krat_list[0].move_range
-            movement_frequency = self.total_krat_list[0].movement_frequency
-            energy_gain_bush = self.total_krat_list[0].energy_gain_bush
-            energy_gain_open = self.total_krat_list[0].energy_gain_open 
-            energy_cost = self.total_krat_list[0].energy_cost
+            ikp = self.sim.initial_krat_pop
+            parent_krat_pop = self.total_krat_list
+            parent_krat_payoffs = [krat.energy_score for krat in parent_krat_pop]
             self.total_krat_list = []
-            self.initialize_krat_pop_discrete_preference(
-                move_range = move_range,
-                movement_frequency = movement_frequency,
-                energy_gain_bush = energy_gain_bush, #from bouskila
-                energy_gain_open = energy_gain_open, #from bouskila
-                energy_cost = energy_cost,
-                krat_genotype_frequencies = next_gen_dist
-                )
+            while ikp > 0:
+                cell = self.select_random_cell()
+                parent = self.rng.choices(parent_krat_pop, weights=parent_krat_payoffs, k = 1)
+                parent = parent[0]
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.krat_mutation_probability, mutation_std = self.sim.krat_mutation_std)
+                open_preference_weight = (1-float(bush_preference_weight))
+                cell = self.select_random_cell()
+                krat = org.Krat(sim = self.sim,
+                            energy_gain_bush = parent.energy_gain_bush, #from bouskila
+                            energy_gain_open = parent.energy_gain_open, #from bouskila
+                            energy_cost = parent.energy_cost,
+                            move_range = parent.move_range,
+                            movement_frequency = parent.movement_frequency,
+                            home_cell= cell,
+                            open_preference_weight = open_preference_weight,
+                            bush_preference_weight = bush_preference_weight)
+                cell.add_krat(krat)
+                krat.current_cell=cell
+                    #krat.generate_krat_stats()
+                ikp = ikp-1
 
     def snake_reproduction(self):
         '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
         if len(self.total_snake_list) > 0:
-            next_gen_dist = self.next_gen_rep_dist_prep(total_org_list = self.total_snake_list,
-                                                        mutation_probability = self.sim.snake_mutation_probability,
-                                                        mutation_std = self.sim.snake_mutation_std)
-            move_range = self.total_snake_list[0].move_range
-            strike_success_probability_bush = self.total_snake_list[0].strike_success_probability_bush
-            strike_success_probability_open = self.total_snake_list[0].strike_success_probability_open
-            death_probability = self.total_snake_list[0].death_probability
-            energy_gain_per_krat = self.total_snake_list[0].energy_gain_per_krat
-            energy_cost = self.total_snake_list[0].energy_cost
-            movement_frequency = self.total_snake_list[0].movement_frequency
+            isp = self.sim.initial_snake_pop
+            parent_snake_pop = self.total_snake_list
+            parent_snake_payoffs = [snake.energy_score for snake in parent_snake_pop]
             self.total_snake_list = []
-            self.initialize_snake_pop_discrete_preference(
-                    strike_success_probability_bush = strike_success_probability_bush,
-                    strike_success_probability_open = strike_success_probability_open,
-                    death_probability = death_probability,
-                    energy_gain_per_krat = energy_gain_per_krat,
-                    energy_cost = energy_cost,
-                    move_range = move_range,
-                    movement_frequency = movement_frequency,
-                    snake_genotype_frequencies = next_gen_dist
-                    )
+            while isp > 0:
+                cell = self.select_random_cell()
+                parent = self.rng.choices(parent_snake_pop, weights=parent_snake_payoffs, k = 1)
+                parent = parent[0]
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.snake_mutation_probability, mutation_std = self.sim.snake_mutation_std)
+                open_preference_weight = (1-float(bush_preference_weight))
+                cell = self.select_random_cell()
+                snake = org.Snake(sim = self.sim,
+                            strike_success_probability_bush = parent.strike_success_probability_bush,
+                            strike_success_probability_open = parent.strike_success_probability_open,
+                            death_probability = parent.death_probability,
+                            energy_gain_per_krat = parent.energy_gain_per_krat,
+                            energy_cost = parent.energy_cost,
+                            move_range = parent.move_range,
+                            movement_frequency = parent.movement_frequency,
+                            open_preference_weight = open_preference_weight,
+                            bush_preference_weight = bush_preference_weight
+                            )
+                cell.add_snake(snake)
+                snake.current_cell=cell
+
+                isp = isp-1
 
     def iter_through_cells_activity(self):
         '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first

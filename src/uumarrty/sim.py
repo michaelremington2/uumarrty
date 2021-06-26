@@ -561,7 +561,7 @@ class Landscape(object):
                 cell = self.select_random_cell()
                 parent = self.rng.choices(parent_snake_pop, weights=parent_snake_payoffs, k = 1)
                 parent = parent[0]
-                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.snake_mutation_probability, mutation_std = self.sim.snake_mutation_std)
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability = self.sim.snake_mutation_probability, mutation_std = self.sim.snake_mutation_std)
                 open_preference_weight = (1-float(bush_preference_weight))
                 cell = self.select_random_cell()
                 snake = org.Snake(sim = self.sim,

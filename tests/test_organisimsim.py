@@ -29,10 +29,10 @@ class TestOrganismsimScript(unittest.TestCase):
 		pass
 
 	def test_movement_data(self):
-		self.self.org_movement.main()
+		self.org_movement.main()
 		kratdata=pd.read_csv('Data/one_krat_movement.csv',header=None)
 		kratdata.columns = ['krat_id', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','snakes_in_cell','owls_in_cell']
-		print(kratdata['cell_id'].head(10))
+		#print(kratdata['cell_id'].head(10))
 
 
 

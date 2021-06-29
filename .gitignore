@@ -22,6 +22,7 @@ src/data.txt
 bin/*.tsv
 bin/ex_data.txt
 tests/scratch_script.ipynb
+tests/.ipynb_checkpoints/*
 # OS X / Darwin
 .DS_Store*
 

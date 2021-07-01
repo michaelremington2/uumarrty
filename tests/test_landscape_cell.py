@@ -13,7 +13,7 @@ from uumarrty.sim import Sim, Landscape, Cell
 # Set up artificial conditions
 
 class TestCell_and_Landscape(unittest.TestCase):
-    @classmethod
+
     def setUp(self):
         print('setup and initalizing cell object')
         self.data_file = 'Data/null_exp.txt'
@@ -23,9 +23,21 @@ class TestCell_and_Landscape(unittest.TestCase):
         self.blank_cell_prey_true = Cell(sim = self.null_sim, habitat_type=Landscape.MicrohabitatType.BUSH, cell_id=(0,0),prey_competition=True)
         self.blank_cell_prey_false = Cell(sim = self.null_sim, habitat_type=Landscape.MicrohabitatType.OPEN, cell_id=(0,0),prey_competition=False)
 
-    @classmethod
+
     def tearDown(self):
-        print('Tearing Down Cell')
+        print('Tearing Down Cell Tests')
+
+    def _add_krat_to_cell(self):
+        krat = org.Krat(sim = self.null_sim,
+                        energy_gain_bush = 10, #from bouskila
+                        energy_gain_open = 10, #from bouskila
+                        energy_cost = 5,
+                        move_range = 1,
+                        movement_frequency = 1,
+                        home_cell = self.blank_cell_prey_true,
+                        open_preference_weight = 1,
+                        bush_preference_weight = 0)
+        cell.add_krat(krat)
 
 if __name__ == '__main__':
     unittest.main()

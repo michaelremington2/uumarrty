@@ -12,7 +12,6 @@ class TestSimConfig(unittest.TestCase):
         self.data_file = 'Data/null_exp.txt'
         with open(self.data_file) as f:
             self.config_d = json.load(f)
-        #self.null_sim = Sim(initial_conditions_file_path = 'Data/null_exp.txt', krat_tsv_output_file_path = 'Data/null_exp_krat_energy.tsv', snake_tsv_output_file_path = 'Data/null_exp_snake_energy.tsv',rng=None)
 
 
     def tearDown(self):

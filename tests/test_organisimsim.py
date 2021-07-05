@@ -39,7 +39,7 @@ class TestOrganismsimScript(unittest.TestCase):
 		self.data_path_krat = 'Data/two_krat_movement.csv'
 		self.data_path_landscape = 'Data/test_landscape.csv'
 		self.kratdata=pd.read_csv(self.data_path_krat,header=None)
-		self.kratdata.columns = ['krat_id', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','snakes_in_cell','owls_in_cell']
+		self.kratdata.columns = ['krat_id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','snakes_in_cell','owls_in_cell']
 		self.landscape=pd.read_csv(self.data_path_landscape,header=None)
 		self.landscape.columns = ['cell_id','microhabitat_type']
 		self.kratdata['cell_id'] = self.kratdata['cell_id'].astype('string')

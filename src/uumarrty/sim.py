@@ -546,8 +546,8 @@ class Landscape(object):
                             bush_preference_weight = bush_preference_weight)
                 cell.add_krat(krat)
                 krat.current_cell=cell
-                    #krat.generate_krat_stats()
                 ikp = ikp-1
+                self.sim.krat_generation += 1
 
     def snake_reproduction(self):
         '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
@@ -577,8 +577,8 @@ class Landscape(object):
                             )
                 cell.add_snake(snake)
                 snake.current_cell=cell
-
                 isp = isp-1
+        self.sim.snake_generation += 1
 
     def iter_through_cells_activity(self):
         '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
@@ -632,8 +632,8 @@ class Sim(object):
         krat_info -- an array with info on every krat object per cycle.
         cycle -- a genral time unit. Starts at zero and the simulation runs until the cycle reaches end time. (int)
         end_time -- the length of the simulation in cycles. (int)
-        initial_krat_pop -- the number of krats in the population. This is a constant interager. (int)
-        initial_snake_pop -- the number of snake in the population. This is a constant interager. (int)
+        initial_krat_pop -- the number of krats in the population. This is a constant integer. (int)
+        initial_snake_pop -- the number of snake in the population. This is a constant integer. (int)
         krat_reproduction_freq -- the length in cycles until the new generation of krats is formed.
         snake_reproduction_freq -- the length in cycles until the new generation of snakes is formed.
         krat_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for krats. (int)
@@ -653,6 +653,8 @@ class Sim(object):
         self.krat_file_path = krat_tsv_output_file_path
         self.snake_file_path = snake_tsv_output_file_path
         self.cycle = 0
+        self.krat_generation = 0
+        self.snake_generation = 0
         self._output_landscape = _output_landscape
         self._output_landscape_file_path = _output_landscape_file_path
         
@@ -695,7 +697,7 @@ class Sim(object):
                     'owl_move_range' : owl_move_range}
         for key, val in test_vals.items():
             if not type(val) is int:
-                raise TypeError("{} value should be an interager".format(key))
+                raise TypeError("{} value should be an integer".format(key))
 
     def exception_float_or_int_values(
                         self, krat_mutation_std, snake_mutation_std,

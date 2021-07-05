@@ -332,6 +332,7 @@ class Snake(Organism):
     def generate_snake_stats(self):
         '''compiles a row of stats per cycle to be added to the simulations overall snake stats array.'''
         row = [self.org_id,
+                self.sim.snake_generation,
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,
@@ -420,6 +421,7 @@ class Krat(Organism):
     def generate_krat_stats(self):
         '''generates 1 row of stats on the krat object per cycle to be appended to the simulations overall krat info array.'''
         row = [self.org_id,
+                self.sim.krat_generation,
                 self.sim.cycle,
                 self.open_preference_weight,
                 self.bush_preference_weight,

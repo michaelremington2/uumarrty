@@ -547,7 +547,7 @@ class Landscape(object):
                 cell.add_krat(krat)
                 krat.current_cell=cell
                 ikp = ikp-1
-                self.sim.krat_generation += 1
+            self.sim.krat_generation += 1
 
     def snake_reproduction(self):
         '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
@@ -578,7 +578,7 @@ class Landscape(object):
                 cell.add_snake(snake)
                 snake.current_cell=cell
                 isp = isp-1
-        self.sim.snake_generation += 1
+            self.sim.snake_generation += 1
 
     def iter_through_cells_activity(self):
         '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first

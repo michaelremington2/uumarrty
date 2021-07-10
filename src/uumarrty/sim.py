@@ -658,9 +658,9 @@ class Sim(object):
         if seed is not None:
             self.rng.seed(seed)
         if burn_in is not None:
-            self.burn_in = 0
+            self.burn_in = burn_in       
         else:
-            self.burn_in = burn_in
+            self.burn_in = 0
         self._output_landscape = _output_landscape
         self._output_landscape_file_path = _output_landscape_file_path
         

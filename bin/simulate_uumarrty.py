@@ -49,9 +49,11 @@ def run(args):
     init_file_path = args.input # these match the "dest": dest="input"
     iterations = args.iterations
     output_file_path = args.output # from dest="output"
+    burn_in = args.burn_in
+    seed = args.seed
     with open(init_file_path) as f:
         config_exp = json.load(f)
-    run_simulations = run_experiments(experimental_groups_dict=config_exp, experiment_iterations=iterations, output_file_folder=output_file_path)
+    run_simulations = run_experiments(experimental_groups_dict=config_exp, experiment_iterations=iterations, output_file_folder=output_file_path, burn_in = burn_in, seed = seed)
     run_simulations.main()
 
 
@@ -60,8 +62,8 @@ def main():
     parser.add_argument("-in",help="json or txt file full of 1 to several experimental groups." ,dest="input", type=str, required=True)
     parser.add_argument("-out",help="output file folder. ex: Data/" ,dest="output", type=str, required=False, default=None)
     parser.add_argument("-iter",help="Number of times you want the experiment to be repeated." ,dest="iterations", type=int, required=True)
-    parser.add_argument("-burn_in",help="Number of cycles before the simulation starts collecting data on the simulatio.." ,dest="burn_in", type=int, required=False)
-    parser.add_argument("-seed",help="Number of cycles before the simulation starts collecting data on the simulation.." ,dest="burn_in", type=int, required=False)
+    parser.add_argument("-burn_in",help="Number of cycles before the simulation starts collecting data on the simulatio." ,dest="burn_in", type=int, required=False)
+    parser.add_argument("-seed",help="Random number seed for the sim." ,dest="seed", type=int, required=False)
     parser.set_defaults(func=run)
     args=parser.parse_args()
     args.func(args)

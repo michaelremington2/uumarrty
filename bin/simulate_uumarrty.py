@@ -9,11 +9,14 @@ from uumarrty import sim
 from uumarrty import organismsim
 
 class run_experiments(object):
-    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None):
+    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None, seed = None, burn_in = None):
         self.experimental_groups= experimental_groups_dict
         self.experiment_iterations = experiment_iterations
         self.format_output_folder_fp(output_file_folder = output_file_folder)
         self.rng = rng
+        self.seed = seed
+        self.burn_in = burn_in
+
 
     def format_output_folder_fp(self,output_file_folder):
         if output_file_folder is None:
@@ -31,10 +34,7 @@ class run_experiments(object):
             snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.csv'.format(i)
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
-            if self.rng is None:
-                sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_file_label, snake_tsv_output_file_path = snake_data_output_file_label)
-            else:
-                sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt', krat_tsv_output_file_path = krat_data_output_file_label, snake_tsv_output_file_path = snake_data_output_file_label, rng = self.rng)
+            sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt', krat_csv_output_file_path = krat_data_output_file_label, snake_csv_output_file_path = snake_data_output_file_label,seed = self.seed, burn_in = self.burn_in)
             sim_object.main()
         if os.path.exists('ex_data.txt'):
             os.remove('ex_data.txt')
@@ -58,8 +58,10 @@ def run(args):
 def main():
     parser=argparse.ArgumentParser(description="Run experiments through krattle game theory model.")
     parser.add_argument("-in",help="json or txt file full of 1 to several experimental groups." ,dest="input", type=str, required=True)
+    parser.add_argument("-out",help="output file folder. ex: Data/" ,dest="output", type=str, required=False, default=None)
     parser.add_argument("-iter",help="Number of times you want the experiment to be repeated." ,dest="iterations", type=int, required=True)
-    parser.add_argument("-out",help="output file path" ,dest="output", type=str, required=False, default=None)
+    parser.add_argument("-burn_in",help="Number of cycles before the simulation starts collecting data on the simulatio.." ,dest="burn_in", type=int, required=False)
+    parser.add_argument("-seed",help="Number of cycles before the simulation starts collecting data on the simulation.." ,dest="burn_in", type=int, required=False)
     parser.set_defaults(func=run)
     args=parser.parse_args()
     args.func(args)

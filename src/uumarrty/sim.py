@@ -642,7 +642,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_tsv_output_file_path, snake_tsv_output_file_path,rng=None, _output_landscape=False,_output_landscape_file_path=None):
+    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None):
         self.initial_conditions_file_path = initial_conditions_file_path
         self.snake_info = []
         self.krat_info = []
@@ -650,11 +650,17 @@ class Sim(object):
             self.rng = random.Random()
         else:
             self.rng = rng
-        self.krat_file_path = krat_tsv_output_file_path
-        self.snake_file_path = snake_tsv_output_file_path
+        self.krat_file_path = krat_csv_output_file_path
+        self.snake_file_path = snake_csv_output_file_path
         self.cycle = 0
         self.krat_generation = 0
         self.snake_generation = 0
+        if seed is not None:
+            self.rng.seed(seed)
+        if burn_in is not None:
+            self.burn_in = 0
+        else:
+            self.burn_in = burn_in
         self._output_landscape = _output_landscape
         self._output_landscape_file_path = _output_landscape_file_path
         

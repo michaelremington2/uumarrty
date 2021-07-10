@@ -331,18 +331,19 @@ class Snake(Organism):
 
     def generate_snake_stats(self):
         '''compiles a row of stats per cycle to be added to the simulations overall snake stats array.'''
-        row = [self.org_id,
-                self.sim.snake_generation,
-                self.sim.cycle,
-                self.open_preference_weight,
-                self.bush_preference_weight,
-                self.energy_score,
-                self.number_of_movements, 
-                self.current_cell.cell_id,
-                self.current_cell.habitat_type[0].name,
-                len(self.current_cell.krats),
-                len(self.current_cell.owls)]
-        self.sim.snake_info.append(row)
+        if self.sim.cycle >= self.sim.burn_in:
+            row = [self.org_id,
+                    self.sim.snake_generation,
+                    self.sim.cycle,
+                    self.open_preference_weight,
+                    self.bush_preference_weight,
+                    self.energy_score,
+                    self.number_of_movements, 
+                    self.current_cell.cell_id,
+                    self.current_cell.habitat_type[0].name,
+                    len(self.current_cell.krats),
+                    len(self.current_cell.owls)]
+            self.sim.snake_info.append(row)
 
     def snake_death(self):
         '''Kills snake if the probability condition is met.'''
@@ -420,18 +421,19 @@ class Krat(Organism):
 
     def generate_krat_stats(self):
         '''generates 1 row of stats on the krat object per cycle to be appended to the simulations overall krat info array.'''
-        row = [self.org_id,
-                self.sim.krat_generation,
-                self.sim.cycle,
-                self.open_preference_weight,
-                self.bush_preference_weight,
-                self.energy_score,
-                self.number_of_movements, 
-                self.current_cell.cell_id,
-                self.current_cell.habitat_type[0].name,
-                len(self.current_cell.snakes),
-                len(self.current_cell.owls)]
-        self.sim.krat_info.append(row)
+        if self.sim.cycle >= self.sim.burn_in:
+            row = [self.org_id,
+                    self.sim.krat_generation,
+                    self.sim.cycle,
+                    self.open_preference_weight,
+                    self.bush_preference_weight,
+                    self.energy_score,
+                    self.number_of_movements, 
+                    self.current_cell.cell_id,
+                    self.current_cell.habitat_type[0].name,
+                    len(self.current_cell.snakes),
+                    len(self.current_cell.owls)]
+            self.sim.krat_info.append(row)
 
 
 class Owl(Organism):

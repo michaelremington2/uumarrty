@@ -1,12 +1,10 @@
 #!/usr/bin/python
 from enum import Enum,auto
 import random
-import json
+from json import load
 from uumarrty import organismsim as org
 from itertools import chain
-import math
 import time
-import csv
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -245,12 +243,12 @@ class Landscape(object):
 
     def _output_landscape_row_append(self,cell):
         '''This function generates a csv that has the information on every cell that generates the lanscape.'''
-        import csv
+        from csv import writer
         cell_id = cell.cell_id 
         cell_microhabitat_type = cell.habitat_type[0].name  
         fields=[cell_id, cell_microhabitat_type]
         with open(self._output_landscape_file_path, 'a') as f:
-            writer = csv.writer(f)
+            writer = writer(f)
             writer.writerow(fields)
 
     def select_random_cell_type(self):
@@ -820,12 +818,9 @@ class Sim(object):
                 bush_preference_weight = 0
                 )
 
-    def round_down(self,x, a):
-        return round(math.floor(x / a) * a,2)
-
     def read_configuration_file(self):
         with open(self.initial_conditions_file_path) as f:
-            config_d = json.load(f)
+            config_d = load(f)
         self.run_config_checks(config_d = config_d)
         self.configure(config_d)
 

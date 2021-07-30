@@ -1,8 +1,7 @@
 #!/usr/bin/python
 import json
+import argparse
 
-experiment_iterations = 2
-experiment_name = 'owl_data/owl_exp.txt'
 
 control_group = {"cycles_of_sim": 50000,
                  "krat_data_sample_freq": 25,
@@ -142,9 +141,24 @@ experimental_groups = {
     "experiment_2": experimental_group_2,
     "experiment_3": experimental_group_3,
 }
-def main(experimental_groups, file_name):
+def make_file(experimental_groups, file_name):
     with open(file_name, 'w') as outfile:
         json.dump(experimental_groups, outfile)
 
-if __name__ ==  "__main__":
-    main(experimental_groups, experiment_name)
+def run(args):
+    file_name = args.file_name
+    make_file(experimental_groups = experimental_groups, file_name = file_name) 
+
+def main():
+    # python agg_sims.py -in  owl_data/sim_data/ -totals owl_data/total_sims_stats.csv
+    #python agg_sims.py -in  owl_data/sim_data/ -per_cycle owl_data/owl_sim_stats_per_cycle.csv
+    parser=argparse.ArgumentParser(description="Makes a config file for uumarrty software.")
+    parser.add_argument("-file_name",help="the output config filename." ,dest="file_name", type=str, required=True)
+    parser.set_defaults(func=run)
+    args=parser.parse_args()
+    args.func(args)
+    
+
+if __name__=="__main__":
+    main()
+

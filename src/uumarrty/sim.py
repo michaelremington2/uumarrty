@@ -5,6 +5,7 @@ from json import load
 from uumarrty import organismsim as org
 from itertools import chain
 import time
+import csv
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -531,7 +532,7 @@ class Landscape(object):
                 parent = self.rng.choices(parent_krat_pop, weights=parent_krat_payoffs, k = 1)
                 parent = parent[0]
                 bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.krat_mutation_probability, mutation_std = self.sim.krat_mutation_std)
-                open_preference_weight = (1-float(bush_preference_weight))
+                open_preference_weight = (1-float(bush_preference_weight))S
                 cell = self.select_random_cell()
                 krat = org.Krat(sim = self.sim,
                             energy_gain_bush = parent.energy_gain_bush, #from bouskila
@@ -603,10 +604,14 @@ class Landscape(object):
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
         for all organisms.'''
+        cycle_start = round(time.time())
         self.total_krats = 0
         self.total_snakes = 0
         self.total_owls = 0
+        cell_activity_start=round(time.time())
         self.iter_through_cells_activity()
+        cell_activity_end = round(time.time()) - cell_activity_start
+        print("cell activity {}".format(cell_activity_end))
         self.relocate_krats()
         self.relocate_snakes()
         self.relocate_owls()
@@ -615,6 +620,8 @@ class Landscape(object):
             self.krat_reproduction()
         if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.snake_reproduction()
+        cycle_end = round(time.time()) - cycle_start
+        print("cycle time {}".format(cycle_end))
 
 
 
@@ -642,8 +649,8 @@ class Sim(object):
     '''
     def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None):
         self.initial_conditions_file_path = initial_conditions_file_path
-        self.snake_info = []
-        self.krat_info = []
+        #self.snake_info = []
+        #self.krat_info = []
         if rng is None:
             self.rng = random.Random()
         else:
@@ -827,11 +834,11 @@ class Sim(object):
     def main(self):
         start = round(time.time())
         self.read_configuration_file()
+        self.make_csv(file_name = self.krat_file_path )
+        self.make_csv(file_name = self.snake_file_path )
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = self.krat_file_path )
-        self.report_writer(array = self.snake_info,file_name = self.snake_file_path )
         time_elapsed = round(time.time()) - start
         print(time_elapsed)
         #self.analyze_and_plot_org_fitness(org_data = self.snake_info)
@@ -845,11 +852,14 @@ class Sim(object):
                 print(cell_id)
         
 
-    def report_writer(self,array,file_name):
-        import csv
+    def make_csv(self,file_name):
         with open(file_name, 'w', newline='\n') as file:
-            writer = csv.writer(file)
-            writer.writerows(array)
+            pass
+
+    def append_data(self,file_name,data_row):
+        with open(file_name, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(data_row)
 
 
 if __name__ ==  "__main__":

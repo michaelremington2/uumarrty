@@ -343,7 +343,7 @@ class Snake(Organism):
                     self.current_cell.habitat_type[0].name,
                     len(self.current_cell.krats),
                     len(self.current_cell.owls)]
-            self.sim.snake_info.append(row)
+            self.sim.append_data(file_name=self.sim.snake_file_path ,data_row=row)
 
     def snake_death(self):
         '''Kills snake if the probability condition is met.'''
@@ -433,7 +433,7 @@ class Krat(Organism):
                     self.current_cell.habitat_type[0].name,
                     len(self.current_cell.snakes),
                     len(self.current_cell.owls)]
-            self.sim.krat_info.append(row)
+            self.sim.append_data(file_name=self.sim.krat_file_path ,data_row=row)
 
 
 class Owl(Organism):

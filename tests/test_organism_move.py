@@ -6,6 +6,7 @@ import random
 import pandas as pd
 import numpy as np
 import math
+from matplotlib import pyplot as plt
 from uumarrty import organismsim as org
 from uumarrty.sim import Sim, Landscape, Cell
 
@@ -20,8 +21,8 @@ class TestOrganismsimScript(unittest.TestCase):
 		#self.null_sim = Sim(initial_conditions_file_path = 'Data/null_exp.txt', krat_tsv_output_file_path = 'Data/null_exp_krat_energy.csv', snake_tsv_output_file_path = 'Data/null_exp_snake_energy.csv',rng=self.rng)
 		self.org_movement = Sim(
 							initial_conditions_file_path = 'Data/movement_test.txt',
-							krat_tsv_output_file_path = 'Data/two_krat_movement.csv',
-							snake_tsv_output_file_path = 'Data/no_snake.csv',
+							krat_csv_output_file_path = 'Data/two_krat_movement.csv',
+							snake_csv_output_file_path = 'Data/no_snake.csv',
 							rng = self.rng,
 							_output_landscape = True,
 							_output_landscape_file_path = 'Data/test_landscape.csv')
@@ -190,28 +191,28 @@ class TestOrganismsimScript(unittest.TestCase):
 		test_passed = True
 		if sum(self.lk2['error_check']) > 0:
 			test_passed = False
-		if test_passed:
-			pass
-		else:
-			labels = lk2['cell_id']
-			observed = lk2['observed']
-			expected = lk2['expected']
-			yerror = lk2['st_error_observed']
-			x = np.arange(len(labels))  # the label locations
-			width = 0.35  # the width of the bars
-			fig, ax = plt.subplots()
-			fig.set_figheight(15)
-			fig.set_figwidth(15)
-			rects1 = ax.bar(x - width/2, expected, width, label='expected')
-			rects2 = ax.bar(x + width/2, observed, width,yerr = yerror, label='observed')
-			# Add some text for labels, title and custom x-axis tick labels, etc.
-			ax.set_ylabel('Movement Frequencies')
-			ax.set_title('Cell Ids')
-			ax.set_xticks(x)
-			ax.set_xticklabels(labels)
-			ax.legend()
-			fig.tight_layout()
-			plt.show()
+		# if test_passed:
+		# 	pass
+		# else:
+		labels = self.lk2['cell_id']
+		observed = self.lk2['observed']
+		expected = self.lk2['expected']
+		yerror = self.lk2['st_error_observed']
+		x = np.arange(len(labels))  # the label locations
+		width = 0.35  # the width of the bars
+		fig, ax = plt.subplots()
+		fig.set_figheight(15)
+		fig.set_figwidth(15)
+		rects1 = ax.bar(x - width/2, expected, width, label='expected')
+		rects2 = ax.bar(x + width/2, observed, width,yerr = yerror, label='observed')
+		# Add some text for labels, title and custom x-axis tick labels, etc.
+		ax.set_ylabel('Movement Frequencies')
+		ax.set_title('Cell Ids')
+		ax.set_xticks(x)
+		ax.set_xticklabels(labels)
+		ax.legend()
+		fig.tight_layout()
+		plt.show()
 		self.assertEqual(test_passed,True)
 
 

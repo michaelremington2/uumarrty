@@ -252,9 +252,17 @@ class Organism(object):
 
     def organism_movement(self):
         '''Runs movement algorithm and returns the new cell id for the object to move to.'''
-        new_cell = self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
+        #new_cell = self.pick_new_cell(bush_preference_weight=self.bush_preference_weight, open_preference_weight=self.open_preference_weight)
+        new_cell = self.global_organism_movement()
         if new_cell != self.current_cell:
                 self.number_of_movements += 1
+        return new_cell
+
+    def global_organism_movement(self):
+        '''New Organism movment that just selects a random cell from the landscape'''
+        mh_type = self.rng.choices(list(self.landscape.cell_mh_dict.keys()),[self.bush_preference_weight,self.open_preference_weight],k=1)[0]
+        new_cell = self.rng.choice(self.landscape.cell_mh_dict[mh_type])
+        #print("bush_pref {}, open_pref {}, new_cell_id {}, new_cell_type {}".format(self.bush_preference_weight,self.open_preference_weight,new_cell.cell_id,new_cell.habitat_type))
         return new_cell
 
     def return_home(self):

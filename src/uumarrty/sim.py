@@ -228,6 +228,7 @@ class Landscape(object):
     def build(self):
         '''Populates the attribute cells with an x by y array'''
         self.cells = []
+        self.cell_mh_dict = {'BUSH':[],'OPEN':[]}
         for yidx in range(self.cells_y_rows):
             temp_x = []
             for xidx in range(self.cells_x_columns):
@@ -237,10 +238,12 @@ class Landscape(object):
                     habitat_type = self.select_random_cell_type(),
                     cell_id = cell_id,
                     prey_competition = self.sim.prey_competition)
+                self.cell_mh_dict[cell.habitat_type[0].name].append(cell)
                 if self._output_landscape:
                     self._output_landscape_row_append(cell)
                 temp_x.append(cell)
             self.cells.append(temp_x)
+
 
     def _output_landscape_row_append(self,cell):
         '''This function generates a csv that has the information on every cell that generates the lanscape.'''
@@ -532,7 +535,7 @@ class Landscape(object):
                 parent = self.rng.choices(parent_krat_pop, weights=parent_krat_payoffs, k = 1)
                 parent = parent[0]
                 bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.krat_mutation_probability, mutation_std = self.sim.krat_mutation_std)
-                open_preference_weight = (1-float(bush_preference_weight))S
+                open_preference_weight = (1-float(bush_preference_weight))
                 cell = self.select_random_cell()
                 krat = org.Krat(sim = self.sim,
                             energy_gain_bush = parent.energy_gain_bush, #from bouskila
@@ -604,24 +607,28 @@ class Landscape(object):
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
         for all organisms.'''
-        cycle_start = round(time.time())
+        cycle_start = time.time()
         self.total_krats = 0
         self.total_snakes = 0
         self.total_owls = 0
-        cell_activity_start=round(time.time())
+        cell_activity_start=time.time()
         self.iter_through_cells_activity()
-        cell_activity_end = round(time.time()) - cell_activity_start
-        print("cell activity {}".format(cell_activity_end))
+        cell_activity_end = time.time() - cell_activity_start
+        relocations_time=time.time()
         self.relocate_krats()
         self.relocate_snakes()
         self.relocate_owls()
+        relocation_end=time.time() - relocations_time
+        reprod_time=time.time()
         self.iter_through_cells_reproduction()
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.krat_reproduction()
         if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.snake_reproduction()
-        cycle_end = round(time.time()) - cycle_start
-        print("cycle time {}".format(cycle_end))
+        reprod_time_end=time.time()-reprod_time
+        cycle_end = time.time() - cycle_start
+        t_row =[cycle_end, cell_activity_end,relocation_end,reprod_time_end]
+        self.sim.append_data(file_name="/home/mremington/Documents/krattle_analysis/krattle_analysis/speed_test.csv" ,data_row=t_row)
 
 
 
@@ -834,6 +841,7 @@ class Sim(object):
     def main(self):
         start = round(time.time())
         self.read_configuration_file()
+        self.make_csv(file_name = "/home/mremington/Documents/krattle_analysis/krattle_analysis/speed_test.csv" )
         self.make_csv(file_name = self.krat_file_path )
         self.make_csv(file_name = self.snake_file_path )
         for i in range(0,self.end_time,1):

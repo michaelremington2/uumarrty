@@ -607,28 +607,18 @@ class Landscape(object):
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
         for all organisms.'''
-        cycle_start = time.time()
         self.total_krats = 0
         self.total_snakes = 0
         self.total_owls = 0
-        cell_activity_start=time.time()
         self.iter_through_cells_activity()
-        cell_activity_end = time.time() - cell_activity_start
-        relocations_time=time.time()
         self.relocate_krats()
         self.relocate_snakes()
         self.relocate_owls()
-        relocation_end=time.time() - relocations_time
-        reprod_time=time.time()
         self.iter_through_cells_reproduction()
         if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.krat_reproduction()
         if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
             self.snake_reproduction()
-        reprod_time_end=time.time()-reprod_time
-        cycle_end = time.time() - cycle_start
-        t_row =[cycle_end, cell_activity_end,relocation_end,reprod_time_end]
-        self.sim.append_data(file_name="/home/mremington/Documents/krattle_analysis/krattle_analysis/speed_test.csv" ,data_row=t_row)
 
 
 
@@ -654,7 +644,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None):
+    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
         self.initial_conditions_file_path = initial_conditions_file_path
         #self.snake_info = []
         #self.krat_info = []
@@ -673,6 +663,8 @@ class Sim(object):
             self.burn_in = burn_in       
         else:
             self.burn_in = 0
+        if sim_info_output_file is not None:
+            self.sim_info_output_file = sim_info_output_file
         self._output_landscape = _output_landscape
         self._output_landscape_file_path = _output_landscape_file_path
         
@@ -840,16 +832,17 @@ class Sim(object):
 
     def main(self):
         start = round(time.time())
+        start_info ='sim started at {}, Data config {}.'.format(start, self.initial_conditions_file_path)
+        self.sim_info(line = start_info)
         self.read_configuration_file()
-        self.make_csv(file_name = "/home/mremington/Documents/krattle_analysis/krattle_analysis/speed_test.csv" )
         self.make_csv(file_name = self.krat_file_path )
         self.make_csv(file_name = self.snake_file_path )
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
         time_elapsed = round(time.time()) - start
-        print(time_elapsed)
-        #self.analyze_and_plot_org_fitness(org_data = self.snake_info)
+        end_info = 'Sim ended at {}, time elapsed {}, data'
+        self.sim_info(line = end_info)
 
     def test(self):
         self.read_configuration_file()
@@ -868,6 +861,12 @@ class Sim(object):
         with open(file_name, 'a') as f:
             writer = csv.writer(f)
             writer.writerow(data_row)
+
+    def sim_info(self, line):
+        if self.sim_info_output_file is not None:
+            with open(self.sim_info_output_file, 'a') as file:
+                file.write(line)
+
 
 
 if __name__ ==  "__main__":

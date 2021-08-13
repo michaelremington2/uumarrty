@@ -832,7 +832,8 @@ class Sim(object):
 
     def main(self):
         start = round(time.time())
-        start_info ='sim started at {}, Data config {}\n'.format(time.localtime(), self.initial_conditions_file_path)
+        start_info = 'sim started at {}, Data config {}\n'.format(time.localtime(), self.initial_conditions_file_path)
+        data_info ='{}, {} \n'.format(self.krat_file_path,self.snake_file_path )
         self.sim_info(line = start_info)
         self.read_configuration_file()
         self.make_csv(file_name = self.krat_file_path )

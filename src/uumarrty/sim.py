@@ -5,6 +5,7 @@ from json import load
 from uumarrty import organismsim as org
 from itertools import chain
 import time
+import csv
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -227,6 +228,7 @@ class Landscape(object):
     def build(self):
         '''Populates the attribute cells with an x by y array'''
         self.cells = []
+        self.cell_mh_dict = {'BUSH':[],'OPEN':[]}
         for yidx in range(self.cells_y_rows):
             temp_x = []
             for xidx in range(self.cells_x_columns):
@@ -236,10 +238,12 @@ class Landscape(object):
                     habitat_type = self.select_random_cell_type(),
                     cell_id = cell_id,
                     prey_competition = self.sim.prey_competition)
+                self.cell_mh_dict[cell.habitat_type[0].name].append(cell)
                 if self._output_landscape:
                     self._output_landscape_row_append(cell)
                 temp_x.append(cell)
             self.cells.append(temp_x)
+
 
     def _output_landscape_row_append(self,cell):
         '''This function generates a csv that has the information on every cell that generates the lanscape.'''
@@ -640,10 +644,10 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None):
+    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
         self.initial_conditions_file_path = initial_conditions_file_path
-        self.snake_info = []
-        self.krat_info = []
+        #self.snake_info = []
+        #self.krat_info = []
         if rng is None:
             self.rng = random.Random()
         else:
@@ -659,6 +663,8 @@ class Sim(object):
             self.burn_in = burn_in       
         else:
             self.burn_in = 0
+        if sim_info_output_file is not None:
+            self.sim_info_output_file = sim_info_output_file
         self._output_landscape = _output_landscape
         self._output_landscape_file_path = _output_landscape_file_path
         
@@ -826,15 +832,17 @@ class Sim(object):
 
     def main(self):
         start = round(time.time())
+        start_info ='sim started at {}, Data config {}.'.format(start, self.initial_conditions_file_path)
+        self.sim_info(line = start_info)
         self.read_configuration_file()
+        self.make_csv(file_name = self.krat_file_path )
+        self.make_csv(file_name = self.snake_file_path )
         for i in range(0,self.end_time,1):
             self.landscape.landscape_dynamics()
             self.cycle += 1
-        self.report_writer(array = self.krat_info,file_name = self.krat_file_path )
-        self.report_writer(array = self.snake_info,file_name = self.snake_file_path )
         time_elapsed = round(time.time()) - start
-        print(time_elapsed)
-        #self.analyze_and_plot_org_fitness(org_data = self.snake_info)
+        end_info = 'Sim ended at {}, time elapsed {}, data'
+        self.sim_info(line = end_info)
 
     def test(self):
         self.read_configuration_file()
@@ -845,11 +853,20 @@ class Sim(object):
                 print(cell_id)
         
 
-    def report_writer(self,array,file_name):
-        import csv
+    def make_csv(self,file_name):
         with open(file_name, 'w', newline='\n') as file:
-            writer = csv.writer(file)
-            writer.writerows(array)
+            pass
+
+    def append_data(self,file_name,data_row):
+        with open(file_name, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(data_row)
+
+    def sim_info(self, line):
+        if self.sim_info_output_file is not None:
+            with open(self.sim_info_output_file, 'a') as file:
+                file.write(line)
+
 
 
 if __name__ ==  "__main__":

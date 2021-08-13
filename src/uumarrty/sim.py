@@ -832,7 +832,7 @@ class Sim(object):
 
     def main(self):
         start = round(time.time())
-        start_info ='sim started at {}, Data config {}.'.format(start, self.initial_conditions_file_path)
+        start_info ='sim started at {}, Data config {}\n'.format(time.localtime(), self.initial_conditions_file_path)
         self.sim_info(line = start_info)
         self.read_configuration_file()
         self.make_csv(file_name = self.krat_file_path )
@@ -841,7 +841,7 @@ class Sim(object):
             self.landscape.landscape_dynamics()
             self.cycle += 1
         time_elapsed = round(time.time()) - start
-        end_info = 'Sim ended at {}, time elapsed {}, data'
+        end_info = 'Sim ended at {}, time elapsed {}\n'.format(time.localtime(), time_elapsed)
         self.sim_info(line = end_info)
 
     def test(self):

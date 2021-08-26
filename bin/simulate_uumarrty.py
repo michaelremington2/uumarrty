@@ -120,14 +120,15 @@ class run_experiments(object):
     def run_single_experiment(self, experiment_dictionary, experiment_label):
         ex_label = experiment_label
         data = experiment_dictionary
-        with open('ex_data.txt', 'w') as outfile:
+        config_file_name = 'config_{}.txt'.format(ex_label)
+        with open(config_file_name, 'w') as outfile:
             json.dump(data, outfile)
         for i in range(self.experiment_iterations):
             krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.csv'.format(i)
             snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.csv'.format(i)
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
-            sim_object = sim.Sim(initial_conditions_file_path = 'ex_data.txt',
+            sim_object = sim.Sim(initial_conditions_file_path = config_file_name,
                                  krat_csv_output_file_path = krat_data_output_file_label,
                                  snake_csv_output_file_path = snake_data_output_file_label,
                                  seed = self.seed,
@@ -143,8 +144,6 @@ class run_experiments(object):
                 for i in sims:
                     if os.path.exists(i):
                         os.remove(i)
-        if os.path.exists('ex_data.txt'):
-            os.remove('ex_data.txt')
 
     def main(self):
         for key, ex_group in self.experimental_groups.items():

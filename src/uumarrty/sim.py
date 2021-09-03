@@ -151,7 +151,7 @@ class Cell(object):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
         moving_krats = []
         for krat in self.krats:
-            if (self.sim.cycle % self.sim.krat_data_sample_frequency) == 0:
+            if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
                 krat.generate_krat_stats()
             self.foraging_rat(krat)
             if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
@@ -162,7 +162,7 @@ class Cell(object):
         """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
         moving_snakes = []
         for snake in self.snakes:
-            if (self.sim.cycle % self.sim.snake_data_sample_frequency) == 0:
+            if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
                 snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
             if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: 
@@ -644,7 +644,8 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path,rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
+    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path, totals_csv_output_file_path, rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
+        self.sim_id = uuid.uuid4().hex
         self.initial_conditions_file_path = initial_conditions_file_path
         #self.snake_info = []
         #self.krat_info = []
@@ -654,6 +655,7 @@ class Sim(object):
             self.rng = rng
         self.krat_file_path = krat_csv_output_file_path
         self.snake_file_path = snake_csv_output_file_path
+        self.sim_parameters_and_totals = totals_csv_output_file_path
         self.cycle = 0
         self.krat_generation = 0
         self.snake_generation = 0
@@ -744,7 +746,7 @@ class Sim(object):
                         strike_success_probability_open=config_d["snake_strike_success_probability_open"], snake_death_probability=config_d["snake_death_probability"],  owl_strike_success_probability=config_d["owl_catch_success"]
                         )
 
-    def config_sim_species_attributes(self,config_d):
+    def config_sim_species_attributes_and_sim_paramaters(self,config_d):
         self.mixed_individuals = config_d["mixed_preference_individuals"]
         self.prey_competition = config_d["prey_competition"]
         self.end_time = config_d["cycles_of_sim"]
@@ -756,8 +758,8 @@ class Sim(object):
         self.snake_mutation_std = config_d["snake_mutation_std"]
         self.krat_mutation_probability = config_d["krat_mutation_probability"]
         self.snake_mutation_probability = config_d["snake_mutation_probability"]
-        self.krat_data_sample_frequency = config_d["krat_data_sample_freq"]
-        self.snake_data_sample_frequency = config_d["snake_data_sample_freq"]
+        self.data_sample_frequency = config_d["data_sample_freq"]
+
 
     def initialize_snake_pop(self,config_d):
         if self.mixed_individuals:
@@ -804,7 +806,7 @@ class Sim(object):
                 )
 
     def configure(self, config_d):
-        self.config_sim_species_attributes(config_d = config_d)
+        self.config_sim_species_attributes_and_sim_paramater(config_d = config_d)
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -830,34 +832,6 @@ class Sim(object):
         self.run_config_checks(config_d = config_d)
         self.configure(config_d)
 
-    def main(self):
-        start = round(time.time())
-        start_local_time = time.localtime()
-        start_info = 'Sim start time {}:{} {}/{}/{}, Data config {}\n'.format(start_local_time.tm_hour,
-                                                                               start_local_time.tm_min,
-                                                                               start_local_time.tm_year,
-                                                                               start_local_time.tm_mon, 
-                                                                               start_local_time.tm_mday, 
-                                                                               self.initial_conditions_file_path)
-        data_info ='{}, {} \n'.format(self.krat_file_path,self.snake_file_path )
-        self.sim_info(line = data_info)
-        self.sim_info(line = start_info)
-        self.read_configuration_file()
-        self.make_csv(file_name = self.krat_file_path )
-        self.make_csv(file_name = self.snake_file_path )
-        for i in range(0,self.end_time,1):
-            self.landscape.landscape_dynamics()
-            self.cycle += 1
-        time_elapsed = round(time.time()) - start
-        end_local_time = time.localtime()
-        end_info = 'Sim end time {}:{} {}/{}/{}, time elapsed {}\n'.format(end_local_time.tm_hour,
-                                                                           end_local_time.tm_min,
-                                                                           end_local_time.tm_year,
-                                                                           end_local_time.tm_mon, 
-                                                                           end_local_time.tm_mday,
-                                                                           time_elapsed)
-        self.sim_info(line = end_info)
-
     def test(self):
         self.read_configuration_file()
         cells = self.landscape.cells
@@ -880,6 +854,52 @@ class Sim(object):
         if self.sim_info_output_file is not None:
             with open(self.sim_info_output_file, 'a') as file:
                 file.write(line)
+
+    def sim_stats_per_cycle(self, config_d):
+        if self.cycle == 0:
+            data_row = []
+            data_row.append("sim_id")
+            data_row.append("cycle")
+            for keys, vals in config_d.items():
+                data_row.append(keys)
+            self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
+        elif self.cycle >= self.burn_in and (self.sim.cycle % self.sim.data_sample_frequency) == 0:
+            data_row = []
+            data_row.append(self.sim_id)
+            data_row.append(self.cycle)
+            for keys, vals in config_d.items():
+                data_row.append(vals)
+            self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
+
+    def main(self):
+        start = round(time.time())
+        start_local_time = time.localtime()
+        start_info = 'Sim start time {}:{} {}/{}/{}, Data config {}\n'.format(start_local_time.tm_hour,
+                                                                               start_local_time.tm_min,
+                                                                               start_local_time.tm_year,
+                                                                               start_local_time.tm_mon, 
+                                                                               start_local_time.tm_mday, 
+                                                                               self.initial_conditions_file_path)
+        data_info ='{}, {} \n'.format(self.krat_file_path,self.snake_file_path )
+        self.sim_info(line = data_info)
+        self.sim_info(line = start_info)
+        self.read_configuration_file()
+        self.make_csv(file_name = self.krat_file_path )
+        self.make_csv(file_name = self.snake_file_path )
+        self.make_csv(file_name = self.sim_parameters_and_totals)
+        for i in range(0,self.end_time,1):
+            self.landscape.landscape_dynamics()
+            self.sim_stats_per_cycle(config_d)
+            self.cycle += 1
+        time_elapsed = round(time.time()) - start
+        end_local_time = time.localtime()
+        end_info = 'Sim end time {}:{} {}/{}/{}, time elapsed {}\n'.format(end_local_time.tm_hour,
+                                                                           end_local_time.tm_min,
+                                                                           end_local_time.tm_year,
+                                                                           end_local_time.tm_mon, 
+                                                                           end_local_time.tm_mday,
+                                                                           time_elapsed)
+        self.sim_info(line = end_info)
 
 
 

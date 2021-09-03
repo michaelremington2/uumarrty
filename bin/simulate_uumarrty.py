@@ -8,6 +8,7 @@ import argparse
 import glob
 import re
 import json
+import uuid
 import pandas as pd
 from uumarrty import sim
 from uumarrty import organismsim
@@ -61,7 +62,7 @@ class export_data_from_sims(object):
             file_name = self.get_file_name(sim = sim)
             experiment = self.format_experiment_label(file_name = file_name)
             sim_number = re.findall(r'\d+',sim)[-1]
-            cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim =sim)
+            cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim=sim)
             data_type = self.data_label(file_name = file_name)
             row = [file_name, experiment, sim_number, data_type, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref]
             self.append_data(fp = self.output_file_path_total,d_row = row)
@@ -81,10 +82,10 @@ class export_data_from_sims(object):
             data_type = self.data_label(file_name = file_name)
             data=pd.read_csv(sim,header=None)
             data.columns = ['id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-            grouped_data = data[["cycle", "bush_pw"]].groupby("cycle").mean()
+            grouped_data = data.groupby("cycle").agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'others_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
             grouped_data = grouped_data.reset_index()
             for index, row in grouped_data.iterrows():
-                dr = [file_name, experiment, sim_number, data_type, row['cycle'], row['bush_pw']]
+                dr = [file_name, experiment, sim_number, data_type] + row
                 self.append_data(fp = self.output_file_path_per_cycle, d_row = dr)
 
     def append_data(self,fp,d_row):

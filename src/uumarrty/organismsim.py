@@ -425,7 +425,10 @@ class Krat(Organism):
 
     def calc_energy_cost(self):
         '''returns the appropriate energy pay cost. Future iterations of this function may be more dynamic.'''
-        cost = self.energy_cost
+        if self.alive:
+            cost = self.energy_cost
+        else:
+            cost = 0
         return cost
 
     def generate_krat_stats(self):

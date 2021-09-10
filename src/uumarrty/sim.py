@@ -6,6 +6,7 @@ from uumarrty import organismsim as org
 from itertools import chain
 import time
 import csv
+import uuid
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -806,7 +807,7 @@ class Sim(object):
                 )
 
     def configure(self, config_d):
-        self.config_sim_species_attributes_and_sim_paramater(config_d = config_d)
+        self.config_sim_species_attributes_and_sim_paramaters(config_d = config_d)
         self.landscape = Landscape(
                 sim=self,
                 size_x=config_d["landscape_size_x"],
@@ -828,9 +829,9 @@ class Sim(object):
 
     def read_configuration_file(self):
         with open(self.initial_conditions_file_path) as f:
-            config_d = load(f)
-        self.run_config_checks(config_d = config_d)
-        self.configure(config_d)
+            self.config_d = load(f)
+        self.run_config_checks(config_d = self.config_d)
+        self.configure(self.config_d)
 
     def test(self):
         self.read_configuration_file()
@@ -863,7 +864,7 @@ class Sim(object):
             for keys, vals in config_d.items():
                 data_row.append(keys)
             self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
-        elif self.cycle >= self.burn_in and (self.sim.cycle % self.sim.data_sample_frequency) == 0:
+        elif self.cycle >= self.burn_in and (self.cycle % self.data_sample_frequency) == 0:
             data_row = []
             data_row.append(self.sim_id)
             data_row.append(self.cycle)
@@ -883,13 +884,13 @@ class Sim(object):
         data_info ='{}, {} \n'.format(self.krat_file_path,self.snake_file_path )
         self.sim_info(line = data_info)
         self.sim_info(line = start_info)
-        self.read_configuration_file()
         self.make_csv(file_name = self.krat_file_path )
         self.make_csv(file_name = self.snake_file_path )
         self.make_csv(file_name = self.sim_parameters_and_totals)
+        self.read_configuration_file()
         for i in range(0,self.end_time,1):
+            self.sim_stats_per_cycle(self.config_d)
             self.landscape.landscape_dynamics()
-            self.sim_stats_per_cycle(config_d)
             self.cycle += 1
         time_elapsed = round(time.time()) - start
         end_local_time = time.localtime()

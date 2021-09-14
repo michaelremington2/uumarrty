@@ -152,10 +152,10 @@ class Cell(object):
         """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
         moving_krats = []
         for krat in self.krats:
-            if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
+            if (self.sim.cycle % self.sim.data_sample_frequency) == 0 and krat.alive:
                 krat.generate_krat_stats()
             self.foraging_rat(krat)
-            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0:
+            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0 and krat.alive:
                 self.krat_move(krat,moving_krat_list = moving_krats)           
         self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
 
@@ -163,12 +163,12 @@ class Cell(object):
         """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
         moving_snakes = []
         for snake in self.snakes:
+            snake.snake_death()
             if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
                 snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
             if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: 
-                self.snake_move(snake, moving_snake_list=moving_snakes)      
-            snake.snake_death()      
+                self.snake_move(snake, moving_snake_list=moving_snakes)            
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
 
     def owl_activity_pulse_behavior(self):
@@ -645,7 +645,7 @@ class Sim(object):
         snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path, totals_csv_output_file_path, rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
+    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path, parameters_csv_output_file_path, rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
         self.sim_id = uuid.uuid4().hex
         self.initial_conditions_file_path = initial_conditions_file_path
         #self.snake_info = []
@@ -656,7 +656,7 @@ class Sim(object):
             self.rng = rng
         self.krat_file_path = krat_csv_output_file_path
         self.snake_file_path = snake_csv_output_file_path
-        self.sim_parameters_and_totals = totals_csv_output_file_path
+        self.sim_parameters_and_totals = parameters_csv_output_file_path
         self.cycle = 0
         self.krat_generation = 0
         self.snake_generation = 0

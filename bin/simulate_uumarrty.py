@@ -3,15 +3,15 @@
 import csv
 import json
 import os
-import sys
 import argparse
 import glob
 import re
 import json
-import uuid
 import pandas as pd
 from uumarrty import sim
 from uumarrty import organismsim
+from warnings import filterwarnings
+filterwarnings("ignore")
 
 
 class run_experiments(object):
@@ -133,7 +133,7 @@ class export_data_from_sims(object):
             pass 
         else:
             header = ['file_name','experiment','sim_number',
-                  'org','sim_id', 'cycle','pop_count',
+                  'org','sim_id', 'cycle','generation','pop_count',
                   'bush_pw_mean','bush_pw_std',
                   'energy_score_mean','energy_score_std','energy_score_sum',
                   'movements_mean','movements_std','movements_sum',
@@ -150,7 +150,7 @@ class export_data_from_sims(object):
             data_type = self.data_label(file_name = file_name)
             data=pd.read_csv(sim,header=None)
             data.columns = ['sim_id','id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-            grouped_data = data.groupby(['sim_id','cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
+            grouped_data = data.groupby(['sim_id','generation','cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
             grouped_data = grouped_data.reset_index()
             result = grouped_data.set_index(['sim_id','cycle']).join(parameter_df.set_index(['sim_id','cycle']), how="left").reset_index()
             #pd.merge(grouped_data, parameter_df, how="left", on=["sim_id", "cycle"])

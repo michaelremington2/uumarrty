@@ -276,19 +276,19 @@ class Organism(object):
 
 
 
-class Snake(Organism):
+class Predator(Organism):
     '''
-    The for a general predator that represents a snake. The snake can hunt in any habitat.
+    The for a general predator that represents a predator_item. The predator_item can hunt in any habitat.
 
     Args:
         sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
         move_range -- the distance the organism can move from it's current cell. Orgs can move (N,E,W,S,NW,NE,SE,SW). 
         move_frequency -- the number of cycles that pass before the organism moves.
-        strike_success_probability_bush -- the probability a snake object will catch a prey item if they are in the same cell with a bush microhabitat.
-        strike_success_probability_open -- the probability a snake object will catch a prey item if they are in the same cell with a open microhabitat.
-        energy_gain_per_krat -- the amount of payoff the snake object gets from capturing a krat object.
+        strike_success_probability_bush -- the probability a predator_item object will catch a prey item if they are in the same cell with a bush microhabitat.
+        strike_success_probability_open -- the probability a predator_item object will catch a prey item if they are in the same cell with a open microhabitat.
+        energy_gain_per_prey_item -- the amount of payoff the predator_item object gets from capturing a prey_item object.
         energy_cost -- the amount of energy lost per cycle.
-        death_probability -- a probability that the snake will die of either random causes or old age.
+        death_probability -- a probability that the predator_item will die of either random causes or old age.
         home_cell -- cell the organism is born in or has a nest. (tuple of x,y, default is none)
         move_preference -- an algorithm for weighting cells that previously provided the organism with increased payoff. This currently isn't working so set to false.
         open_preference_weight -- a weight that either increases or decreases prference to the open habitat. (default 1)
@@ -307,11 +307,11 @@ class Snake(Organism):
         org_id -- the id in memory space of the object.
     '''
 
-    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_krat,energy_cost,death_probability,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_prey_item,energy_cost,death_probability,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell, move_range,move_preference,memory_length_cycles)
         self.sim = sim 
         self.energy_score = 0
-        self.energy_gain_per_krat = energy_gain_per_krat
+        self.energy_gain_per_prey_item = energy_gain_per_prey_item
         self.death_probability = death_probability
         self.energy_cost = energy_cost
         self.strike_success_probability_bush = strike_success_probability_bush
@@ -337,12 +337,12 @@ class Snake(Organism):
             ss = self.strike_success_probability_open
         return ss
 
-    def generate_snake_stats(self):
-        '''compiles a row of stats per cycle to be added to the simulations overall snake stats array.'''
+    def generate_predator_item_stats(self):
+        '''compiles a row of stats per cycle to be added to the simulations overall predator_item stats array.'''
         if self.sim.cycle >= self.sim.burn_in and self.alive:
             row = [ self.sim.sim_id,
                     self.org_id,
-                    self.sim.snake_generation,
+                    self.sim.predator_item_generation,
                     self.sim.cycle,
                     self.open_preference_weight,
                     self.bush_preference_weight,
@@ -350,19 +350,19 @@ class Snake(Organism):
                     self.number_of_movements, 
                     self.current_cell.cell_id,
                     self.current_cell.habitat_type[0].name,
-                    len(self.current_cell.krats),
+                    len(self.current_cell.prey_items),
                     len(self.current_cell.owls)]
-            self.sim.append_data(file_name=self.sim.snake_file_path ,data_row=row)
+            self.sim.append_data(file_name=self.sim.predator_item_file_path ,data_row=row)
 
-    def snake_death(self):
-        '''Kills snake if the probability condition is met.'''
+    def predator_item_death(self):
+        '''Kills predator_item if the probability condition is met.'''
         if self.rng.random() < self.death_probability:
             self.alive = False
 
 
-class Krat(Organism):
+class Prey(Organism):
     '''
-    The for a general prey item the kangaroo rat. In this simulation it is just known as the krat
+    The for a general prey item the kangaroo rat. In this simulation it is just known as the prey_item
 
     Args:
         sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
@@ -371,7 +371,7 @@ class Krat(Organism):
         energy_gain_bush -- the payoff for foraging in a bush habitat
         energy_gain_open -- the payoff for foraging in a open habitat
         energy_cost -- the amount of energy lost per cycle.
-        death_probability -- a probability that the snake will die of either random causes or old age.
+        death_probability -- a probability that the predator_item will die of either random causes or old age.
         home_cell -- cell the organism is born in or has a nest. (tuple of x,y)
         move_preference -- an algorithm for weighting cells that previously provided the organism with increased payoff. This currently isn't working so set to false.
         open_preference_weight -- a weight that either increases or decreases prference to the open habitat. (default 1)
@@ -431,12 +431,12 @@ class Krat(Organism):
             cost = 0
         return cost
 
-    def generate_krat_stats(self):
-        '''generates 1 row of stats on the krat object per cycle to be appended to the simulations overall krat info array.'''
+    def generate_prey_item_stats(self):
+        '''generates 1 row of stats on the prey_item object per cycle to be appended to the simulations overall prey_item info array.'''
         if self.sim.cycle >= self.sim.burn_in and self.alive:
             row = [ self.sim.sim_id,
                     self.org_id,
-                    self.sim.krat_generation,
+                    self.sim.prey_item_generation,
                     self.sim.cycle,
                     self.open_preference_weight,
                     self.bush_preference_weight,
@@ -444,14 +444,14 @@ class Krat(Organism):
                     self.number_of_movements, 
                     self.current_cell.cell_id,
                     self.current_cell.habitat_type[0].name,
-                    len(self.current_cell.snakes),
+                    len(self.current_cell.predator_items),
                     len(self.current_cell.owls)]
-            self.sim.append_data(file_name=self.sim.krat_file_path ,data_row=row)
+            self.sim.append_data(file_name=self.sim.prey_item_file_path ,data_row=row)
 
 
 class Owl(Organism):
     '''
-    This object represents a specialized predator item representing an owl. In this simulation it is just known as the kratThe owl can only hunt in open habitats.
+    This object represents a specialized predator item representing an owl. In this simulation it is just known as the prey_itemThe owl can only hunt in open habitats.
     Args:
         sim -- the simulation object with base parameters such as a random number generator and a time parameter. (sim object)
         move_range -- the distance the organism can move from it's current cell. Orgs can move (N,E,W,S,NW,NE,SE,SW). 

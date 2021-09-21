@@ -19,15 +19,15 @@ class Cell(object):
         habitat_type -- this is a label from an enumerated habitat object. (enum object)
         cell_id -- a tuple of the postion of the cell on the landscape in the y direction (rows) and the landscape in the x direction (columns). (tuple with 2 elements)
     Attributes:
-        krats -- a list that holds krat objects. (list)
-        snakes -- a list that holds sake objects. (list)
+        prey_items -- a list that holds prey_item objects. (list)
+        predator_items -- a list that holds sake objects. (list)
         landscape -- the landscape object the cell operates in.
         rng -- a random number operator object.
     '''
     def __init__(self, sim, habitat_type,cell_id,prey_competition=False):
         self.sim = sim
-        self.krats = []
-        self.snakes = []
+        self.prey_items = []
+        self.predator_items = []
         self.owls = []
         self.habitat_type = habitat_type
         self.landscape = sim.landscape
@@ -38,143 +38,143 @@ class Cell(object):
     def __hash__(self):
         return id(self)
 
-    def add_krat(self, krat):
-        '''Add a krat to the population of this cells krats'''
-        self.krats.append(krat)
+    def add_prey_item(self, prey_item):
+        '''Add a prey_item to the population of this cells prey_items'''
+        self.prey_items.append(prey_item)
 
-    def add_snake(self, snake):
-        '''Add a snake to the population of this cells snakes'''
-        self.snakes.append(snake)
+    def add_predator_item(self, predator_item):
+        '''Add a predator_item to the population of this cells predator_items'''
+        self.predator_items.append(predator_item)
 
     def add_owl(self,owl):
         '''adds an owl object to the landscape.'''
         self.owls.append(owl)
 
-    def select_krat(self,krat_index = None):
-        '''returns a random krat object if no specific index is provided.'''
-        if krat_index == None:
-            krat_index = self.rng.randint(0,len(self.krats)-1)
-        krat = self.krats[krat_index]
-        return krat
+    def select_prey_item(self,prey_item_index = None):
+        '''returns a random prey_item object if no specific index is provided.'''
+        if prey_item_index == None:
+            prey_item_index = self.rng.randint(0,len(self.prey_items)-1)
+        prey_item = self.prey_items[prey_item_index]
+        return prey_item
 
-    def select_snake(self,snake_index = None):
-        '''returns a random snake object if no specific index is provided.'''
-        if snake_index == None:
-            snake_index = self.rng.randint(0,len(self.snake)-1)
-        snake = self.snakes[snake_index]
-        return snake
+    def select_predator_item(self,predator_item_index = None):
+        '''returns a random predator_item object if no specific index is provided.'''
+        if predator_item_index == None:
+            predator_item_index = self.rng.randint(0,len(self.predator_item)-1)
+        predator_item = self.predator_items[predator_item_index]
+        return predator_item
 
-    def pop_krat(self,krat_index):
-        '''Selects a krat at random from population and removes it and returns the object '''
-        return self.krats.pop(krat_index)
+    def pop_prey_item(self,prey_item_index):
+        '''Selects a prey_item at random from population and removes it and returns the object '''
+        return self.prey_items.pop(prey_item_index)
 
-    def pop_snake(self,snake_index):
-        '''Selects a snake at random from population and removes it and returns the object '''
-        return self.snakes.pop(snake_index)
+    def pop_predator_item(self,predator_item_index):
+        '''Selects a predator_item at random from population and removes it and returns the object '''
+        return self.predator_items.pop(predator_item_index)
 
-    def clean_krat_list(self):
-        '''creates a fresh list for the attribute krats'''
-        self.krats = []
+    def clean_prey_item_list(self):
+        '''creates a fresh list for the attribute prey_items'''
+        self.prey_items = []
 
-    def clean_snake_list(self):
-        '''creates a fresh list for the attribute snakes'''
-        self.snakes = []
+    def clean_predator_item_list(self):
+        '''creates a fresh list for the attribute predator_items'''
+        self.predator_items = []
 
     def cell_over_populated(self):
         '''test that makes sure cells don't become overpopulated and break sim'''
-        if len(self.krats) > self.sim.initial_krat_pop:
-            raise ValueError("Krats mating too much")
-        if len(self.snakes) > self.sim.initial_snake_pop:
-            raise ValueError("snakes mating too much")
+        if len(self.prey_items) > self.sim.initial_prey_item_pop:
+            raise ValueError("prey_items mating too much")
+        if len(self.predator_items) > self.sim.initial_predator_item_pop:
+            raise ValueError("predator_items mating too much")
 
-    def krat_move(self, krat,moving_krat_list,return_home=False):
-        '''runs the krat movement algorithm and moves the krat from the cell to a temp list in the landscape. 
-        Optional can designate the krat to return to designated nest cell tied to the krat object.'''
+    def prey_item_move(self, prey_item,moving_prey_item_list,return_home=False):
+        '''runs the prey_item movement algorithm and moves the prey_item from the cell to a temp list in the landscape. 
+        Optional can designate the prey_item to return to designated nest cell tied to the prey_item object.'''
         if return_home== True:
-            new_cell = krat.return_home()
+            new_cell = prey_item.return_home()
         else:
-            new_cell = krat.organism_movement()
+            new_cell = prey_item.organism_movement()
         if new_cell != self:
-            moving_krat = (new_cell,krat,self)
-            self.landscape.krat_move_pool.append(moving_krat)
-            moving_krat_list.append(krat)
+            moving_prey_item = (new_cell,prey_item,self)
+            self.landscape.prey_item_move_pool.append(moving_prey_item)
+            moving_prey_item_list.append(prey_item)
 
-    def snake_move(self,snake,moving_snake_list):
-        '''runs the snake movement algorithm and moves the krat from the cell to a temp list in the landscape. '''
-        new_cell = snake.organism_movement()
+    def predator_item_move(self,predator_item,moving_predator_item_list):
+        '''runs the predator_item movement algorithm and moves the prey_item from the cell to a temp list in the landscape. '''
+        new_cell = predator_item.organism_movement()
         if new_cell != self:
-            moving_snake = (new_cell,snake,self)
-            self.landscape.snake_move_pool.append(moving_snake)
-            moving_snake_list.append(snake)
+            moving_predator_item = (new_cell,predator_item,self)
+            self.landscape.predator_item_move_pool.append(moving_predator_item)
+            moving_predator_item_list.append(predator_item)
 
     def owl_move(self,owl,moving_owl_list):
-        '''runs the owl movement algorithm and moves the krat from the cell to a temp list in the landscape. '''
+        '''runs the owl movement algorithm and moves the prey_item from the cell to a temp list in the landscape. '''
         new_cell = owl.organism_movement()
         if new_cell != self:
             moving_owl = (new_cell,owl,self)
             self.landscape.owl_move_pool.append(moving_owl)
             moving_owl_list.append(owl)             
 
-    def krat_predation_by_snake(self,snake):
-        '''determines whether or not the snake that was passed into the function successfully kills and obtains payoff of a krat that shares the cell with it.'''
-        live_krats = [krat for krat in self.krats if krat.alive] 
-        ss = snake.calc_strike_success_probability(self)
-        energy_cost = snake.energy_cost
-        if len(live_krats) > 0 and self.rng.random() < ss:
-            krat_index = self.rng.randint(0,len(live_krats)-1)
-            krat = self.select_krat(krat_index = krat_index)
-            krat.alive = False
-            energy_gain = snake.energy_gain_per_krat              
+    def prey_item_predation_by_predator_item(self,predator_item):
+        '''determines whether or not the predator_item that was passed into the function successfully kills and obtains payoff of a prey_item that shares the cell with it.'''
+        live_prey_items = [prey_item for prey_item in self.prey_items if prey_item.alive] 
+        ss = predator_item.calc_strike_success_probability(self)
+        energy_cost = predator_item.energy_cost
+        if len(live_prey_items) > 0 and self.rng.random() < ss:
+            prey_item_index = self.rng.randint(0,len(live_prey_items)-1)
+            prey_item = self.select_prey_item(prey_item_index = prey_item_index)
+            prey_item.alive = False
+            energy_gain = predator_item.energy_gain_per_prey_item              
         else:
             energy_gain = 0
         energy_delta = (energy_gain - energy_cost)
-        snake.energy_score += energy_delta
+        predator_item.energy_score += energy_delta
 
-    def krat_predation_by_owl(self,owl):
-        '''determines whether or not the owl that was passed into the function successfully kills and obtains payoff of a krat that shares the cell with it.'''
-        live_krats = [krat for krat in self.krats if krat.alive] 
-        if len(live_krats) > 0 and self.rng.random() < owl.strike_success_probability and self.habitat_type[0].name == 'OPEN':
-            krat_index = self.rng.randint(0,len(live_krats)-1)
-            krat = self.select_krat(krat_index = krat_index)
-            krat.alive = False
+    def prey_item_predation_by_owl(self,owl):
+        '''determines whether or not the owl that was passed into the function successfully kills and obtains payoff of a prey_item that shares the cell with it.'''
+        live_prey_items = [prey_item for prey_item in self.prey_items if prey_item.alive] 
+        if len(live_prey_items) > 0 and self.rng.random() < owl.strike_success_probability and self.habitat_type[0].name == 'OPEN':
+            prey_item_index = self.rng.randint(0,len(live_prey_items)-1)
+            prey_item = self.select_prey_item(prey_item_index = prey_item_index)
+            prey_item.alive = False
 
-    def foraging_rat(self,krat):
-        '''Provides krat with appropriate pay off for foraging in the cell.'''
+    def foraging_rat(self,prey_item):
+        '''Provides prey_item with appropriate pay off for foraging in the cell.'''
         if self.prey_competition:
-            krat_energy_gain = krat.calc_energy_gain(self)/len(self.krats)
+            prey_item_energy_gain = prey_item.calc_energy_gain(self)/len(self.prey_items)
         else:
-            krat_energy_gain = krat.calc_energy_gain(self)
-        krat_energy_cost = krat.calc_energy_cost()
-        energy_delta = (krat_energy_gain - krat_energy_cost)
-        krat.energy_score += energy_delta
+            prey_item_energy_gain = prey_item.calc_energy_gain(self)
+        prey_item_energy_cost = prey_item.calc_energy_cost()
+        energy_delta = (prey_item_energy_gain - prey_item_energy_cost)
+        prey_item.energy_score += energy_delta
 
-    def krat_activity_pulse_behavior(self):
-        """ Krat function, this is the general behavior of either moving or foraging of the krat for one activity pulse."""
-        moving_krats = []
-        for krat in self.krats:
-            if (self.sim.cycle % self.sim.data_sample_frequency) == 0 and krat.alive:
-                krat.generate_krat_stats()
-            self.foraging_rat(krat)
-            if self.sim.cycle % krat.movement_frequency == 0 and self.sim.cycle != 0 and krat.alive:
-                self.krat_move(krat,moving_krat_list = moving_krats)           
-        self.krats = [krat for krat in self.krats if krat not in moving_krats and krat.alive]     
+    def prey_item_activity_pulse_behavior(self):
+        """ prey_item function, this is the general behavior of either moving or foraging of the prey_item for one activity pulse."""
+        moving_prey_items = []
+        for prey_item in self.prey_items:
+            if (self.sim.cycle % self.sim.data_sample_frequency) == 0 and prey_item.alive:
+                prey_item.generate_prey_item_stats()
+            self.foraging_rat(prey_item)
+            if self.sim.cycle % prey_item.movement_frequency == 0 and self.sim.cycle != 0 and prey_item.alive:
+                self.prey_item_move(prey_item,moving_prey_item_list = moving_prey_items)           
+        self.prey_items = [prey_item for prey_item in self.prey_items if prey_item not in moving_prey_items and prey_item.alive]     
 
-    def snake_activity_pulse_behavior(self):
-        """ snake function, this is the general behavior of either moving or hunting of the krat for one activity pulse."""
-        moving_snakes = []
-        for snake in self.snakes:
-            snake.snake_death()
+    def predator_item_activity_pulse_behavior(self):
+        """ predator_item function, this is the general behavior of either moving or hunting of the prey_item for one activity pulse."""
+        moving_predator_items = []
+        for predator_item in self.predator_items:
+            predator_item.predator_item_death()
             if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
-                snake.generate_snake_stats()
-            self.krat_predation_by_snake(snake)
-            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: 
-                self.snake_move(snake, moving_snake_list=moving_snakes)            
-        self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
+                predator_item.generate_predator_item_stats()
+            self.prey_item_predation_by_predator_item(predator_item)
+            if self.sim.cycle % predator_item.movement_frequency == 0 and self.sim.cycle != 0: 
+                self.predator_item_move(predator_item, moving_predator_item_list=moving_predator_items)            
+        self.predator_items = [predator_item for predator_item in self.predator_items if predator_item not in moving_predator_items and predator_item.alive]
 
     def owl_activity_pulse_behavior(self):
         moving_owls = []
         for owl in self.owls:
-            self.krat_predation_by_owl(owl)
+            self.prey_item_predation_by_owl(owl)
             self.owl_move(owl, moving_owl_list=moving_owls)
         self.owls = [owl for owl in self.owls if owl not in moving_owls]
 
@@ -191,11 +191,11 @@ class Landscape(object):
         cells -- a list of cell objects that populate the landscape.
         cells_x_columns -- the length of the cells array in the x direction (columns). (int)
         cells_y_rows -- the length of the cells array in the y direction (rows). (int)
-        krat_move_pool -- a temporary list that holds krats that need to be relocated to different cells in the landscape.
-        snake_move_pool -- a temporary list that holds snakes that need to be relocated to different cells in the landscape.
+        prey_item_move_pool -- a temporary list that holds prey_items that need to be relocated to different cells in the landscape.
+        predator_item_move_pool -- a temporary list that holds predator_items that need to be relocated to different cells in the landscape.
         owl_move_pool = -- a temporary list that holds owls that need to be relocated to different cells in the landscape.
-        total_krat_list -- a list of the krat objects used for analysis and reproduction.
-        total_snake_list -- a list of the snake objects used for analysis and reproduction.
+        total_prey_item_list -- a list of the prey_item objects used for analysis and reproduction.
+        total_predator_item_list -- a list of the predator_item objects used for analysis and reproduction.
         total_owl_list -- a list of the owl objects used for analysis and reproduction.
         '''
     class MicrohabitatType(Enum):
@@ -211,11 +211,11 @@ class Landscape(object):
         self.cells_x_columns = int(round(self.size_x))
         self.cells_y_rows = int(round(self.size_y))
         self.microhabitat_open_bush_proportions = microhabitat_open_bush_proportions
-        self.krat_move_pool = []
-        self.snake_move_pool = []
+        self.prey_item_move_pool = []
+        self.predator_item_move_pool = []
         self.owl_move_pool = []
-        self.total_krat_list = [] 
-        self.total_snake_list = []
+        self.total_prey_item_list = [] 
+        self.total_predator_item_list = []
         self.total_owl_list = []
         self.rng = self.sim.rng
         self._output_landscape = _output_landscape
@@ -274,81 +274,81 @@ class Landscape(object):
         cell = temp[column]
         return cell
 
-    def initialize_snake_pop_discrete_preference(
+    def initialize_predator_item_pop_discrete_preference(
             self, 
             death_probability, strike_success_probability_bush,
-            strike_success_probability_open, energy_gain_per_krat,
+            strike_success_probability_open, energy_gain_per_prey_item,
             energy_cost, move_range,
-            movement_frequency, snake_genotype_frequencies):
+            movement_frequency, predator_item_genotype_frequencies):
         '''Just used to first initalize populations of kangaroo rats.
             This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
-        isp = self.sim.initial_snake_pop
-        for key, freq in snake_genotype_frequencies.items():
+        isp = self.sim.initial_predator_item_pop
+        for key, freq in predator_item_genotype_frequencies.items():
             pop = round(isp*freq)
             while pop > 0:
                 cell = self.select_random_cell()
                 bush_preference_weight = float(key)
                 open_preference_weight = (1-float(key))
-                snake = org.Snake(sim = self.sim,
+                predator_item = org.Predator(sim = self.sim,
                             strike_success_probability_bush = strike_success_probability_bush,
                             strike_success_probability_open = strike_success_probability_open,
                             death_probability = death_probability,
-                            energy_gain_per_krat = energy_gain_per_krat,
+                            energy_gain_per_prey_item = energy_gain_per_prey_item,
                             energy_cost = energy_cost,
                             move_range = move_range,
                             movement_frequency = movement_frequency,
                             open_preference_weight = open_preference_weight,
                             bush_preference_weight = bush_preference_weight
                             )
-                cell.add_snake(snake)
-                snake.current_cell=cell
-                #snake.generate_snake_stats()
+                cell.add_predator_item(predator_item)
+                predator_item.current_cell=cell
+                #predator_item.generate_predator_item_stats()
                 pop = pop-1
 
-    def initialize_snake_pop_continuous_preference(
+    def initialize_predator_item_pop_continuous_preference(
             self, death_probability,
             strike_success_probability_bush, strike_success_probability_open,
-            energy_gain_per_krat,energy_cost, move_range,
+            energy_gain_per_prey_item,energy_cost, move_range,
             movement_frequency):
         '''Just used to first initalize populations of kangaroo rats.
             This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
-        isp = self.sim.initial_snake_pop
+        isp = self.sim.initial_predator_item_pop
         while isp > 0:
             cell = self.select_random_cell()
             bush_preference_weight = self.rng.uniform(0, 1)
             open_preference_weight = (1-float(bush_preference_weight))
-            snake = org.Snake(sim = self.sim,
+            predator_item = org.Predator(sim = self.sim,
                         strike_success_probability_bush = strike_success_probability_bush,
                         strike_success_probability_open = strike_success_probability_open,
                         death_probability = death_probability,
-                        energy_gain_per_krat = energy_gain_per_krat,
+                        energy_gain_per_prey_item = energy_gain_per_prey_item,
                         energy_cost = energy_cost,
                         move_range = move_range,
                         movement_frequency = movement_frequency,
                         open_preference_weight = open_preference_weight,
                         bush_preference_weight = bush_preference_weight
                         )
-            cell.add_snake(snake)
-            snake.current_cell=cell
-            #snake.generate_snake_stats()
+            cell.add_predator_item(predator_item)
+            predator_item.current_cell=cell
+            #predator_item.generate_predator_item_stats()
             isp = isp-1
 
-    def initialize_krat_pop_discrete_preference(
+    def initialize_prey_item_pop_discrete_preference(
             self, 
             energy_gain_bush, energy_gain_open,
             energy_cost, move_range,
-            movement_frequency, krat_genotype_frequencies):
+            movement_frequency, prey_item_genotype_frequencies):
         '''Just used to first initalize populations of kangaroo rats.
             This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
-        ikp = self.sim.initial_krat_pop
-        for key, freq in krat_genotype_frequencies.items():
+        ikp = self.sim.initial_prey_item_pop
+        for key, freq in prey_item_genotype_frequencies.items():
             pop = round(ikp*freq)
             while pop > 0:
                 cell = self.select_random_cell()
                 bush_preference_weight = float(key)
                 open_preference_weight = (1-float(key))
                 cell = self.select_random_cell()
-                krat = org.Krat(sim = self.sim,
+                prey_item = org.Prey(sim = self.sim,
                             energy_gain_bush = energy_gain_bush, #from bouskila
                             energy_gain_open = energy_gain_open, #from bouskila
                             energy_cost = energy_cost,
@@ -357,25 +357,25 @@ class Landscape(object):
                             home_cell = cell,
                             open_preference_weight = open_preference_weight,
                             bush_preference_weight = bush_preference_weight)
-                cell.add_krat(krat)
-                krat.current_cell=cell
-                #krat.generate_krat_stats()
+                cell.add_prey_item(prey_item)
+                prey_item.current_cell=cell
+                #prey_item.generate_prey_item_stats()
                 pop = pop-1
 
-    def initialize_krat_pop_continuous_preference(
+    def initialize_prey_item_pop_continuous_preference(
         self, 
         energy_gain_bush, energy_gain_open,
         energy_cost, move_range,
         movement_frequency):
         '''Just used to first initalize populations of kangaroo rats.
             This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
-        ikp = self.sim.initial_krat_pop
+        ikp = self.sim.initial_prey_item_pop
         while ikp > 0:
             cell = self.select_random_cell()
             bush_preference_weight = self.rng.uniform(0, 1)
             open_preference_weight = (1-float(bush_preference_weight))
             cell = self.select_random_cell()
-            krat = org.Krat(sim = self.sim,
+            prey_item = org.Prey(sim = self.sim,
                         energy_gain_bush = energy_gain_bush, #from bouskila
                         energy_gain_open = energy_gain_open, #from bouskila
                         energy_cost = energy_cost,
@@ -384,9 +384,9 @@ class Landscape(object):
                         home_cell= cell,
                         open_preference_weight = open_preference_weight,
                         bush_preference_weight = bush_preference_weight)
-            cell.add_krat(krat)
-            krat.current_cell=cell
-                #krat.generate_krat_stats()
+            cell.add_prey_item(prey_item)
+            prey_item.current_cell=cell
+                #prey_item.generate_prey_item_stats()
             ikp = ikp-1
 
     def initialize_owl_pop(
@@ -405,21 +405,21 @@ class Landscape(object):
             owl.current_cell=cell
             iop = iop-1
 
-    def relocate_krats(self):
-        for i, krat in enumerate(self.krat_move_pool):
-            new_cell = krat[0]
-            krat_object = krat[1]
-            new_cell.add_krat(krat_object)
-            krat_object.current_cell = new_cell
-        self.krat_move_pool = []
+    def relocate_prey_items(self):
+        for i, prey_item in enumerate(self.prey_item_move_pool):
+            new_cell = prey_item[0]
+            prey_item_object = prey_item[1]
+            new_cell.add_prey_item(prey_item_object)
+            prey_item_object.current_cell = new_cell
+        self.prey_item_move_pool = []
 
-    def relocate_snakes(self):
-        for j, snake in enumerate(self.snake_move_pool):
-            new_cell = snake[0]
-            snake_object = snake[1]
-            new_cell.add_snake(snake_object)
-            snake_object.current_cell = new_cell 
-        self.snake_move_pool = []
+    def relocate_predator_items(self):
+        for j, predator_item in enumerate(self.Predator_item_move_pool):
+            new_cell = predator_item[0]
+            predator_item_object = predator_item[1]
+            new_cell.add_predator_item(predator_item_object)
+            predator_item_object.current_cell = new_cell 
+        self.predator_item_move_pool = []
 
     def relocate_owls(self):
         for j, owl in enumerate(self.owl_move_pool):
@@ -502,43 +502,43 @@ class Landscape(object):
 
 
     def iter_through_cells_reproduction(self):
-        #Snakes and Krats
-        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) == 0:
+        #predator_items and prey_items
+        if (self.sim.cycle % self.sim.prey_item_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.predator_item_reproduction_freq) == 0:
             for cell_width in self.cells:
                 for cell in cell_width:
-                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
-                    cell.clean_krat_list()
-                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
-                    cell.clean_snake_list()
-        #Just Krats
-        elif (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) != 0:
+                    self.populate_total_org_list(total_org_list = self.total_prey_item_list, cell_org_list= cell.prey_items) #prey_item reproduction
+                    cell.clean_prey_item_list()
+                    self.populate_total_org_list(total_org_list = self.total_predator_item_list, cell_org_list= cell.predator_items) #predator_item reproduction
+                    cell.clean_predator_item_list()
+        #Just prey_items
+        elif (self.sim.cycle % self.sim.prey_item_reproduction_freq) == 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.predator_item_reproduction_freq) != 0:
             for cell_width in self.cells:
                 for cell in cell_width:
-                    self.populate_total_org_list(total_org_list = self.total_krat_list, cell_org_list= cell.krats) #Krat reproduction
-                    cell.clean_krat_list()
-        #just Snakes
-        elif (self.sim.cycle % self.sim.krat_reproduction_freq) != 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.snake_reproduction_freq) == 0:
+                    self.populate_total_org_list(total_org_list = self.total_prey_item_list, cell_org_list= cell.prey_items) #prey_item reproduction
+                    cell.clean_prey_item_list()
+        #just predator_items
+        elif (self.sim.cycle % self.sim.prey_item_reproduction_freq) != 0 and self.sim.cycle != 0 and (self.sim.cycle % self.sim.predator_item_reproduction_freq) == 0:
             for cell_width in self.cells:
                 for cell in cell_width:
-                    self.populate_total_org_list(total_org_list = self.total_snake_list, cell_org_list= cell.snakes) #snake reproduction
-                    cell.clean_snake_list()
+                    self.populate_total_org_list(total_org_list = self.total_predator_item_list, cell_org_list= cell.predator_items) #predator_item reproduction
+                    cell.clean_predator_item_list()
 
-    def krat_reproduction(self):
-        '''Generates the new generaton of krats from information from the old generation and a calculation of how well agents in the previous generation
+    def prey_item_reproduction(self):
+        '''Generates the new generaton of prey_items from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
-        if len(self.total_krat_list) > 0:
-            ikp = self.sim.initial_krat_pop
-            parent_krat_pop = self.total_krat_list
-            parent_krat_payoffs = [krat.energy_score for krat in parent_krat_pop]
-            self.total_krat_list = []
+        if len(self.total_prey_item_list) > 0:
+            ikp = self.sim.initial_prey_item_pop
+            parent_prey_item_pop = self.total_prey_item_list
+            parent_prey_item_payoffs = [prey_item.energy_score for prey_item in parent_prey_item_pop]
+            self.total_prey_item_list = []
             while ikp > 0:
                 cell = self.select_random_cell()
-                parent = self.rng.choices(parent_krat_pop, weights=parent_krat_payoffs, k = 1)
+                parent = self.rng.choices(parent_prey_item_pop, weights=parent_prey_item_payoffs, k = 1)
                 parent = parent[0]
-                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.krat_mutation_probability, mutation_std = self.sim.krat_mutation_std)
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability= self.sim.prey_item_mutation_probability, mutation_std = self.sim.prey_item_mutation_std)
                 open_preference_weight = (1-float(bush_preference_weight))
                 cell = self.select_random_cell()
-                krat = org.Krat(sim = self.sim,
+                prey_item = org.Prey(sim = self.sim,
                             energy_gain_bush = parent.energy_gain_bush, #from bouskila
                             energy_gain_open = parent.energy_gain_open, #from bouskila
                             energy_cost = parent.energy_cost,
@@ -547,119 +547,119 @@ class Landscape(object):
                             home_cell= cell,
                             open_preference_weight = open_preference_weight,
                             bush_preference_weight = bush_preference_weight)
-                cell.add_krat(krat)
-                krat.current_cell=cell
+                cell.add_prey_item(prey_item)
+                prey_item.current_cell=cell
                 ikp = ikp-1
-            self.sim.krat_generation += 1
+            self.sim.prey_item_generation += 1
 
-    def snake_reproduction(self):
-        '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
+    def predator_item_reproduction(self):
+        '''Generates the new generaton of predator_items from information from the old generation and a calculation of how well agents in the previous generation
         associated with certain habitat preference genotypes preformed.'''
-        if len(self.total_snake_list) > 0:
-            isp = self.sim.initial_snake_pop
-            parent_snake_pop = self.total_snake_list
-            parent_snake_payoffs = [snake.energy_score for snake in parent_snake_pop]
-            self.total_snake_list = []
+        if len(self.total_predator_item_list) > 0:
+            isp = self.sim.initial_predator_item_pop
+            parent_predator_item_pop = self.total_predator_item_list
+            parent_predator_item_payoffs = [predator_item.energy_score for predator_item in parent_predator_item_pop]
+            self.total_predator_item_list = []
             while isp > 0:
                 cell = self.select_random_cell()
-                parent = self.rng.choices(parent_snake_pop, weights=parent_snake_payoffs, k = 1)
+                parent = self.rng.choices(parent_predator_item_pop, weights=parent_predator_item_payoffs, k = 1)
                 parent = parent[0]
-                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability = self.sim.snake_mutation_probability, mutation_std = self.sim.snake_mutation_std)
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability = self.sim.predator_item_mutation_probability, mutation_std = self.sim.predator_item_mutation_std)
                 open_preference_weight = (1-float(bush_preference_weight))
                 cell = self.select_random_cell()
-                snake = org.Snake(sim = self.sim,
+                predator_item = org.Predator(sim = self.sim,
                             strike_success_probability_bush = parent.strike_success_probability_bush,
                             strike_success_probability_open = parent.strike_success_probability_open,
                             death_probability = parent.death_probability,
-                            energy_gain_per_krat = parent.energy_gain_per_krat,
+                            energy_gain_per_prey_item = parent.energy_gain_per_prey_item,
                             energy_cost = parent.energy_cost,
                             move_range = parent.move_range,
                             movement_frequency = parent.movement_frequency,
                             open_preference_weight = open_preference_weight,
                             bush_preference_weight = bush_preference_weight
                             )
-                cell.add_snake(snake)
-                snake.current_cell=cell
+                cell.add_predator_item(predator_item)
+                predator_item.current_cell=cell
                 isp = isp-1
-            self.sim.snake_generation += 1
+            self.sim.predator_item_generation += 1
 
     def iter_through_cells_activity(self):
-        '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
+        '''Iterates through all the cells in the landscape and runs prey_item, predator_item, and owl acivity. Predators move before prey_items. Which species moves first
         depends on the proportion of the species to other predators in the cell and is used as a probability check. .'''
         for cell_width in self.cells:
             for cell in cell_width:
-                self.total_krats += len(cell.krats)
-                self.total_snakes += len(cell.snakes)
+                self.total_prey_items += len(cell.prey_items)
+                self.total_predator_items += len(cell.predator_items)
                 self.total_owls += len(cell.owls)
                 cell.cell_over_populated()
-                preds = len(cell.snakes) + len(cell.owls)
+                preds = len(cell.predator_items) + len(cell.owls)
                 if preds > 0:
                     owl_move_first_probability = len(cell.owls)/preds
                     if owl_move_first_probability < self.rng.random() and owl_move_first_probability > 0:
                         cell.owl_activity_pulse_behavior()
-                        cell.snake_activity_pulse_behavior()
+                        cell.predator_item_activity_pulse_behavior()
                     else:
-                        cell.snake_activity_pulse_behavior()
+                        cell.predator_item_activity_pulse_behavior()
                         cell.owl_activity_pulse_behavior()
-                cell.krat_activity_pulse_behavior()
+                cell.prey_item_activity_pulse_behavior()
 
 
 
     def landscape_dynamics(self):
         '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
         for all organisms.'''
-        self.total_krats = 0
-        self.total_snakes = 0
+        self.total_prey_items = 0
+        self.total_predator_items = 0
         self.total_owls = 0
         self.iter_through_cells_activity()
-        self.relocate_krats()
-        self.relocate_snakes()
+        self.relocate_prey_items()
+        self.relocate_predator_items()
         self.relocate_owls()
         self.iter_through_cells_reproduction()
-        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
-            self.krat_reproduction()
-        if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
-            self.snake_reproduction()
+        if (self.sim.cycle % self.sim.prey_item_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.prey_item_reproduction()
+        if (self.sim.cycle % self.sim.predator_item_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.predator_item_reproduction()
 
 
 
 class Sim(object):
     '''
     loads the initial conditions, initializes the landscape and organism populations, and runs the sim for the appropraite amount of cycles.
-    Once the sim concludes two csvs are generated with krat and snake information.
+    Once the sim concludes two csvs are generated with prey_item and predator_item information.
     Args:
         initial_conditions_file_path -- file path for a json file with all the appropriate initial conditions of interest for the simulation.
         rng -- random number generator object. (default is none)
     Attributes:
-        snake_info -- an array with info on every snake object per cycle.
-        krat_info -- an array with info on every krat object per cycle.
+        predator_item_info -- an array with info on every predator_item object per cycle.
+        prey_item_info -- an array with info on every prey_item object per cycle.
         cycle -- a genral time unit. Starts at zero and the simulation runs until the cycle reaches end time. (int)
         end_time -- the length of the simulation in cycles. (int)
-        initial_krat_pop -- the number of krats in the population. This is a constant integer. (int)
-        initial_snake_pop -- the number of snake in the population. This is a constant integer. (int)
-        krat_reproduction_freq -- the length in cycles until the new generation of krats is formed.
-        snake_reproduction_freq -- the length in cycles until the new generation of snakes is formed.
-        krat_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for krats. (int)
-        snake_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for snakes. (int)
-        krat_mutation_probability -- a probabilty less than one that the bush preference of an individual krat offspring accrues a mutation to it's bush preference.
-        snake_mutation_probability -- a probabilty less than one that the bush preference of an individual snake offspring accrues a mutation to it's bush preference.
+        initial_prey_item_pop -- the number of prey_items in the population. This is a constant integer. (int)
+        initial_predator_item_pop -- the number of predator_item in the population. This is a constant integer. (int)
+        prey_item_reproduction_freq -- the length in cycles until the new generation of prey_items is formed.
+        predator_item_reproduction_freq -- the length in cycles until the new generation of predator_items is formed.
+        prey_item_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for prey_items. (int)
+        predator_item_mutation_std -- the standard deviation of the population used to calculate the mutation quantity that the bush preference is changed by if the mutation probabilty is successfully met for predator_items. (int)
+        prey_item_mutation_probability -- a probabilty less than one that the bush preference of an individual prey_item offspring accrues a mutation to it's bush preference.
+        predator_item_mutation_probability -- a probabilty less than one that the bush preference of an individual predator_item offspring accrues a mutation to it's bush preference.
 
     '''
-    def __init__(self,initial_conditions_file_path, krat_csv_output_file_path, snake_csv_output_file_path, parameters_csv_output_file_path, rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
+    def __init__(self,initial_conditions_file_path, prey_item_csv_output_file_path, predator_item_csv_output_file_path, parameters_csv_output_file_path, rng=None,seed=None,burn_in = None,_output_landscape=False,_output_landscape_file_path=None,sim_info_output_file=None):
         self.sim_id = uuid.uuid4().hex
         self.initial_conditions_file_path = initial_conditions_file_path
-        #self.snake_info = []
-        #self.krat_info = []
+        #self.predator_item_info = []
+        #self.prey_item_info = []
         if rng is None:
             self.rng = random.Random()
         else:
             self.rng = rng
-        self.krat_file_path = krat_csv_output_file_path
-        self.snake_file_path = snake_csv_output_file_path
+        self.prey_item_file_path = prey_item_csv_output_file_path
+        self.predator_item_file_path = predator_item_csv_output_file_path
         self.sim_parameters_and_totals = parameters_csv_output_file_path
         self.cycle = 0
-        self.krat_generation = 0
-        self.snake_generation = 0
+        self.prey_item_generation = 0
+        self.predator_item_generation = 0
         if seed is not None:
             self.rng.seed(seed)
         if burn_in is not None:
@@ -684,26 +684,26 @@ class Sim(object):
                 raise TypeError("{} check should be a boolean (True or False).".format(key))
 
     def exception_int_values(
-                        self, end_time, initial_krat_pop, initial_snake_pop,
-                        krat_reproduction_freq, snake_reproduction_freq, energy_gain_per_krat,
-                        snake_energy_cost, snake_move_range, snake_movement_frequency,
-                        krat_move_range, krat_movement_frequency, krat_energy_gain_bush,
-                        krat_energy_gain_open, krat_energy_cost, owl_move_range,
+                        self, end_time, initial_prey_item_pop, initial_predator_item_pop,
+                        prey_item_reproduction_freq, predator_item_reproduction_freq, energy_gain_per_prey_item,
+                        predator_item_energy_cost, predator_item_move_range, predator_item_movement_frequency,
+                        prey_item_move_range, prey_item_movement_frequency, prey_item_energy_gain_bush,
+                        prey_item_energy_gain_open, prey_item_energy_cost, owl_move_range,
                         landscape_size_x, landscape_size_y, initial_owl_pop
                         ):
         test_vals = {'end_time': end_time,
-                    'initial_krat_pop' : initial_krat_pop,
-                    'initial_snake_pop' : initial_snake_pop,
-                    'krat_reproduction_freq' : krat_reproduction_freq,
-                    'snake_reproduction_freq' : snake_reproduction_freq,
-                    'energy_gain_per_krat' : energy_gain_per_krat,
-                    'snake_energy_cost' : snake_energy_cost,
-                    'snake_movement_frequency' : snake_movement_frequency,
-                    'krat_move_range' : krat_move_range,
-                    'krat_movement_frequency' : krat_movement_frequency,
-                    'krat_energy_gain_bush' : krat_energy_gain_bush,
-                    'krat_energy_gain_open' : krat_energy_gain_open,
-                    'krat_energy_cost' : krat_energy_cost,
+                    'initial_prey_item_pop' : initial_prey_item_pop,
+                    'initial_predator_item_pop' : initial_predator_item_pop,
+                    'prey_item_reproduction_freq' : prey_item_reproduction_freq,
+                    'predator_item_reproduction_freq' : predator_item_reproduction_freq,
+                    'energy_gain_per_prey_item' : energy_gain_per_prey_item,
+                    'predator_item_energy_cost' : predator_item_energy_cost,
+                    'predator_item_movement_frequency' : predator_item_movement_frequency,
+                    'prey_item_move_range' : prey_item_move_range,
+                    'prey_item_movement_frequency' : prey_item_movement_frequency,
+                    'prey_item_energy_gain_bush' : prey_item_energy_gain_bush,
+                    'prey_item_energy_gain_open' : prey_item_energy_gain_open,
+                    'prey_item_energy_cost' : prey_item_energy_cost,
                     'landscape_size_x' : landscape_size_x,
                     'landscape_size_y' : landscape_size_y,
                     'initial_owl_pop' : initial_owl_pop,
@@ -713,17 +713,17 @@ class Sim(object):
                 raise TypeError("{} value should be an integer".format(key))
 
     def exception_float_or_int_values(
-                        self, krat_mutation_std, snake_mutation_std,
-                        krat_mutation_probability, snake_mutation_probability, snake_strike_success_probability_bush,
-                        strike_success_probability_open, snake_death_probability,  owl_strike_success_probability 
+                        self, prey_item_mutation_std, predator_item_mutation_std,
+                        prey_item_mutation_probability, predator_item_mutation_probability, predator_item_strike_success_probability_bush,
+                        strike_success_probability_open, predator_item_death_probability,  owl_strike_success_probability 
                         ):
-        test_vals = {'krat_mutation_std': krat_mutation_std,
-                    'snake_mutation_std' : snake_mutation_std,
-                    'krat_mutation_probability' : krat_mutation_probability,
-                    'snake_mutation_probability' : snake_mutation_probability,
-                    'snake_strike_success_probability_bush' : snake_strike_success_probability_bush,
+        test_vals = {'prey_item_mutation_std': prey_item_mutation_std,
+                    'predator_item_mutation_std' : predator_item_mutation_std,
+                    'prey_item_mutation_probability' : prey_item_mutation_probability,
+                    'predator_item_mutation_probability' : predator_item_mutation_probability,
+                    'predator_item_strike_success_probability_bush' : predator_item_strike_success_probability_bush,
                     'strike_success_probability_open' : strike_success_probability_open,
-                    'snake_death_probability' : snake_death_probability,
+                    'predator_item_death_probability' : predator_item_death_probability,
                     'owl_strike_success_probability ' : owl_strike_success_probability}
         for key, val in test_vals.items():
             if type(val) not in [int,float]:
@@ -734,76 +734,76 @@ class Sim(object):
     def run_config_checks(self,config_d):
         self.exception_bool_values(mixed_preference=config_d["mixed_preference_individuals"], prey_competition=config_d["prey_competition"])
         self.exception_int_values(
-                        end_time = config_d["cycles_of_sim"], initial_krat_pop=config_d["initial_krat_pop"], initial_snake_pop=config_d["initial_snake_pop"],
-                        krat_reproduction_freq=config_d["krat_reproduction_freq_per_x_cycles"], snake_reproduction_freq=config_d["snake_reproduction_freq_per_x_cycles"], energy_gain_per_krat=config_d["snake_energy_gain"],
-                        snake_energy_cost=config_d["snake_energy_cost"], snake_move_range=config_d["snake_move_range"], snake_movement_frequency=config_d["snake_movement_frequency_per_x_cycles"],
-                        krat_move_range=config_d["krat_move_range"], krat_movement_frequency=config_d["krat_movement_frequency_per_x_cycles"], krat_energy_gain_bush=config_d["krat_energy_gain_bush"],
-                        krat_energy_gain_open=config_d["krat_energy_gain_open"], krat_energy_cost=config_d["krat_energy_cost"], owl_move_range=config_d["owl_move_range"],
+                        end_time = config_d["cycles_of_sim"], initial_prey_item_pop=config_d["initial_prey_item_pop"], initial_predator_item_pop=config_d["initial_predator_item_pop"],
+                        prey_item_reproduction_freq=config_d["prey_item_reproduction_freq_per_x_cycles"], predator_item_reproduction_freq=config_d["predator_item_reproduction_freq_per_x_cycles"], energy_gain_per_prey_item=config_d["predator_item_energy_gain"],
+                        predator_item_energy_cost=config_d["predator_item_energy_cost"], predator_item_move_range=config_d["predator_item_move_range"], predator_item_movement_frequency=config_d["predator_item_movement_frequency_per_x_cycles"],
+                        prey_item_move_range=config_d["prey_item_move_range"], prey_item_movement_frequency=config_d["prey_item_movement_frequency_per_x_cycles"], prey_item_energy_gain_bush=config_d["prey_item_energy_gain_bush"],
+                        prey_item_energy_gain_open=config_d["prey_item_energy_gain_open"], prey_item_energy_cost=config_d["prey_item_energy_cost"], owl_move_range=config_d["owl_move_range"],
                         landscape_size_x=config_d["landscape_size_x"], landscape_size_y=config_d["landscape_size_y"], initial_owl_pop=config_d["initial_owl_pop"]
                         )
         self.exception_float_or_int_values(
-                        krat_mutation_std=config_d["krat_mutation_std"], snake_mutation_std=config_d["snake_mutation_std"],
-                        krat_mutation_probability=config_d["krat_mutation_probability"], snake_mutation_probability=config_d["snake_mutation_probability"], snake_strike_success_probability_bush=config_d["snake_strike_success_probability_bush"],
-                        strike_success_probability_open=config_d["snake_strike_success_probability_open"], snake_death_probability=config_d["snake_death_probability"],  owl_strike_success_probability=config_d["owl_catch_success"]
+                        prey_item_mutation_std=config_d["prey_item_mutation_std"], predator_item_mutation_std=config_d["predator_item_mutation_std"],
+                        prey_item_mutation_probability=config_d["prey_item_mutation_probability"], predator_item_mutation_probability=config_d["predator_item_mutation_probability"], predator_item_strike_success_probability_bush=config_d["predator_item_strike_success_probability_bush"],
+                        strike_success_probability_open=config_d["predator_item_strike_success_probability_open"], predator_item_death_probability=config_d["predator_item_death_probability"],  owl_strike_success_probability=config_d["owl_catch_success"]
                         )
 
     def config_sim_species_attributes_and_sim_paramaters(self,config_d):
         self.mixed_individuals = config_d["mixed_preference_individuals"]
         self.prey_competition = config_d["prey_competition"]
         self.end_time = config_d["cycles_of_sim"]
-        self.initial_krat_pop = config_d["initial_krat_pop"]
-        self.initial_snake_pop = config_d["initial_snake_pop"]
-        self.krat_reproduction_freq = config_d["krat_reproduction_freq_per_x_cycles"]
-        self.snake_reproduction_freq = config_d["snake_reproduction_freq_per_x_cycles"]
-        self.krat_mutation_std = config_d["krat_mutation_std"]
-        self.snake_mutation_std = config_d["snake_mutation_std"]
-        self.krat_mutation_probability = config_d["krat_mutation_probability"]
-        self.snake_mutation_probability = config_d["snake_mutation_probability"]
+        self.initial_prey_item_pop = config_d["initial_prey_item_pop"]
+        self.initial_predator_item_pop = config_d["initial_predator_item_pop"]
+        self.prey_item_reproduction_freq = config_d["prey_item_reproduction_freq_per_x_cycles"]
+        self.predator_item_reproduction_freq = config_d["predator_item_reproduction_freq_per_x_cycles"]
+        self.prey_item_mutation_std = config_d["prey_item_mutation_std"]
+        self.predator_item_mutation_std = config_d["predator_item_mutation_std"]
+        self.prey_item_mutation_probability = config_d["prey_item_mutation_probability"]
+        self.predator_item_mutation_probability = config_d["predator_item_mutation_probability"]
         self.data_sample_frequency = config_d["data_sample_freq"]
 
 
-    def initialize_snake_pop(self,config_d):
+    def initialize_predator_item_pop(self,config_d):
         if self.mixed_individuals:
-            self.landscape.initialize_snake_pop_continuous_preference(
-                strike_success_probability_bush = config_d["snake_strike_success_probability_bush"],
-                strike_success_probability_open = config_d["snake_strike_success_probability_open"],
-                death_probability = config_d["snake_death_probability"],
-                energy_gain_per_krat = config_d["snake_energy_gain"],
-                energy_cost = config_d["snake_energy_cost"],
-                move_range = config_d["snake_move_range"],
-                movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
+            self.landscape.initialize_predator_item_pop_continuous_preference(
+                strike_success_probability_bush = config_d["predator_item_strike_success_probability_bush"],
+                strike_success_probability_open = config_d["predator_item_strike_success_probability_open"],
+                death_probability = config_d["predator_item_death_probability"],
+                energy_gain_per_prey_item = config_d["predator_item_energy_gain"],
+                energy_cost = config_d["predator_item_energy_cost"],
+                move_range = config_d["predator_item_move_range"],
+                movement_frequency = config_d["predator_item_movement_frequency_per_x_cycles"],
             )
         else:
-            snake_genotype_frequencies = {1:(1/2), 0:(1/2)}
-            self.landscape.initialize_snake_pop_discrete_preference(
-                strike_success_probability_bush = config_d["snake_strike_success_probability_bush"],
-                strike_success_probability_open = config_d["snake_strike_success_probability_open"],
-                death_probability = config_d["snake_death_probability"],
-                energy_gain_per_krat = config_d["snake_energy_gain"],
-                energy_cost = config_d["snake_energy_cost"],
-                move_range = config_d["snake_move_range"],
-                movement_frequency = config_d["snake_movement_frequency_per_x_cycles"],
-                snake_genotype_frequencies = snake_genotype_frequencies
+            predator_item_genotype_frequencies = {1:(1/2), 0:(1/2)}
+            self.landscape.initialize_predator_item_pop_discrete_preference(
+                strike_success_probability_bush = config_d["predator_item_strike_success_probability_bush"],
+                strike_success_probability_open = config_d["predator_item_strike_success_probability_open"],
+                death_probability = config_d["predator_item_death_probability"],
+                energy_gain_per_prey_item = config_d["predator_item_energy_gain"],
+                energy_cost = config_d["predator_item_energy_cost"],
+                move_range = config_d["predator_item_move_range"],
+                movement_frequency = config_d["predator_item_movement_frequency_per_x_cycles"],
+                predator_item_genotype_frequencies = predator_item_genotype_frequencies
             )
 
-    def initialize_krat_pop(self,config_d):
+    def initialize_prey_item_pop(self,config_d):
         if self.mixed_individuals:
-                self.landscape.initialize_krat_pop_continuous_preference(
-                move_range = config_d["krat_move_range"],
-                movement_frequency = config_d["krat_movement_frequency_per_x_cycles"],
-                energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
-                energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
-                energy_cost=config_d["krat_energy_cost"],
+                self.landscape.initialize_prey_item_pop_continuous_preference(
+                move_range = config_d["prey_item_move_range"],
+                movement_frequency = config_d["prey_item_movement_frequency_per_x_cycles"],
+                energy_gain_bush=config_d["prey_item_energy_gain_bush"], #from bouskila
+                energy_gain_open=config_d["prey_item_energy_gain_open"], #from bouskila
+                energy_cost=config_d["prey_item_energy_cost"],
                 )
         else:
-            krat_genotype_frequencies = {1:(1/2), 0:(1/2)}
-            self.landscape.initialize_krat_pop_discrete_preference(
-                move_range = config_d["krat_move_range"],
-                movement_frequency = config_d["krat_movement_frequency_per_x_cycles"],
-                energy_gain_bush=config_d["krat_energy_gain_bush"], #from bouskila
-                energy_gain_open=config_d["krat_energy_gain_open"], #from bouskila
-                energy_cost=config_d["krat_energy_cost"],
-                krat_genotype_frequencies = krat_genotype_frequencies
+            prey_item_genotype_frequencies = {1:(1/2), 0:(1/2)}
+            self.landscape.initialize_prey_item_pop_discrete_preference(
+                move_range = config_d["prey_item_move_range"],
+                movement_frequency = config_d["prey_item_movement_frequency_per_x_cycles"],
+                energy_gain_bush=config_d["prey_item_energy_gain_bush"], #from bouskila
+                energy_gain_open=config_d["prey_item_energy_gain_open"], #from bouskila
+                energy_cost=config_d["prey_item_energy_cost"],
+                prey_item_genotype_frequencies = prey_item_genotype_frequencies
                 )
 
     def configure(self, config_d):
@@ -817,8 +817,8 @@ class Sim(object):
                 _output_landscape_file_path = self._output_landscape_file_path
                 )
         self.landscape.build()
-        self.initialize_snake_pop(config_d = config_d)
-        self.initialize_krat_pop(config_d = config_d)
+        self.initialize_predator_item_pop(config_d = config_d)
+        self.initialize_prey_item_pop(config_d = config_d)
         self.landscape.initialize_owl_pop(
                 initial_owl_pop=config_d["initial_owl_pop"],
                 move_range = config_d["owl_move_range"],
@@ -881,11 +881,11 @@ class Sim(object):
                                                                                start_local_time.tm_mon, 
                                                                                start_local_time.tm_mday, 
                                                                                self.initial_conditions_file_path)
-        data_info ='{}, {} \n'.format(self.krat_file_path,self.snake_file_path )
+        data_info ='{}, {} \n'.format(self.prey_item_file_path,self.predator_item_file_path )
         self.sim_info(line = data_info)
         self.sim_info(line = start_info)
-        self.make_csv(file_name = self.krat_file_path )
-        self.make_csv(file_name = self.snake_file_path )
+        self.make_csv(file_name = self.prey_item_file_path )
+        self.make_csv(file_name = self.predator_item_file_path )
         self.make_csv(file_name = self.sim_parameters_and_totals)
         self.read_configuration_file()
         for i in range(0,self.end_time,1):
@@ -906,7 +906,7 @@ class Sim(object):
 
 if __name__ ==  "__main__":
     pass
-    #sim = Sim(initial_conditions_file_path = 'data.txt', krat_tsv_output_file_path = 'krat_energy.tsv', snake_tsv_output_file_path = 'snake_energy.tsv')
+    #sim = Sim(initial_conditions_file_path = 'data.txt', prey_item_tsv_output_file_path = 'prey_item_energy.tsv', predator_item_tsv_output_file_path = 'predator_item_energy.tsv')
     #sim.main()
     #print('test')
 

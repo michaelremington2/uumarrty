@@ -54,6 +54,7 @@ class run_experiments(object):
                                  sim_info_output_file=self.sim_info_output_file)
             sim_object.main()
             if self.agg_sim_info:
+                print(self.agg_sim_info)
                 sims = [krat_data_output_file_label, snake_data_output_file_label]
                 sim_parameters = parameters_data_output_file_label
                 output_file_path_total = self.output_file_folder + 'totals.csv'

@@ -307,9 +307,10 @@ class Predator(Organism):
         org_id -- the id in memory space of the object.
     '''
 
-    def __init__(self,sim, move_range,movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_prey_item,energy_cost,death_probability,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim,organism_label, movement_frequency,strike_success_probability_bush,strike_success_probability_open,energy_gain_per_prey_item,energy_cost,death_probability,move_range=1,home_cell=None,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell, move_range,move_preference,memory_length_cycles)
-        self.sim = sim 
+        self.sim = sim
+        self.predator_species_label = organism_label
         self.energy_score = 0
         self.energy_gain_per_prey_item = energy_gain_per_prey_item
         self.death_probability = death_probability
@@ -389,7 +390,7 @@ class Prey(Organism):
         microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
         org_id -- the id in memory space of the object.
     '''
-    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,move_range,movement_frequency,home_cell,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim,energy_gain_open,energy_gain_bush,energy_cost,movement_frequency,home_cell,move_range=1,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         super().__init__(sim,home_cell,move_range,move_preference,memory_length_cycles)
         self.sim = sim
         self.home_cell = home_cell
@@ -473,7 +474,7 @@ class Owl(Organism):
         microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
         org_id -- the id in memory space of the object.
     '''
-    def __init__(self,sim, move_range,strike_success_probability,home_cell=None,open_preference_weight=1,bush_preference_weight=0):
+    def __init__(self,sim, strike_success_probability,move_range=1,home_cell=None,open_preference_weight=1,bush_preference_weight=0):
         super().__init__(sim,home_cell,move_range)
         self.sim = sim 
         self.strike_success_probability = strike_success_probability

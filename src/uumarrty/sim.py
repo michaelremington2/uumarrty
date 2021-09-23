@@ -807,25 +807,26 @@ class Sim(object):
                 )
 
     def configure(self, config_d):
-        self.config_sim_species_attributes_and_sim_paramaters(config_d = config_d)
+        self.config_sim_species_attributes_and_sim_paramaters(config_d = config_d['sim'])
+        landscape_parameters = config_d['landscape']
         self.landscape = Landscape(
                 sim=self,
-                size_x=config_d["landscape_size_x"],
-                size_y=config_d["landscape_size_y"],
-                microhabitat_open_bush_proportions = config_d["microhabitat_open_bush_proportions"],
+                size_x=landscape_parameters["landscape_size_x"],
+                size_y=landscape_parameters["landscape_size_y"],
+                microhabitat_open_bush_proportions = landscape_parameters["microhabitat_open_bush_proportions"],
                 _output_landscape = self._output_landscape,
                 _output_landscape_file_path = self._output_landscape_file_path
                 )
         self.landscape.build()
-        self.initialize_predator_item_pop(config_d = config_d)
+        self.initialize_predator_item_pop(config_d = config_d[])
         self.initialize_prey_item_pop(config_d = config_d)
-        self.landscape.initialize_owl_pop(
-                initial_owl_pop=config_d["initial_owl_pop"],
-                move_range = config_d["owl_move_range"],
-                strike_success_probability = config_d["owl_catch_success"],
-                open_preference_weight = 1,
-                bush_preference_weight = 0
-                )
+        # self.landscape.initialize_owl_pop(
+        #         initial_owl_pop=config_d["initial_owl_pop"],
+        #         move_range = config_d["owl_move_range"],
+        #         strike_success_probability = config_d["owl_catch_success"],
+        #         open_preference_weight = 1,
+        #         bush_preference_weight = 0
+        #         )
 
     def read_configuration_file(self):
         with open(self.initial_conditions_file_path) as f:

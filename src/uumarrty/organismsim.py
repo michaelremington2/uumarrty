@@ -25,7 +25,7 @@ class Organism(object):
         rng -- random number generator in the sim. (random object)
         microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
     '''
-    def __init__(self,sim,home_cell=None, move_range=1, open_preference_weight=1, bush_preference_weight=1):
+    def __init__(self,sim,home_cell=None, move_range=1, microhabitat_preference_dict=None):
         self.sim = sim
         self.landscape = self.sim.landscape
         self.energy_score = 0
@@ -38,8 +38,8 @@ class Organism(object):
         self.column_boundary = self.sim.landscape.cells_x_columns - 1
         self.row_boundary = self.sim.landscape.cells_y_rows - 1
         self.number_of_movements = 0
-        self.open_preference_weight = open_preference_weight
-        self.bush_preference_weight = bush_preference_weight
+        if microhabitat_preference_dict==None:
+            
         #self.phenotype = [bush_preference_weight]
 
     def __hash__(self):
@@ -206,6 +206,40 @@ class Organism(object):
         '''Returns the home cell to be used in an algorithm for movment if the org needs to return to nest.'''
         return self.home_cell
 
+    ###### Setting habitat preference ##########
+    def set_mh_pref_discrete(mh_labels):
+        org_preference_dict = {}
+        for i in mh_labels:
+            org_preference_dict[i] = 0
+        mh_type = random.choice(mh_labels)
+        org_preference_dict[mh_type] += 1
+        return org_preference_dict
+
+    def set_mh_pref_continuous(mh_labels):
+        org_preference_dict = {}
+        for i in mh_labels:
+            org_preference_dict[i] = random.uniform(0, 1)
+        print(org_preference_dict)
+        norm_org_preference_dict = normalize_habitat_frequency(org_preference_dict = org_preference_dict)
+        print(norm_org_preference_dict)
+        return norm_org_preference_dict
+
+    def initialize_mh_pref_strategy(mh_labels,mixed_individuals):
+        if mixed_individuals:
+            fin = set_mh_pref_continuous(mh_labels = mh_labels)
+        else:
+            fin = set_mh_pref_discrete(mh_labels = mh_labels, org_preference_dict = org_preference_dict)
+        #fin = org_preference_dict
+        return fin
+
+    def normalize_habitat_frequency(org_preference_dict):
+        if sum(org_preference_dict.values())!=1:
+            temp_preference_dict = org_preference_dict
+            for key, mh_pref in temp_preference_dict.items():
+                new_pref = mh_pref/sum(temp_preference_dict.values())
+                org_preference_dict[key] = new_pref
+        return org_preference_dict
+
 
 
 
@@ -315,7 +349,7 @@ class Prey(Organism):
         microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
         org_id -- the id in memory space of the object.
     '''
-    def __init__(self,sim,organism_label,energy_gain_dict,energy_cost,movement_frequency,home_cell,move_range=1, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim,organism_label,energy_gain_dict,energy_cost,movement_frequency,home_cell,move_range=1, microhabitat_preference_dict,memory_length_cycles=0):
         super().__init__(sim,home_cell,move_range,move_preference,memory_length_cycles)
         self.sim = sim
         self.organism_label = organism_label
@@ -326,8 +360,7 @@ class Prey(Organism):
         self.rng = self.sim.rng
         self.move_range = move_range
         self.movement_frequency = movement_frequency
-        self.open_preference_weight = open_preference_weight
-        self.bush_preference_weight = bush_preference_weight
+        self.microhabitat_preference_dict = microhabitat_preference_dict
         self.org_id = id(self)
 
     def calc_energy_gain(self,cell):

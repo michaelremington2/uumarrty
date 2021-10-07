@@ -32,7 +32,7 @@ class run_experiments(object):
         else:
             self.output_file_folder = output_file_folder 
 
-    def run_single_experiment(self, experiment_dictionary, experiment_label):
+    def run_single_experiment(self, experiment_dictionary, experiment_label,parameter_file):
         ex_label = experiment_label
         data = experiment_dictionary
         config_file_name = 'config_{}.txt'.format(ex_label)
@@ -41,10 +41,9 @@ class run_experiments(object):
         for i in range(self.experiment_iterations):
             krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.csv'.format(i)
             snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.csv'.format(i)
-            parameters_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_parameter_info.csv'.format(i)
+            parameters_data_output_file_label = parameter_file
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
-            print(parameters_data_output_file_label)
             sim_object = sim.Sim(initial_conditions_file_path = config_file_name,
                                  krat_csv_output_file_path = krat_data_output_file_label,
                                  snake_csv_output_file_path = snake_data_output_file_label,
@@ -55,26 +54,23 @@ class run_experiments(object):
             sim_object.main()
             if self.agg_sim_info:
                 sims = [krat_data_output_file_label, snake_data_output_file_label]
-                sim_parameters = parameters_data_output_file_label
                 output_file_path_total = self.output_file_folder + 'totals.csv'
                 output_file_path_per_cycle = self.output_file_folder + 'per_cycle.csv'
-                edfs = export_data_from_sims(sims = sims,parameter_file=sim_parameters, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
+                edfs = export_data_from_sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
                 edfs.main()
                 for i in sims:
                     if os.path.exists(i):
                         os.remove(i)
-                if os.path.exists(sim_parameters):
-                        os.remove(sim_parameters)
 
     def main(self):
+        sim_parameters_file_label = self.output_file_folder + 'parameters.csv'
         for key, ex_group in self.experimental_groups.items():
-            self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key)
+            self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key,parameter_file=sim_parameters_file_label)
 
 
 class export_data_from_sims(object):
-    def __init__(self,sims,parameter_file, output_file_path_total=None, output_file_path_per_cycle=None):
+    def __init__(self,sims, output_file_path_total=None, output_file_path_per_cycle=None):
         self.sims = sims
-        self.parameter_file = parameter_file
         self.output_file_path_total = output_file_path_total
         self.output_file_path_per_cycle = output_file_path_per_cycle
 
@@ -122,41 +118,50 @@ class export_data_from_sims(object):
             file_name = self.get_file_name(sim = sim)
             experiment = self.format_experiment_label(file_name = file_name)
             sim_number = re.findall(r'\d+',sim)[-1]
-            cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim=sim)
+            try:
+                cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim=sim)
+            except pd.errors.EmptyDataError:
+                cycles=float("NaN")
+                generations=float("NaN")
+                mean_bush_pref=float("NaN")
+                std_bush_pref= float("NaN")
+                se_bush_pref= float("NaN")
             data_type = self.data_label(file_name = file_name)
             row = [file_name, experiment, sim_number, data_type, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref]
             self.append_data(fp = self.output_file_path_total,d_row = row)
 
     def mean_by_cycle(self):
-        parameter_df = pd.read_csv(self.parameter_file, header = 0, index_col=None)
+        #parameter_df = pd.read_csv(self.parameter_file, header = 0, index_col=None)
         if os.path.isfile(self.output_file_path_per_cycle):
             pass 
         else:
             header = ['file_name','experiment','sim_number',
-                  'org','sim_id', 'cycle','generation','pop_count',
+                  'org','sim_id', 'generation','cycle','pop_count',
                   'bush_pw_mean','bush_pw_std',
                   'energy_score_mean','energy_score_std','energy_score_sum',
                   'movements_mean','movements_std','movements_sum',
                   'other_in_cell_mean','other_in_cell_std','other_in_cell_sum',
                   'owls_in_cell_mean','owls_in_cell_std','owls_in_cell_sum']
-            column_names_not_included = ['sim_id','cycle']
-            par_file_headers = [column_name for column_name in list(parameter_df.columns) if column_name not in column_names_not_included]
-            header = header + par_file_headers
+            header = header# + par_file_headers
             self.create_csv(fp = self.output_file_path_per_cycle, header = header)
+            #self.create_csv(fp = self.output_file_path_per_cycle, header = header)
         for sim in self.sims:
             file_name = self.get_file_name(sim = sim)
             experiment = self.format_experiment_label(file_name = file_name)
             sim_number = re.findall(r'\d+',sim)[-1]
             data_type = self.data_label(file_name = file_name)
-            data=pd.read_csv(sim,header=None)
-            data.columns = ['sim_id','id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-            grouped_data = data.groupby(['sim_id','generation','cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
-            grouped_data = grouped_data.reset_index()
-            result = grouped_data.set_index(['sim_id','cycle']).join(parameter_df.set_index(['sim_id','cycle']), how="left").reset_index()
-            #pd.merge(grouped_data, parameter_df, how="left", on=["sim_id", "cycle"])
-            for index, row in result.iterrows():
+            try:
+                data=pd.read_csv(sim,header=None)
+                data.columns = ['sim_id','id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
+                grouped_data = data.groupby(['sim_id','generation','cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
+                grouped_data = grouped_data.reset_index()
+                for index, row in grouped_data.iterrows():
+                    d1 = [file_name, experiment, sim_number, data_type]
+                    dr =  d1 + list(row)
+                    self.append_data(fp = self.output_file_path_per_cycle, d_row = dr)
+            except pd.errors.EmptyDataError:
                 d1 = [file_name, experiment, sim_number, data_type]
-                dr =  d1 + list(row)
+                dr = d1 + [float("NaN") for i in range(len(header)-4)]
                 self.append_data(fp = self.output_file_path_per_cycle, d_row = dr)
 
     def append_data(self,fp,d_row):

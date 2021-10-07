@@ -7,6 +7,7 @@ from itertools import chain
 import time
 import csv
 import uuid
+import os
 #look up contact rates based on spatial scale and tempor
 #brownian motion 
 
@@ -164,10 +165,10 @@ class Cell(object):
         moving_snakes = []
         for snake in self.snakes:
             snake.snake_death()
-            if (self.sim.cycle % self.sim.data_sample_frequency) == 0:
+            if (self.sim.cycle % self.sim.data_sample_frequency) == 0 and snake.alive:
                 snake.generate_snake_stats()
             self.krat_predation_by_snake(snake)
-            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0: 
+            if self.sim.cycle % snake.movement_frequency == 0 and self.sim.cycle != 0 and snake.alive: 
                 self.snake_move(snake, moving_snake_list=moving_snakes)            
         self.snakes = [snake for snake in self.snakes if snake not in moving_snakes and snake.alive]
 
@@ -856,18 +857,35 @@ class Sim(object):
             with open(self.sim_info_output_file, 'a') as file:
                 file.write(line)
 
-    def sim_stats_per_cycle(self, config_d):
-        if self.cycle == 0:
-            data_row = []
+    def sim_initial_conditions(self, config_d):
+        data_row = []
+        start_local_time = time.localtime()
+        start_day= '{}/{}/{}'.format(start_local_time.tm_year,
+                                            start_local_time.tm_mon, 
+                                            start_local_time.tm_mday)
+        start_time='{}:{}:{}'.format(start_local_time.tm_hour,
+                                     start_local_time.tm_min,
+                                     start_local_time.tm_sec)
+
+        if os.path.isfile(self.sim_parameters_and_totals):
+            data_row.append(self.sim_id)
+            data_row.append(start_day)
+            data_row.append(start_time)
+            for keys, vals in config_d.items():
+                data_row.append(vals)
+            self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
+        else:
+            self.make_csv(file_name = self.sim_parameters_and_totals) 
             data_row.append("sim_id")
-            data_row.append("cycle")
+            data_row.append("start_day")
+            data_row.append("start_time")
             for keys, vals in config_d.items():
                 data_row.append(keys)
             self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
-        elif self.cycle >= self.burn_in and (self.cycle % self.data_sample_frequency) == 0:
             data_row = []
             data_row.append(self.sim_id)
-            data_row.append(self.cycle)
+            data_row.append(start_day)
+            data_row.append(start_time)
             for keys, vals in config_d.items():
                 data_row.append(vals)
             self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
@@ -886,10 +904,9 @@ class Sim(object):
         self.sim_info(line = start_info)
         self.make_csv(file_name = self.krat_file_path )
         self.make_csv(file_name = self.snake_file_path )
-        self.make_csv(file_name = self.sim_parameters_and_totals)
         self.read_configuration_file()
+        self.sim_initial_conditions(self.config_d)
         for i in range(0,self.end_time,1):
-            self.sim_stats_per_cycle(self.config_d)
             self.landscape.landscape_dynamics()
             self.cycle += 1
         time_elapsed = round(time.time()) - start

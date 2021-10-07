@@ -186,8 +186,7 @@ class Sim(object):
                     self.landscape.initialize_prey_pop_continuous_preference(
                     organism_label = prey_label,
                     movement_frequency = prey_pm["prey_movement_frequency_per_x_cycles"],
-                    energy_gain_bush=prey_pm["prey_energy_gain_bush"], #from bouskila
-                    energy_gain_open=prey_pm["prey_energy_gain_open"], #from bouskila
+                    energy_gain_dict=prey_pm["energy_gain_dict"], #from bouskila
                     energy_cost=prey_pm["prey_energy_cost"],
                     )
             else:
@@ -195,8 +194,7 @@ class Sim(object):
                 self.landscape.initialize_prey_pop_discrete_preference(
                     organism_label = prey_label,
                     movement_frequency = prey_pm["prey_movement_frequency_per_x_cycles"],
-                    energy_gain_bush=prey_pm["prey_energy_gain_bush"], #from bouskila
-                    energy_gain_open=prey_pm["prey_energy_gain_open"], #from bouskila
+                    energy_gain_dict=prey_pm["energy_gain_dict"], #from bouskila
                     energy_cost=prey_pm["prey_energy_cost"],
                     prey_genotype_frequencies = prey_genotype_frequencies
                     )

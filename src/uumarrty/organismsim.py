@@ -39,6 +39,9 @@ class Organism(object):
         self.row_boundary = self.sim.landscape.cells_y_rows - 1
         self.number_of_movements = 0
         if microhabitat_preference_dict==None:
+            self.microhabitat_preference_dict=self.initialize_mh_pref_strategy(mh_labels = self.sim.,mixed_individuals)
+        else:
+            self.microhabitat_preference_dict=microhabitat_preference_dict
             
         #self.phenotype = [bush_preference_weight]
 
@@ -82,12 +85,7 @@ class Organism(object):
                 destination_cell_probabilities[i] = 0
             else:
                 norm_probability = prob/denom
-                #print('current prob {}, normal prob {}'.format(prob,norm_probability))
-                #print('pre')
-                #print(destination_cell_probabilities[i])
                 destination_cell_probabilities[i] = norm_probability
-               # print('post')
-                #print(destination_cell_probabilities[i])
         return destination_cell_probabilities
 
     def calibrate_move_distance_with_boundaries(self,current_coord_x,current_coord_y, move_distance,x_boundary,y_boundary):
@@ -197,7 +195,7 @@ class Organism(object):
 
     def global_organism_movement(self):
         '''New Organism movment that just selects a random cell from the landscape'''
-        mh_type = self.rng.choices(list(self.landscape.cell_mh_dict.keys()),[self.bush_preference_weight,self.open_preference_weight],k=1)[0]
+        mh_type = self.rng.choices(list(self.microhabitat_preference_dict.keys()),list(self.microhabitat_preference_dict.values()),k=1)[0]
         new_cell = self.rng.choice(self.landscape.cell_mh_dict[mh_type])
         #print("bush_pref {}, open_pref {}, new_cell_id {}, new_cell_type {}".format(self.bush_preference_weight,self.open_preference_weight,new_cell.cell_id,new_cell.habitat_type))
         return new_cell
@@ -219,18 +217,8 @@ class Organism(object):
         org_preference_dict = {}
         for i in mh_labels:
             org_preference_dict[i] = random.uniform(0, 1)
-        print(org_preference_dict)
         norm_org_preference_dict = normalize_habitat_frequency(org_preference_dict = org_preference_dict)
-        print(norm_org_preference_dict)
         return norm_org_preference_dict
-
-    def initialize_mh_pref_strategy(mh_labels,mixed_individuals):
-        if mixed_individuals:
-            fin = set_mh_pref_continuous(mh_labels = mh_labels)
-        else:
-            fin = set_mh_pref_discrete(mh_labels = mh_labels, org_preference_dict = org_preference_dict)
-        #fin = org_preference_dict
-        return fin
 
     def normalize_habitat_frequency(org_preference_dict):
         if sum(org_preference_dict.values())!=1:
@@ -239,6 +227,13 @@ class Organism(object):
                 new_pref = mh_pref/sum(temp_preference_dict.values())
                 org_preference_dict[key] = new_pref
         return org_preference_dict
+
+    def initialize_mh_pref_strategy(mh_labels,mixed_individuals):
+        if mixed_individuals:
+            fin = set_mh_pref_continuous(mh_labels = mh_labels)
+        else:
+            fin = set_mh_pref_discrete(mh_labels = mh_labels, org_preference_dict = org_preference_dict)
+        return fin
 
 
 

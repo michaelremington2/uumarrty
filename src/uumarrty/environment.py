@@ -363,8 +363,7 @@ class Landscape(object):
                 cell = self.select_random_cell()
                 prey = org.Prey(sim = self.sim,
                             org_label = org_label,
-                            energy_gain_bush = energy_gain_bush, #from bouskila
-                            energy_gain_open = energy_gain_open, #from bouskila
+                            energy_gain_dict=energy_gain_dict,
                             energy_cost = energy_cost,
                             move_range = move_range,
                             movement_frequency = movement_frequency,
@@ -378,9 +377,8 @@ class Landscape(object):
 
     def initialize_prey_pop_continuous_preference(
         self, organism_label,
-        energy_gain_bush, energy_gain_open,
-        energy_cost, move_range,
-        movement_frequency):
+        energy_gain_dict,energy_cost,
+        move_range,movement_frequency):
         '''Just used to first initalize populations of kangaroo rats.
             This is a reproduction algorithm based on the calculated next generation phenotype frequency.'''
         ikp = self.sim.prey_parameters[organism_label]["initial_pop"]
@@ -390,8 +388,7 @@ class Landscape(object):
             open_preference_weight = (1-float(bush_preference_weight))
             cell = self.select_random_cell()
             prey = org.Prey(sim = self.sim,
-                        energy_gain_bush = energy_gain_bush, #from bouskila
-                        energy_gain_open = energy_gain_open, #from bouskila
+                        energy_gain_dict=energy_gain_dict,
                         energy_cost = energy_cost,
                         move_range = move_range,
                         movement_frequency = movement_frequency,
@@ -553,8 +550,7 @@ class Landscape(object):
                 open_preference_weight = (1-float(bush_preference_weight))
                 cell = self.select_random_cell()
                 prey = org.Prey(sim = self.sim,
-                            energy_gain_bush = parent.energy_gain_bush, #from bouskila
-                            energy_gain_open = parent.energy_gain_open, #from bouskila
+                            energy_gain_dict=parent.energy_gain_dict,
                             energy_cost = parent.energy_cost,
                             move_range = parent.move_range,
                             movement_frequency = parent.movement_frequency,
@@ -565,3 +561,73 @@ class Landscape(object):
                 prey.current_cell=cell
                 ikp = ikp-1
             self.sim.prey_generation += 1
+
+
+    def predator_reproduction(self):
+        '''Generates the new generaton of snakes from information from the old generation and a calculation of how well agents in the previous generation
+        associated with certain habitat preference genotypes preformed.'''
+        if len(self.total_snake_list) > 0:
+            isp = self.sim.initial_snake_pop
+            parent_snake_pop = self.total_snake_list
+            parent_snake_payoffs = [snake.energy_score for snake in parent_snake_pop]
+            self.total_snake_list = []
+            while isp > 0:
+                cell = self.select_random_cell()
+                parent = self.rng.choices(parent_snake_pop, weights=parent_snake_payoffs, k = 1)
+                parent = parent[0]
+                bush_preference_weight = self.preference_mutation_calc(bush_pref_weight = parent.bush_preference_weight, mutation_probability = self.sim.snake_mutation_probability, mutation_std = self.sim.snake_mutation_std)
+                open_preference_weight = (1-float(bush_preference_weight))
+                cell = self.select_random_cell()
+                snake = org.Snake(sim = self.sim,
+                            strike_success_probability_bush = parent.strike_success_probability_bush,
+                            strike_success_probability_open = parent.strike_success_probability_open,
+                            death_probability = parent.death_probability,
+                            energy_gain_per_krat = parent.energy_gain_per_krat,
+                            energy_cost = parent.energy_cost,
+                            move_range = parent.move_range,
+                            movement_frequency = parent.movement_frequency,
+                            open_preference_weight = open_preference_weight,
+                            bush_preference_weight = bush_preference_weight
+                            )
+                cell.add_snake(snake)
+                snake.current_cell=cell
+                isp = isp-1
+            self.sim.snake_generation += 1
+
+    def iter_through_cells_activity(self):
+        '''Iterates through all the cells in the landscape and runs krat, snake, and owl acivity. Predators move before krats. Which species moves first
+        depends on the proportion of the species to other predators in the cell and is used as a probability check. .'''
+        for cell_width in self.cells:
+            for cell in cell_width:
+                self.total_krats += len(cell.krats)
+                self.total_snakes += len(cell.snakes)
+                self.total_owls += len(cell.owls)
+                cell.cell_over_populated()
+                preds = len(cell.snakes) + len(cell.owls)
+                if preds > 0:
+                    owl_move_first_probability = len(cell.owls)/preds
+                    if owl_move_first_probability < self.rng.random() and owl_move_first_probability > 0:
+                        cell.owl_activity_pulse_behavior()
+                        cell.snake_activity_pulse_behavior()
+                    else:
+                        cell.snake_activity_pulse_behavior()
+                        cell.owl_activity_pulse_behavior()
+                cell.krat_activity_pulse_behavior()
+
+
+
+    def landscape_dynamics(self):
+        '''Main function for the landscape, runs all of the appropriate functions for a cycle such as the relocation, activity, and reproduction algorithms
+        for all organisms.'''
+        self.total_krats = 0
+        self.total_snakes = 0
+        self.total_owls = 0
+        self.iter_through_cells_activity()
+        self.relocate_krats()
+        self.relocate_snakes()
+        self.relocate_owls()
+        self.iter_through_cells_reproduction()
+        if (self.sim.cycle % self.sim.krat_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.krat_reproduction()
+        if (self.sim.cycle % self.sim.snake_reproduction_freq) == 0 and self.sim.cycle != 0:
+            self.snake_reproduction()

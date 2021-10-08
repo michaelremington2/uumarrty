@@ -44,23 +44,32 @@ class run_experiments(object):
             parameters_data_output_file_label = parameter_file
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
-            sim_object = sim.Sim(initial_conditions_file_path = config_file_name,
-                                 krat_csv_output_file_path = krat_data_output_file_label,
-                                 snake_csv_output_file_path = snake_data_output_file_label,
-                                 parameters_csv_output_file_path = parameters_data_output_file_label,
-                                 seed = self.seed,
-                                 burn_in = self.burn_in,
-                                 sim_info_output_file=self.sim_info_output_file)
-            sim_object.main()
-            if self.agg_sim_info:
-                sims = [krat_data_output_file_label, snake_data_output_file_label]
-                output_file_path_total = self.output_file_folder + 'totals.csv'
-                output_file_path_per_cycle = self.output_file_folder + 'per_cycle.csv'
-                edfs = export_data_from_sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
-                edfs.main()
-                for i in sims:
-                    if os.path.exists(i):
-                        os.remove(i)
+            attempts = 0
+            done=False
+            while attempts<3 and done is False:
+                print(attempts)
+                try:
+                    sim_object = sim.Sim(initial_conditions_file_path = config_file_name,
+                                         krat_csv_output_file_path = krat_data_output_file_label,
+                                         snake_csv_output_file_path = snake_data_output_file_label,
+                                         parameters_csv_output_file_path = parameters_data_output_file_label,
+                                         seed = self.seed,
+                                         burn_in = self.burn_in,
+                                         sim_info_output_file=self.sim_info_output_file)
+                    sim_object.main()
+                    if self.agg_sim_info:
+                        sims = [krat_data_output_file_label, snake_data_output_file_label]
+                        output_file_path_total = self.output_file_folder + 'totals.csv'
+                        output_file_path_per_cycle = self.output_file_folder + 'per_cycle.csv'
+                        edfs = export_data_from_sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
+                        edfs.main()
+                        for i in sims:
+                            if os.path.exists(i):
+                                os.remove(i)
+                    done=True       
+                except ValueError:
+                    attempts+=1
+
 
     def main(self):
         sim_parameters_file_label = self.output_file_folder + 'parameters.csv'

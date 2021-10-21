@@ -8,6 +8,7 @@ import glob
 import re
 import json
 import pandas as pd
+import random
 from uumarrty import sim
 from uumarrty import organismsim
 from warnings import filterwarnings
@@ -15,12 +16,13 @@ filterwarnings("ignore")
 
 
 class run_experiments(object):
-    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None, seed = None, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
+    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None, set_seeds = True, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
         self.experimental_groups= experimental_groups_dict
         self.experiment_iterations = experiment_iterations
         self.format_output_folder_fp(output_file_folder = output_file_folder)
         self.rng = rng
-        self.seed = seed
+        self.set_seeds = set_seeds
+        self.seeds = []
         self.burn_in = burn_in
         self.agg_sim_info = agg_sim_info
         self.sim_info_output_file =  sim_info_output_file
@@ -42,6 +44,13 @@ class run_experiments(object):
             krat_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_krat_info.csv'.format(i)
             snake_data_output_file_label = self.output_file_folder + ex_label + '_sim_{}_snake_info.csv'.format(i)
             parameters_data_output_file_label = parameter_file
+            if self.set_seeds:
+                seed = random.randint(1, 1000000)
+                if seed in self.seeds:
+                    seed = random.randint(1, 1000000)
+                self.seeds.append(seed)
+            else:
+                seed = None
             print(krat_data_output_file_label)
             print(snake_data_output_file_label)
             attempts = 0
@@ -53,7 +62,7 @@ class run_experiments(object):
                                          krat_csv_output_file_path = krat_data_output_file_label,
                                          snake_csv_output_file_path = snake_data_output_file_label,
                                          parameters_csv_output_file_path = parameters_data_output_file_label,
-                                         seed = self.seed,
+                                         seed = seed,
                                          burn_in = self.burn_in,
                                          sim_info_output_file=self.sim_info_output_file)
                     sim_object.main()
@@ -200,7 +209,7 @@ def run(args):
     output_file_path = args.output # from dest="output"
     sim_info = args.sim_info
     burn_in = args.burn_in
-    seed = args.seed
+    set_seeds = args.set_seeds
     agg_sims = args.agg_sims
     with open(init_file_path) as f:
         config_exp = json.load(f)
@@ -208,7 +217,7 @@ def run(args):
                                       experiment_iterations=iterations,
                                       output_file_folder=output_file_path,
                                       burn_in = burn_in,
-                                      seed = seed,
+                                      set_seeds = set_seeds,
                                       agg_sim_info=agg_sims,
                                       sim_info_output_file=sim_info)
     run_simulations.main()
@@ -221,7 +230,7 @@ def main():
     parser.add_argument("-iter",help="Number of times you want the experiment to be repeated." ,dest="iterations", type=int, required=True)
     parser.add_argument("-sim_info",help="txt file for updates on meta stats of how simulations are running." ,dest="sim_info", type=str, required=False, default=None)
     parser.add_argument("-burn_in",help="Number of cycles before the simulation starts collecting data on the simulation." ,dest="burn_in", type=int, required=False)
-    parser.add_argument("-seed",help="Random number seed for the sim." ,dest="seed", type=int, required=False)
+    parser.add_argument("-set_seeds",help="Generates seed values for sim." ,dest="set_seeds", type=str2bool, nargs='?', const=True, default=False, required=False)
     #parser.add_argument("-agg_sims",help="Aggregates data from sims and removes the indiviudal sim data csvs." ,dest="agg_sims", type=bool, required=False)
     parser.add_argument("-agg_sims", type=str2bool, nargs='?', const=True, default=False, help="Aggregates data from sims and removes the indiviudal sim data csvs.", dest="agg_sims")
     parser.set_defaults(func=run)

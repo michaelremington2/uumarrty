@@ -666,6 +666,7 @@ class Sim(object):
         self.krat_generation = 0
         self.snake_generation = 0
         if seed is not None:
+            self.seed = seed
             self.rng.seed(seed)
         if burn_in is not None:
             self.burn_in = burn_in       
@@ -873,6 +874,7 @@ class Sim(object):
 
         if os.path.isfile(self.sim_parameters_and_totals):
             data_row.append(self.sim_id)
+            data_row.append(self.seed)
             data_row.append(start_day)
             data_row.append(start_time)
             for keys, vals in config_d.items():
@@ -881,6 +883,7 @@ class Sim(object):
         else:
             self.make_csv(file_name = self.sim_parameters_and_totals) 
             data_row.append("sim_id")
+            data_row.append("seed")
             data_row.append("start_day")
             data_row.append("start_time")
             for keys, vals in config_d.items():
@@ -888,6 +891,7 @@ class Sim(object):
             self.append_data(file_name = self.sim_parameters_and_totals, data_row = data_row)
             data_row = []
             data_row.append(self.sim_id)
+            data_row.append(self.seed)
             data_row.append(start_day)
             data_row.append(start_time)
             for keys, vals in config_d.items():

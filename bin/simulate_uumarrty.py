@@ -78,6 +78,10 @@ class run_experiments(object):
                     done=True       
                 except ValueError:
                     attempts+=1
+                    sims = [krat_data_output_file_label, snake_data_output_file_label]
+                    for i in sims:
+                        if os.path.exists(i):
+                            os.remove(i)
 
 
     def main(self):
@@ -112,12 +116,13 @@ class export_data_from_sims(object):
     def overall_stats(self, sim):
         data=pd.read_csv(sim,header=None)
         data.columns = ['sim_id','id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
+        sim_id=data['sim_id'].max()
         cycles=data['cycle'].max()
         generations=data['generation'].max()
         mean_bush_pref=data['bush_pw'].mean()
         std_bush_pref=data['bush_pw'].std()
         se_bush_pref=data['bush_pw'].sem()
-        return cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref
+        return sim_id, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref
 
     def data_label(self, file_name):
         if 'krat' in file_name:
@@ -132,20 +137,23 @@ class export_data_from_sims(object):
             pass 
         else: 
             self.create_csv(fp = self.output_file_path_total)
+            header = ['sim_id', 'file_name', 'experiment', 'sim_number', 'data_type', 'cycles', 'generations', 'mean_bush_pref', 'std_bush_pref', 'se_bush_pref']
+            self.append_data(fp = self.output_file_path_total,d_row = header)
         for sim in self.sims:
             file_name = self.get_file_name(sim = sim)
             experiment = self.format_experiment_label(file_name = file_name)
             sim_number = re.findall(r'\d+',sim)[-1]
             try:
-                cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim=sim)
+                sim_id, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref = self.overall_stats(sim=sim)
             except pd.errors.EmptyDataError:
+                sim_id=float("NaN")
                 cycles=float("NaN")
                 generations=float("NaN")
                 mean_bush_pref=float("NaN")
                 std_bush_pref= float("NaN")
                 se_bush_pref= float("NaN")
             data_type = self.data_label(file_name = file_name)
-            row = [file_name, experiment, sim_number, data_type, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref]
+            row = [sim_id, file_name, experiment, sim_number, data_type, cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref]
             self.append_data(fp = self.output_file_path_total,d_row = row)
 
     def mean_by_cycle(self):

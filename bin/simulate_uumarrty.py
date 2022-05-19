@@ -16,8 +16,11 @@ filterwarnings("ignore")
 
 
 class run_experiments(object):
-    def __init__(self,experimental_groups_dict, experiment_iterations, output_file_folder = None, rng = None, set_seeds = True, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
-        self.experimental_groups= experimental_groups_dict
+    def __init__(self,init_file_path, experiment_iterations, output_file_folder = None, rng = None, set_seeds = True, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
+        self.init_file_path = init_file_path
+        self.config_name = self.init_file_path[:len(self.init_file_path)- 4]
+        with open(init_file_path) as f:
+            self.experimental_groups = json.load(f)
         self.experiment_iterations = experiment_iterations
         self.format_output_folder_fp(output_file_folder = output_file_folder)
         self.rng = rng
@@ -51,8 +54,6 @@ class run_experiments(object):
                 self.seeds.append(seed)
             else:
                 seed = None
-            print(krat_data_output_file_label)
-            print(snake_data_output_file_label)
             attempts = 0
             done=False
             while attempts<3 and done is False:
@@ -68,8 +69,8 @@ class run_experiments(object):
                     sim_object.main()
                     if self.agg_sim_info:
                         sims = [krat_data_output_file_label, snake_data_output_file_label]
-                        output_file_path_total = self.output_file_folder + 'totals.csv'
-                        output_file_path_per_cycle = self.output_file_folder + 'per_cycle.csv'
+                        output_file_path_total = self.output_file_folder + self.config_name + '_totals.csv'
+                        output_file_path_per_cycle = self.output_file_folder + self.config_name + '_per_cycle.csv'
                         edfs = export_data_from_sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
                         edfs.main()
                         for i in sims:
@@ -82,10 +83,12 @@ class run_experiments(object):
                     for i in sims:
                         if os.path.exists(i):
                             os.remove(i)
+        if os.path.exists(config_file_name):
+            os.remove(config_file_name)
 
 
     def main(self):
-        sim_parameters_file_label = self.output_file_folder + 'parameters.csv'
+        sim_parameters_file_label = self.output_file_folder + self.config_name + 'parameters.csv'
         for key, ex_group in self.experimental_groups.items():
             self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key,parameter_file=sim_parameters_file_label)
 
@@ -219,9 +222,7 @@ def run(args):
     burn_in = args.burn_in
     set_seeds = args.set_seeds
     agg_sims = args.agg_sims
-    with open(init_file_path) as f:
-        config_exp = json.load(f)
-    run_simulations = run_experiments(experimental_groups_dict=config_exp,
+    run_simulations = run_experiments(init_file_path=init_file_path,
                                       experiment_iterations=iterations,
                                       output_file_folder=output_file_path,
                                       burn_in = burn_in,

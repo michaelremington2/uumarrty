@@ -25,11 +25,12 @@ class Organism(object):
         rng -- random number generator in the sim. (random object)
         microhabitat_energy_log -- a dictionary used to track the payoffs of the previous cycles based on microhabitat.
     '''
-    def __init__(self,sim,home_cell=None, move_range=1,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
+    def __init__(self,sim, species_label=None, home_cell=None, move_range=1,move_preference=False, open_preference_weight=1, bush_preference_weight=1,memory_length_cycles=0):
         self.sim = sim
         self.landscape = self.sim.landscape
         self.energy_score = 0
         self.alive = True
+        self.species_label = species_label
         self.predation_counter = 0
         self.home_cell = home_cell
         self.current_cell = home_cell
@@ -276,7 +277,7 @@ class Organism(object):
 
 
 
-class Snake(Organism):
+class Predator(Organism):
     '''
     The for a general predator that represents a snake. The snake can hunt in any habitat.
 
@@ -360,7 +361,7 @@ class Snake(Organism):
             self.alive = False
 
 
-class Krat(Organism):
+class Prey(Organism):
     '''
     The for a general prey item the kangaroo rat. In this simulation it is just known as the krat
 

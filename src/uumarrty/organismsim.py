@@ -215,24 +215,6 @@ class Organism(object):
                                                        move_distance = self.move_range,
                                                        x_boundary = self.column_boundary,
                                                        y_boundary = self.row_boundary)
-        # move_options = []
-        # move_options = self.calibrate_move_distance_with_boundaries(current_coord_x=self.current_cell.cell_id[1],
-        #                                                                     current_coord_y=self.current_cell.cell_id[0],
-        #                                                                     move_distance=self.move_range,
-        #                                                                     x_boundary=self.column_boundary,
-        #                                                                     y_boundary=self.row_boundary)
-        # move_options.append(self.current_cell)
-        # for x in range(-calibrated_move_dists[1],calibrated_move_dists[0]+1):
-        #     for y in range(-calibrated_move_dists[3],calibrated_move_dists[2]+1):
-        #         row_coord = self.current_cell.cell_id[0] + y
-        #         column_coord = self.current_cell.cell_id[1] + x
-        #         if row_coord >= 0 and row_coord <= self.row_boundary and column_coord >= 0 and column_coord <= self.column_boundary:
-        #             new_id = (row_coord,column_coord)
-        #             if new_id == self.current_cell.cell_id:
-        #                 continue
-        #             else:
-        #                 destination_cell = self.sim.landscape.select_cell(new_id)
-        #                 move_options.append(destination_cell)
         for i in move_options:
             number_of_move_options = len(move_options)
             p = self.calc_cell_destination_suitability(cell=i, number_of_move_options=number_of_move_options)

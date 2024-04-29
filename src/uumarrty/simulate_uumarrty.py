@@ -19,7 +19,7 @@ class run_experiments(object):
     def __init__(self,init_file_path, experiment_iterations, output_file_folder = None, rng = None, set_seeds = True, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
         self.init_file_path = init_file_path
         self.config_name = self.init_file_path[:len(self.init_file_path)- 4]
-        with open(self.init_file_path) as f:
+        with open(init_file_path) as f:
             self.experimental_groups = json.load(f)
         self.experiment_iterations = experiment_iterations
         self.format_output_folder_fp(output_file_folder = output_file_folder)
@@ -181,9 +181,9 @@ class Export_Data_From_Sims(object):
             data_type = self.data_label(file_name = file_name)
             try:
                 data=pd.read_csv(sim,header=None)
-                data.columns = ['sim_id','id','generation', 'cycle','phenotype','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-                grouped_data_per_cycle = data.groupby(['sim_id','generation', 'cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
-                grouped_data_per_cycle = grouped_data_per_cycle.reset_index()
+                data.columns = ['sim_id','id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
+                grouped_data = data.groupby(['sim_id','generation','cycle']).agg({'id':['count'], 'bush_pw':['mean','std'],'energy_score':['mean','std','sum'],'movements':['mean','std','sum'],'other_in_cell':['mean','std','sum'],'owls_in_cell':['mean','std','sum'] })
+                grouped_data = grouped_data.reset_index()
                 for index, row in grouped_data.iterrows():
                     d1 = [file_name, experiment, sim_number, data_type]
                     dr =  d1 + list(row)
@@ -241,8 +241,7 @@ def main():
     parser.add_argument("-burn_in",help="Number of cycles before the simulation starts collecting data on the simulation." ,dest="burn_in", type=int, required=False)
     parser.add_argument("-set_seeds",help="Generates seed values for sim." ,dest="set_seeds", type=str2bool, nargs='?', const=True, default=False, required=False)
     #parser.add_argument("-agg_sims",help="Aggregates data from sims and removes the indiviudal sim data csvs." ,dest="agg_sims", type=bool, required=False)
-    parser.add_argument("-agg_sims", type=str2bool, nargs='?', const=True, default=False, help="Aggregates data from sims.", dest="agg_sims")
-    #parser.add_argument("-rmv_sims", type=str2bool, nargs='?', const=True, default=False, help="Deletes individual sims csv.", dest="rmv_sims")
+    parser.add_argument("-agg_sims", type=str2bool, nargs='?', const=True, default=False, help="Aggregates data from sims and removes the indiviudal sim data csvs.", dest="agg_sims")
     parser.set_defaults(func=run)
     args=parser.parse_args()
     args.func(args)

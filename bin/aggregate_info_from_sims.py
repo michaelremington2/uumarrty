@@ -28,17 +28,36 @@ class export_data_from_sims(object):
         else:
             experiment = file_name.split("_")[0]
         return experiment
-        
+
+    def open_counts(self, phenotype_counts):
+        if 'OPEN' in phenotype_counts.index:
+            # Get the count value for 'X'
+            open_n = phenotype_counts.loc['OPEN']
+        else:
+            open_n = 0
+        return open_n
+
+    def bush_counts(self, phenotype_counts):
+        if 'BUSH' in phenotype_counts.index:
+            # Get the count value for 'X'
+            bush_n = phenotype_counts.loc['BUSH']
+        else:
+            bush_n = 0
+        return bush_n
 
     def overall_stats(self, sim):
-        data=pd.read_csv(sim,header=None)
-        data.columns = ['id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-        cycles=data['cycle'].max()
-        generations=data['generation'].max()
-        mean_bush_pref=data['bush_pw'].mean()
-        std_bush_pref=data['bush_pw'].std()
-        se_bush_pref=data['bush_pw'].sem()
-        return cycles, generations, mean_bush_pref, std_bush_pref, se_bush_pref
+        data = pd.read_csv(sim,header=None)
+        data.columns = ['id','generation', 'cycle','phenotype', 'open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
+        cycles = data['cycle'].max()
+        generations = data['generation'].max()
+        mean_bush_pref = data['bush_pw'].mean()
+        std_bush_pref = data['bush_pw'].std()
+        se_bush_pref = data['bush_pw'].sem()
+        total_counts = data.shape[0] 
+        # phenotype_counts = data['phenotype'].value_counts()
+        # open_n = self.open_counts(phenotype_counts)
+        # bush_n = self.bush_counts(phenotype_counts)
+        return cycles, generations, total_counts,  mean_bush_pref, std_bush_pref, se_bush_pref
 
     def data_label(self, file_name):
         if 'krat' in file_name:
@@ -71,17 +90,17 @@ class export_data_from_sims(object):
             sim_number = re.findall(r'\d+',sim)[-1]
             data_type = self.data_label(file_name = file_name)
             data=pd.read_csv(sim,header=None)
-            data.columns = ['id','generation', 'cycle','open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
-            grouped_data = data[["cycle", "bush_pw"]].groupby("cycle").mean()
-            grouped_data = grouped_data.reset_index()
+            data.columns = ['id','generation', 'cycle', 'phenotype', 'open_pw','bush_pw','energy_score','movements','cell_id','microhabitat','other_in_cell','owls_in_cell']
+            grouped_data = data.groupby(['cycle', 'phenotype']).agg({
+                'id': 'count',        # Count of individuals (assuming 'id' is unique identifier)
+                'bush_pw': 'mean'     # Mean bush preference
+            }).reset_index()
+            pivot_data = grouped_data.pivot(index='cycle', columns='phenotype', values=['id', 'bush_pw'])
+            pivot_data.columns = [f'{agg_type}_{column}_{phenotype}' for (agg_type, column, phenotype) in pivot_data.columns]
+
             for index, row in grouped_data.iterrows():
                 dr = [file_name, experiment, sim_number, data_type, row['cycle'], row['bush_pw']]
                 self.append_data(fp = self.output_file_path_per_cycle, d_row = dr)
-
-
-
-
-
 
 
     def append_data(self,fp,d_row):

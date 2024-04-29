@@ -41,7 +41,7 @@ class Organism(object):
         self.move_preference = move_preference
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
-        #self.phenotype = [bush_preference_weight]
+        self.phenotype = self._set_phenotype()
         if self.move_preference:
             self.memory_length_cycles = memory_length_cycles
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
@@ -50,6 +50,13 @@ class Organism(object):
 
     def __hash__(self):
         return id(self)
+
+    def _set_phenotype(self):
+        if self.bush_preference_weight > 0.5:
+            trait = 'BUSH'
+        else:
+            trait = 'OPEN'
+        return trait
 
     def _get_bush_preference(self):
         #make preference a setter and getter 
@@ -322,6 +329,7 @@ class Snake(Organism):
         self.movement_frequency = movement_frequency
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        self.phenotype = self._set_phenotype()
         if self.move_preference:
             self.memory_length_cycles = memory_length_cycles
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
@@ -402,6 +410,7 @@ class Krat(Organism):
         self.movement_frequency = movement_frequency
         self.open_preference_weight = open_preference_weight
         self.bush_preference_weight = bush_preference_weight
+        self.phenotype = self._set_phenotype()
         if self.move_preference:
             self.memory_length_cycles = memory_length_cycles
             self.microhabitat_energy_log = {'BUSH': [None]*self.memory_length_cycles, 'OPEN':[None]*self.memory_length_cycles}
@@ -438,6 +447,7 @@ class Krat(Organism):
                     self.org_id,
                     self.sim.krat_generation,
                     self.sim.cycle,
+                    self.phenotype,
                     self.open_preference_weight,
                     self.bush_preference_weight,
                     self.energy_score,

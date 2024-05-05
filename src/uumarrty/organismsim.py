@@ -352,6 +352,7 @@ class Snake(Organism):
                     self.org_id,
                     self.sim.snake_generation,
                     self.sim.cycle,
+                    self.phenotype,
                     self.open_preference_weight,
                     self.bush_preference_weight,
                     self.energy_score,

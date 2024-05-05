@@ -17,7 +17,7 @@ filterwarnings("ignore")
 
 class run_experiments(object):
     def __init__(self,init_file_path, experiment_iterations, output_file_folder = None, rng = None, set_seeds = True, burn_in = None, agg_sim_info=False, sim_info_output_file=None):
-        self.init_file_path = init_file_path
+        self.init_file_path = init_file_path #"/home/mremington/Documents/uumarrty_test_0428/config_1.txt" #init_file_path
         self.config_name = self.init_file_path[:len(self.init_file_path)- 4]
         with open(self.init_file_path) as f:
             self.experimental_groups = json.load(f)

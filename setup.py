@@ -21,9 +21,6 @@ setup(
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     ],
-    scripts=[
-        "bin/simulate_uumarrty.py",
-        ],
     test_suite = "tests",
     package_dir={"": "src"},
     description="Agent based simulation of predator prey dynamics.",

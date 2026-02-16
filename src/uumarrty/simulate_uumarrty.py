@@ -66,7 +66,7 @@ class run_experiments(object):
                 sims = [krat_data_output_file_label, snake_data_output_file_label]
                 output_file_path_total = self.output_file_folder + self.config_name + '_totals.csv'
                 output_file_path_per_cycle = self.output_file_folder + self.config_name + '_per_cycle.csv'
-                edfs = export_data_from_sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
+                edfs = Export_Data_From_Sims(sims = sims, output_file_path_total=output_file_path_total, output_file_path_per_cycle = output_file_path_per_cycle)
                 edfs.main()
                 for i in sims:
                     if os.path.exists(i):
@@ -81,7 +81,7 @@ class run_experiments(object):
             self.run_single_experiment(experiment_dictionary = ex_group, experiment_label = key,parameter_file=sim_parameters_file_label)
 
 
-class export_data_from_sims(object):
+class Export_Data_From_Sims(object):
     def __init__(self,sims, output_file_path_total=None, output_file_path_per_cycle=None):
         self.sims = sims
         self.output_file_path_total = output_file_path_total
@@ -194,7 +194,7 @@ class export_data_from_sims(object):
 
 def str2bool(string):
     if isinstance(string, bool):
-        return v
+        return True
     if string.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif string.lower() in ('no', 'false', 'f', 'n', '0'):
